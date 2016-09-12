@@ -1,0 +1,22 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: >
+  TOSCA simple profile with server and attached block storage using the normative AttachesTo Relationship Type.
+
+imports:
+  - docker_def: ./in.lucar.docker.yaml
+
+topology_template:
+  node_templates:
+    my_server:
+      type: in.lucar.docker.container
+      requirements:
+        - volume:
+            node: my_storage
+            relationship:
+              type: tosca.relationships.AttachesTo
+              properties:
+                location: sdf
+
+    my_storage:
+      type: in.lucar.docker.volume

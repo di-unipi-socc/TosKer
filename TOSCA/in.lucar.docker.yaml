@@ -1,0 +1,69 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: >
+  node definition of a Docker container
+
+node_types:
+  in.lucar.docker.volume:
+    derived_from: tosca.nodes.Root
+    properties:
+      driver:
+        type: string
+        required: false
+      driver_opt:
+        type: map
+        required: false
+    capabilities:
+      attachment:
+        type: tosca.capabilities.Attachment
+
+  in.lucar.docker.container:
+    derived_from: tosca.nodes.Root
+    attributes:
+      container_id:
+        type: string
+      private_address:
+        type: string
+      public_address:
+        type: string
+    properties:
+      env_variable:
+        type: map
+        required: false
+      cmd:
+        type: string
+        required: false
+      ports:
+        type: map
+        required: false
+      volumes:
+        type: map
+        required: false
+    requirements:
+      - link:
+          capability: tosca.capabilities.Attachment
+          node: in.lucar.docker.container
+          relationship: tosca.relationships.AttachesTo
+          occurrences: 1
+      - volumeFrom:
+          capability: tosca.capabilities.Attachment
+          node: in.lucar.docker.container
+          relationship: tosca.relationships.AttachesTo
+          occurrences: [0, UNBOUNDED]
+      - volume:
+          capability: tosca.capabilities.Attachment
+          node: in.lucar.docker.volume
+          relationship: tosca.relationships.AttachesTo
+          occurrences: [0, UNBOUNDED]
+    capabilities:
+      # host:
+      #   type: tosca.capabilities.Container
+      #   valid_source_types: [tosca.nodes.SoftwareComponent]
+      # endpoint:
+      #   type: tosca.capabilities.Endpoint.Admin
+      # os:
+      #   type: tosca.capabilities.OperatingSystem
+      # scalable:
+      #   type: tosca.capabilities.Scalable
+      # binding:
+      #   type: tosca.capabilities.network.Bindable
