@@ -9,5 +9,5 @@ pip install -r requirements.txt
 
 **execution**
 ```
-python main.py <TOSCA-file-name> <run/start/stop/delete>
+python main.py <TOSCA-file-name> <run/create/start/stop/delete>
 ```
