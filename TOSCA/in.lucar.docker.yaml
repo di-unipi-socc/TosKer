@@ -26,7 +26,7 @@ node_types:
         type: string
       public_address:
         type: string
-    properties:
+      # work around
       env_variable:
         type: map
         required: false
@@ -36,7 +36,14 @@ node_types:
       ports:
         type: map
         required: false
-      volumes:
+    properties:
+      env_variable:
+        type: map
+        required: false
+      cmd:
+        type: string
+        required: false
+      ports:
         type: map
         required: false
     requirements:

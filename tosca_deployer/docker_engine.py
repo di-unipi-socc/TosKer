@@ -13,49 +13,49 @@ class Docker_engine:
 
         # create docker image
         def create_container():
-            os.makedirs('/tmp/docker_tosca/' + conf['name'], exist_ok=True)
+            os.makedirs('/tmp/docker_tosca/' + conf.name, exist_ok=True)
             return self.cli.create_container(
-                name=conf['name'],
-                image=conf['image'],
-                command=conf['cmd'],
-                environment=conf['env'],
+                name=conf.name,
+                image=conf.image,
+                command=conf.cmd,
+                environment=conf.env,
                 detach=True,
-                ports=[key for key in conf['ports'].keys()]
-                if conf['ports'] else None,
-                volumes=['/tmp/dt'] + ([k for k, v in conf['volumes'].items()]
-                                       if conf['volumes'] else []),
+                ports=[key for key in conf.ports.keys()]
+                if conf.ports else None,
+                volumes=['/tmp/dt'] + ([k for k, v in conf.volume.items()]
+                                       if conf.volume else []),
                 host_config=self.cli.create_host_config(
-                    port_bindings=conf['ports'],
-                    links=conf['link'],
-                    volumes_from=conf['volumeFrom'],
-                    binds=['/tmp/docker_tosca/'+conf['name']+':/tmp/dt'] +
-                    ([v+':'+k for k, v in conf['volumes'].items()]
-                     if conf['volumes'] else []),
+                    port_bindings=conf.ports,
+                    links=conf.link,
+                    # volumes_from=conf.volumeFrom,
+                    binds=['/tmp/docker_tosca/'+conf.name+':/tmp/dt'] +
+                    ([v+':'+k for k, v in conf.volume.items()]
+                     if conf.volume else []),
                 )
             )
 
         def remove_container():
-            self.cli.stop(container=conf['name'])
-            self.cli.remove_container(container=conf['name'], v=True)
+            self.cli.stop(container=conf.name)
+            self.cli.remove_container(container=conf.name, v=True)
 
         container = None
         try:
-            if conf['dockerfile']:
+            if conf.to_build():
                 # with open(conf['dockerfile']) as f:
                 #     byte = BytesIO(f.read().encode('utf-8'))
-                print ('DEBUG:', conf['dockerfile'])
-                print ('DEBUG:', '/'.join(conf['dockerfile'].split('/')[0:-1]))
-                print ('DEBUG:', './' + conf['dockerfile'].split('/')[-1])
+                # print ('DEBUG:', conf.dockerfile)
+                # print ('DEBUG:', '/'.join(conf.dockerfile.split('/')[0:-1]))
+                # print ('DEBUG:', './' + conf.dockerfile.split('/')[-1])
                 utility.print_json(
                     self.cli.build(
-                        path='/'.join(conf['dockerfile'].split('/')[0:-1]),
-                        dockerfile='./' + conf['dockerfile'].split('/')[-1],
-                        tag=conf['image'], stream=True
+                        path='/'.join(conf.dockerfile.split('/')[0:-1]),
+                        dockerfile='./' + conf.dockerfile.split('/')[-1],
+                        tag=conf.image, stream=True
                     )
                 )
             else:
                 utility.print_json(
-                    self.cli.pull(conf['image'], stream=True)
+                    self.cli.pull(conf.image, stream=True)
                 )
             container = create_container()
         except errors.APIError:
@@ -85,7 +85,7 @@ class Docker_engine:
         return self.cli.exec_start(exec_id, stream=stream)
 
     def create_volume(self, conf):
-        return self.cli.create_volume(conf['name'], conf['driver'], conf['driver_opt'])
+        return self.cli.create_volume(conf.name, conf.driver, conf.driver_opt)
 
     def delete_volume(self, name):
         return self.cli.remove_volume(name)

@@ -1,5 +1,6 @@
 import json
 
+
 def get_attributes(args, nodes):
     get = nodes
     for a in args:

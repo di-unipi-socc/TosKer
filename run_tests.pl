@@ -15,10 +15,8 @@ foreach my $i (@files){
     $i = $file[0];
   }
   print "$i\n";
-  `python main.py $i run > /dev/null`;
-  print "   run " . (($?==0) ? '✓' : '✗') . "\n";
-  `python main.py $i stop > /dev/null`;
-  print "   stop " . (($?==0) ? '✓' : '✗') . "\n";
+  `python main.py $i start > /dev/null`;
+  print "   start " . (($?==0) ? '✓' : '✗') . "\n";
   `python main.py $i delete > /dev/null`;
   print "   delete " . (($?==0) ? '✓' : '✗') . "\n";
 }

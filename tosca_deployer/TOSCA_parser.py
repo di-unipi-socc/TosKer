@@ -3,6 +3,7 @@ import re
 from collections import defaultdict
 from toscaparser.tosca_template import ToscaTemplate
 from . import utility
+from .nodes import Container, Software, Volume
 
 
 def _check_requirements(node, running):
@@ -15,40 +16,43 @@ def _check_requirements(node, running):
 
 
 def _parse_conf(node, inputs, repos, file_path):
-    conf = defaultdict(lambda: None)
-    conf['name'] = node.name
+    # conf = defaultdict(lambda: None)
+    conf = None
 
-    base_path = '/'.join(file_path.split('/')[:-1])+'/'
+    base_path = '/'.join(file_path.split('/')[:-1]) + '/'
 
     if node.type == 'in.lucar.docker.container':
-        conf['type'] = 'container'
+        conf = Container(node.name)
 
         def parse_dockerfile(image, dockerfile):
-            conf['image'] = image
-            conf['dockerfile'] = dockerfile
+            conf.image = image
+            conf.dockerfile = dockerfile
 
         def parse_pull_image(img_name, repo_url=None):
             if ':' in img_name:
-                conf['image'] = img_name
+                conf.image = img_name
             else:
-                conf['image'] = img_name + ':latest'
+                conf.image = img_name + ':latest'
             if repo_url:
                 p = re.compile('(https://|http://)')
                 repo = p.sub('', repos[repo_url]).strip('/')
                 if repo != 'registry.hub.docker.com':
-                    conf['image'] = '/'.join([repo.strip('/'),
-                                              conf['image'].strip('/')])
+                    conf.image = '/'.join([repo.strip('/'),
+                                           conf.image.strip('/')])
 
         # get artifacts
         artifacts = node.entity_tpl['artifacts']
         for key, value in artifacts.items():
             if type(value) is dict:
                 if value['type'] == 'tosca.artifacts.Deployment.Image.Container.Docker':
-                    parse_pull_image(value['file'], value.get('repository', None))
+                    parse_pull_image(
+                        value['file'], value.get('repository', None))
                 else:
-                    parse_dockerfile(key, path.abspath(path.join(base_path, value['file'])))
+                    parse_dockerfile(key, path.abspath(
+                        path.join(base_path, value['file'])))
             else:
-                docker_dir = path.abspath(path.join(base_path, value)).strip('/Dockerfile')
+                docker_dir = path.abspath(
+                    path.join(base_path, value)).strip('/Dockerfile')
                 if path.exists(docker_dir):
                     parse_dockerfile(key, docker_dir)
                 else:
@@ -67,27 +71,24 @@ def _parse_conf(node, inputs, repos, file_path):
         if 'properties' in node.entity_tpl:
             if 'env_variable' in node.entity_tpl['properties']:
                 values = node.entity_tpl['properties']['env_variable']
-                conf['env'] = parse_map(values)
+                conf.env = parse_map(values)
 
             if 'cmd' in node.entity_tpl['properties']:
-                conf['cmd'] = node.entity_tpl[
-                    'properties']['cmd']
+                conf.cmd = node.entity_tpl['properties']['cmd']
 
             if 'ports' in node.entity_tpl['properties']:
                 values = node.entity_tpl['properties']['ports']
-                conf['ports'] = parse_map(values)
+                conf.ports = parse_map(values)
 
-            if 'volumes' in node.entity_tpl['properties']:
-                values = node.entity_tpl['properties']['volumes']
-                conf['volumes'] = parse_map(values)
-                # check if is a relative_path
-                for key, value in conf['volumes'].items():
-                    if '/' in value and value[0] != '/':
-                        conf['volumes'][key] = path.abspath(
-                            path.join(base_path, value)
-                        )
-
-
+            # if 'volumes' in node.entity_tpl['properties']:
+            #     values = node.entity_tpl['properties']['volumes']
+            #     conf.volumes = parse_map(values)
+            #     # check if is a relative_path
+            #     for key, value in conf.volumes.items():
+            #         if '/' in value and value[0] != '/':
+            #             conf.volumes.[key] = path.abspath(
+            #                 path.join(base_path, value)
+            #             )
 
         # # get requirements
         # if 'requirements' in node.entity_tpl:
@@ -102,37 +103,36 @@ def _parse_conf(node, inputs, repos, file_path):
         #                     conf['link'] = [(value, value)]
 
     elif node.type == 'in.lucar.docker.volume':
-        conf['type'] = 'volume'
+        conf = Volume(node.name)
         if 'properties' in node.entity_tpl:
             properties = node.entity_tpl['properties']
-            conf['driver'] = properties.get('driver', None)
-            conf['driver_opt'] = properties.get('driver_opt', None)
+            conf.driver = properties.get('driver', None)
+            conf.driver_opt = properties.get('driver_opt', None)
     else:
-        conf['type'] = 'software'
+        conf = Software(node.name)
         if 'artifacts' in node.entity_tpl:
-            conf['artifacts'] = {}
             artifacts = node.entity_tpl['artifacts']
             for key, value in artifacts.items():
-                print ('artifacts', value)
+                # print ('artifacts', value)
                 abs_path = path.abspath(
                     path.join(base_path, value)
                 )
-                conf['artifacts'][key] =  abs_path
+                conf.add_artifact(key, abs_path)
 
         # get interfaces
         # try:
             interfaces = node.entity_tpl['interfaces']['Standard']
             for key, value in interfaces.items():
-                conf['cmd'] = path.abspath(
+                conf.cmd = path.abspath(
                     path.join(base_path, value['implementation'])
                 )
-                conf['inputs'] = {}
                 for key, value in value['inputs'].items():
                     if type(value) is dict:
                         if 'get_artifact' in value:
-                            conf['inputs'][key] = conf['artifacts'][value['get_artifact'][1]]
+                            conf.add_input(key, conf['artifacts'][
+                                           value['get_artifact'][1]])
                     else:
-                        conf['inputs'][key] = value
+                        conf.add_input(key, value)
         # except:
         #     print ('error:')
 
@@ -147,18 +147,15 @@ def _parse_conf(node, inputs, repos, file_path):
         requirements = node.entity_tpl['requirements']
         for value in requirements:
             if 'link' in value:
-                conf['link'] = add_to_list(conf['link'], (value['link'], value['link']))
+                conf.add_link((value['link'], value['link']))
             if 'host' in value:
-                conf['host'] = add_to_list(conf['host'], value['host'])
-            if 'volumeFrom' in value:
-                conf['volumeFrom'] = add_to_list(conf['volumeFrom'], value['volumeFrom'])
+                conf.add_host(value['host'])
             if 'volume' in value:
                 volume = value['volume']
                 if type(volume) is dict:
-                    if not conf['volumes']:
-                        conf['volumes'] = {}
-                    conf['volumes'][volume['relationship']['properties']['location']] = volume['node']
-    print ('\nContainer_conf:\n', conf['name'], conf)
+                    conf.add_volume(volume['relationship']['properties'][
+                                    'location'], volume['node'])
+    print ('\nContainer_conf:\n', conf.name, conf)
     return conf
 
 
@@ -210,7 +207,8 @@ def parse_TOSCA(file_path, inputs):
                 #     docker.create(conf)
                 #     docker.container_exec(conf['name'], )
                 # else:
-                deploy_order.append((node.name, _parse_conf(node, inputs, tosca.tpl.get('repositories', None), file_path)))
+                deploy_order.append((node.name, _parse_conf(
+                    node, inputs, tosca.tpl.get('repositories', None), file_path)))
                 running_container.add(node.name)
 
     return (deploy_order, outputs)

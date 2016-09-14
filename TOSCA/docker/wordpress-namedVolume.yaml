@@ -61,9 +61,3 @@ topology_template:
           file: wordpress
           type: tosca.artifacts.Deployment.Image.Container.Docker
           repository: docker_hub
-
-  # relationship_templates:
-  #   storage_attachment:
-  #     type: AttachesTo
-  #     properties:
-  #       location: /var/lib/mysql

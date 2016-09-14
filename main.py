@@ -9,14 +9,13 @@ def usage():
 deployer <tosca_file> <cmd> <inputs>
 
 cmd:
-    run
     create
     start
     stop
     delete
 
 example:
-    deployer hello.yaml run --name mario
+    deployer hello.yaml start --name mario
     '''
 
 
@@ -67,7 +66,7 @@ if __name__ == '__main__':
     deployer = Deployer(argv[1], inputs)
 
     {
-        'run': deployer.run,
+        # 'run': deployer.run,
         'create': deployer.create,
         'start': deployer.start,
         'stop': deployer.stop,
