@@ -80,12 +80,12 @@ class Docker_engine:
             print (e)
 
     def container_exec(self, name, cmd, stream=False):
-        print ('DEBUG:', 'name', name, 'cmd', cmd)
+        # print ('DEBUG:', 'name', name, 'cmd', cmd)
         exec_id = self.cli.exec_create(name, cmd)
         return self.cli.exec_start(exec_id, stream=stream)
 
     def create_volume(self, conf):
-        return self.cli.create_volume(conf.name, conf.driver, conf.driver_opt)
+        return self.cli.create_volume(conf.name, conf.driver, conf.get_all_opt())
 
     def delete_volume(self, name):
         return self.cli.remove_volume(name)

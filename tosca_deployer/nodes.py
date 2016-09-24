@@ -29,6 +29,12 @@ class Base:
     def add_volume(self, key, value):
         _add_to_map(self.volume, key, value)
 
+    def __getitem__(self, item):
+        if item == 'id':
+            return self.id
+        else:
+            return None
+
 
 class Container(Base):
     image = None
@@ -41,10 +47,10 @@ class Container(Base):
         return self.dockerfile is not None
 
     def add_env(self, name, value):
-        add_to_map(self.env, name, value)
+        _add_to_map(self.env, name, value)
 
     def add_port(self, name, value):
-        add_to_map(self.ports, name, value)
+        _add_to_map(self.ports, name, value)
 
     def __getitem__(self, item):
         if item == 'ports':
@@ -56,8 +62,21 @@ class Container(Base):
 
 
 class Volume(Base):
-    driver = None
+    driver = 'local'
+    device = None
+    type = None
     driver_opt = None
+
+    def get_all_opt(self):
+        ris = self.driver_opt.copy() if self.driver_opt else {}
+        if self.device:
+            ris['device'] = self.device
+        if self.device:
+            ris['type'] = self.type
+        return ris
+
+    def add_driver_opt(self, name, value):
+        _add_to_map(self.ports, name, value)
 
 
 class Software(Base):
@@ -66,7 +85,7 @@ class Software(Base):
     cmd = None
 
     def add_artifact(self, name, value):
-        add_to_map(self.artifacts, name, value)
+        _add_to_map(self.artifacts, name, value)
 
     def add_input(self, name, value):
-        add_to_map(self.input, name, value)
+        _add_to_map(self.input, name, value)

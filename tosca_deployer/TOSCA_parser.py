@@ -107,6 +107,8 @@ def _parse_conf(node, inputs, repos, file_path):
         if 'properties' in node.entity_tpl:
             properties = node.entity_tpl['properties']
             conf.driver = properties.get('driver', None)
+            conf.type = properties.get('type', None)
+            conf.device = properties.get('device', None)
             conf.driver_opt = properties.get('driver_opt', None)
     else:
         conf = Software(node.name)

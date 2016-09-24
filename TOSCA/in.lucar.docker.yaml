@@ -10,6 +10,12 @@ node_types:
       driver:
         type: string
         required: false
+      device:
+        type: string
+        required: false
+      type:
+        type: string
+        required: false
       driver_opt:
         type: map
         required: false
