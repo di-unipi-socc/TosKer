@@ -6,6 +6,9 @@ description: >
 node_types:
   in.lucar.docker.volume:
     derived_from: tosca.nodes.Root
+    attributes:
+      id:
+        type: string
     properties:
       driver:
         type: string
@@ -26,7 +29,7 @@ node_types:
   in.lucar.docker.container:
     derived_from: tosca.nodes.Root
     attributes:
-      container_id:
+      id:
         type: string
       private_address:
         type: string

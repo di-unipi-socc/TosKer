@@ -46,7 +46,7 @@ topology_template:
       type: in.lucar.docker.volume
       properties:
         driver: local
-        device: :/tmp/docker_mysql
+        device: /tmp/docker_mysql
 
     # The WordPress container based on official WordPress image in Docker hub
     wordpress_container:

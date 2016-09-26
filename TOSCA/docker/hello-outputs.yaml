@@ -34,4 +34,4 @@ topology_template:
   outputs:
     container_id:
       description: The id of the Docker container
-      value: { get_attribute: [hello_container, container_id] }
+      value: { get_attribute: [hello_container, id] }

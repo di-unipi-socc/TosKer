@@ -1,2 +1,2 @@
 #!/bin/sh
-docker volume rm $(docker volume ls --filter dangling=true)
+docker volume rm -f $(docker volume ls --filter dangling=true)

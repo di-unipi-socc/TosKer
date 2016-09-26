@@ -85,6 +85,7 @@ class Docker_engine:
         return self.cli.exec_start(exec_id, stream=stream)
 
     def create_volume(self, conf):
+        print ('DEBUG:', conf.get_all_opt())
         return self.cli.create_volume(conf.name, conf.driver, conf.get_all_opt())
 
     def delete_volume(self, name):

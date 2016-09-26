@@ -2,12 +2,14 @@ def _add_to_map(d, k, v):
     if d is None:
         d = {}
     d[k] = v
+    return d
 
 
 def _add_to_list(l, i):
     if l is None:
         l = []
     l.append(i)
+    return l
 
 
 class Base:
@@ -21,13 +23,13 @@ class Base:
         self.name = name
 
     def add_link(self, item):
-        _add_to_list(self.link, item)
+        self.link = _add_to_list(self.link, item)
 
     def add_host(self, item):
-        _add_to_list(self.host, item)
+        self.host = _add_to_list(self.host, item)
 
     def add_volume(self, key, value):
-        _add_to_map(self.volume, key, value)
+        self.volume = _add_to_map(self.volume, key, value)
 
     def __getitem__(self, item):
         if item == 'id':
@@ -47,10 +49,10 @@ class Container(Base):
         return self.dockerfile is not None
 
     def add_env(self, name, value):
-        _add_to_map(self.env, name, value)
+        self.env = _add_to_map(self.env, name, value)
 
     def add_port(self, name, value):
-        _add_to_map(self.ports, name, value)
+        self.ports = _add_to_map(self.ports, name, value)
 
     def __getitem__(self, item):
         if item == 'ports':
@@ -71,12 +73,12 @@ class Volume(Base):
         ris = self.driver_opt.copy() if self.driver_opt else {}
         if self.device:
             ris['device'] = self.device
-        if self.device:
+        if self.type:
             ris['type'] = self.type
         return ris
 
     def add_driver_opt(self, name, value):
-        _add_to_map(self.ports, name, value)
+        self.driver_opt = _add_to_map(self.driver_opt, name, value)
 
 
 class Software(Base):
@@ -85,7 +87,7 @@ class Software(Base):
     cmd = None
 
     def add_artifact(self, name, value):
-        _add_to_map(self.artifacts, name, value)
+        self.artifacts = _add_to_map(self.artifacts, name, value)
 
     def add_input(self, name, value):
-        _add_to_map(self.input, name, value)
+        self.inputs = _add_to_map(self.inputs, name, value)
