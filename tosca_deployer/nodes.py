@@ -13,14 +13,12 @@ def _add_to_list(l, i):
 
 
 class Base:
-    name = None
-    link = None
-    host = None
-    volume = None
-    id = None
-
     def __init__(self, name):
         self.name = name
+        self.link = None
+        self.host = None
+        self.volume = None
+        self.id = None
 
     def add_link(self, item):
         self.link = _add_to_list(self.link, item)
@@ -37,6 +35,13 @@ class Base:
         else:
             return None
 
+    def __str__(self):
+        s = 'name= ' + self.name + ', '
+        s += 'link= ' + str(self.link) + ', '
+        s += 'host=' + str(self.host) + ', '
+        s += 'volume=' + str(self.volume)
+        return s
+
 
 class Container(Base):
     image = None
@@ -44,6 +49,11 @@ class Container(Base):
     env = None
     cmd = None
     ports = None
+
+    def __str__(self):
+        s = super().__str__()
+        s += 'image' + self.image
+        return s
 
     def to_build(self):
         return self.dockerfile is not None

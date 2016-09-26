@@ -159,7 +159,6 @@ def _parse_conf(node, inputs, repos, file_path):
                 if type(volume) is dict:
                     conf.add_volume(volume['relationship']['properties'][
                                     'location'], volume['node'])
-    print ('\nContainer_conf:\n', conf.name, conf)
     return conf
 
 

@@ -12,8 +12,9 @@ class Deployer:
     def __init__(self, file_path, inputs={}):
         self.inputs = {} if inputs is None else inputs
         self.tpl = parse_TOSCA(file_path, inputs)
+        print ('\nDeploy order:\n' + str(self.tpl))
         self.docker = Docker_engine()
-        print('\nDeploy order:\n  - ' + '\n  - '.join([i.name for i in self.tpl.deploy_order]))
+        # print('\nDeploy order:\n  - ' + '\n  - '.join([i.name for i in self.tpl.deploy_order]))
 
     def _print_outputs(self):
         if len(self.tpl.outputs) != 0:

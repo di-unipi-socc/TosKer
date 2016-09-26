@@ -26,3 +26,9 @@ class Template:
     @property
     def software_order(self):
         return [i for i in self.deploy_order if type(i) is Software]
+
+    def __str__(self):
+        s = ''
+        for i in self.deploy_order:
+            s += '- ' + i.name + '\n    ' + str(i) + '\n'
+        return s
