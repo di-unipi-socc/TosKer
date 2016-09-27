@@ -1,0 +1,68 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: >
+  TOSCA simple profile with wordpress, web server and mysql on the same server.
+
+# Repositories to retrieve code artifacts from
+repositories:
+  docker_hub: https://registry.hub.docker.com/
+
+imports:
+  - docker_def: ./../../in.lucar.docker.yaml
+
+topology_template:
+  node_templates:
+    server1:
+      type: in.lucar.software
+      # type: tosca.nodes.SoftwareComponent
+      artifacts:
+        code: server1.js
+        package: package.json
+      requirements:
+        - host: nodejs1
+      interfaces:
+        Standard:
+          create:
+            implementation: install.sh
+            inputs:
+              main: { get_artifact: [ SELF, code ] }
+              package: { get_artifact: [ SELF, package ] }
+
+    server2:
+      type: in.lucar.software
+      # type: tosca.nodes.SoftwareComponent
+      artifacts:
+        code: server2.js
+        package: package.json
+      requirements:
+        - host: nodejs2
+        - connectTo: server1
+      interfaces:
+        Standard:
+          create:
+            implementation: install.sh
+            inputs:
+              main: { get_artifact: [ SELF, code ] }
+              package: { get_artifact: [ SELF, package ] }
+
+    nodejs1:
+      type: in.lucar.docker.container
+      properties:
+        ports:
+          8081: 8081
+      artifacts:
+        my_image:
+          file: node:6
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          repository: docker_hub
+
+    nodejs2:
+      type: in.lucar.docker.container
+      properties:
+        ports:
+          8082: 8082
+      artifacts:
+        my_image:
+          file: node:6
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          repository: docker_hub
