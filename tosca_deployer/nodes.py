@@ -50,11 +50,6 @@ class Container(Base):
     cmd = None
     ports = None
 
-    def __str__(self):
-        s = super().__str__()
-        s += 'image' + self.image
-        return s
-
     def to_build(self):
         return self.dockerfile is not None
 
@@ -71,6 +66,12 @@ class Container(Base):
             return self.env
         else:
             return None
+
+    def __str__(self):
+        s = super().__str__() + ', '
+        s += 'image: ' + self.image + ', ' if self.image else ''
+        s += 'cmd: ' + self.cmd if self.cmd else ''
+        return s
 
 
 class Volume(Base):

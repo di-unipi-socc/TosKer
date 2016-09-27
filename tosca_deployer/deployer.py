@@ -7,6 +7,9 @@ from .TOSCA_parser import parse_TOSCA
 from .docker_engine import Docker_engine
 from .nodes import Software, Volume, Container
 
+# DEBUG
+from time import sleep
+
 
 class Deployer:
     def __init__(self, file_path, inputs={}):
@@ -52,10 +55,34 @@ class Deployer:
                 print('inputs', node.inputs)
                 args = ' '.join(['--'+i[0]+' '+i[1] for i in node.inputs.items()])
                 cmd = 'sh ' + node.cmd
-                stream = self.docker.container_exec(node.host[0],
-                                                    cmd + ' ' + args,
-                                                    stream=True)
-                utility.print_byte(stream)
+                print ('DEBUG: ', cmd + ' ' + args)
+
+                host_container = self.tpl[node.host[0]]
+
+                if node.link is not None:
+                    def get_container(node):
+                        print ('DEBUG: ', 'node', node)
+                        if type(node) is Container:
+                            return node
+                        else:
+                            return get_container(self.tpl[node.host[0]])
+
+                    for link in node.link:
+                        print ('DEBUG: ', link)
+                        container_name = get_container(self.tpl[link]).name
+                        host_container.add_link((container_name, link))
+
+                try:
+                    sleep(1)
+                    stream = self.docker.container_exec(host_container.name,
+                                                        cmd + ' ' + args,
+                                                        stream=True)
+                    utility.print_byte(stream)
+                except errors.APIError:
+                    host_container.cmd = cmd + ' ' + args
+                    print ('DEBUG: ', 'container_conf ', host_container)
+                    host_container.id = self.docker.create(host_container)
+                    self.docker.start(host_container.id)
 
         self._print_outputs()
 

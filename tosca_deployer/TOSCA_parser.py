@@ -152,6 +152,8 @@ def _parse_conf(node, inputs, repos, file_path):
         for value in requirements:
             if 'link' in value:
                 conf.add_link((value['link'], value['link']))
+            if 'connectTo' in value:
+                conf.add_link(value['connectTo'])
             if 'host' in value:
                 conf.add_host(value['host'])
             if 'volume' in value:

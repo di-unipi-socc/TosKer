@@ -83,3 +83,13 @@ node_types:
       #   type: tosca.capabilities.Scalable
       # binding:
       #   type: tosca.capabilities.network.Bindable
+
+
+  in.lucar.software:
+    derived_from: tosca.nodes.SoftwareComponent
+    requirements:
+      - connectTo:
+          node: in.lucar.software
+          relationship: tosca.relationships.ConnectsTo
+          capability: tosca.capabilities.Attachment
+    capabilities:
