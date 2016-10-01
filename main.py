@@ -1,8 +1,9 @@
 from sys import argv
 from os import path
 import re
+import logging
 from tosca_deployer.deployer import Deployer
-
+from tosca_deployer.utility import Logger
 
 def usage():
     return '''
@@ -52,7 +53,6 @@ def parse_unix_input(args):
 
 
 if __name__ == '__main__':
-
     if len(argv) < 3:
         print('error: few arguments..', usage())
         exit(-1)
@@ -62,8 +62,7 @@ if __name__ == '__main__':
         exit(-1)
 
     inputs = parse_unix_input(argv[3:])
-
-    deployer = Deployer(argv[1], inputs)
+    deployer = Deployer(argv[1], inputs, logging.DEBUG)
 
     {
         # 'run': deployer.run,

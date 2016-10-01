@@ -12,6 +12,10 @@ def _add_to_list(l, i):
     return l
 
 
+def _str_obj(o):
+    return ', '.join(["{}: {}".format(k, v) for k, v in vars(o).items()])
+
+
 class Base:
     def __init__(self, name):
         self.name = name
@@ -30,17 +34,14 @@ class Base:
         self.volume = _add_to_map(self.volume, key, value)
 
     def __getitem__(self, item):
-        if item == 'id':
-            return self.id
+        attr = vars(self)
+        if item in attr:
+            return attr[item]
         else:
             return None
 
     def __str__(self):
-        s = 'name= ' + self.name + ', '
-        s += 'link= ' + str(self.link) + ', '
-        s += 'host=' + str(self.host) + ', '
-        s += 'volume=' + str(self.volume)
-        return s
+        _str_obj(self)
 
 
 class Container(Base):
@@ -60,18 +61,17 @@ class Container(Base):
         self.ports = _add_to_map(self.ports, name, value)
 
     def __getitem__(self, item):
-        if item == 'ports':
-            return self.ports
-        elif item == 'env':
-            return self.env
+        attr = super().__getitem__(item)
+        if attr:
+            return attr
         else:
-            return None
+            attr = vars(self)
+            if item in attr:
+                return attr[item]
+        return None
 
     def __str__(self):
-        s = super().__str__() + ', '
-        s += 'image: ' + self.image + ', ' if self.image else ''
-        s += 'cmd: ' + self.cmd if self.cmd else ''
-        return s
+        return '{}, {}'.format(super().__str__(), _str_obj(self))
 
 
 class Volume(Base):
@@ -91,6 +91,9 @@ class Volume(Base):
     def add_driver_opt(self, name, value):
         self.driver_opt = _add_to_map(self.driver_opt, name, value)
 
+    def __str__(self):
+        return '{}, {}'.format(super().__str__(), _str_obj(self))
+
 
 class Software(Base):
     artifacts = None
@@ -102,3 +105,6 @@ class Software(Base):
 
     def add_input(self, name, value):
         self.inputs = _add_to_map(self.inputs, name, value)
+
+    def __str__(self):
+        return '{}, {}'.format(super().__str__(), _str_obj(self))

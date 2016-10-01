@@ -1,4 +1,32 @@
 import json
+import logging
+
+
+class Logger:
+    main_level = logging.ERROR
+    _ch = None
+
+    def _get_console_hadler():
+        # if Logger._ch is None:
+        Logger._ch = logging.StreamHandler()
+        Logger._ch.setLevel(Logger.main_level)
+
+        # create formatter and add it to the handlers
+        LOG_FORMAT = ('%(levelname) -3s %(asctime)s %(name) -3s %(funcName)'
+                      '-1s %(lineno) -0s: %(message)s')
+        formatter = logging.Formatter(LOG_FORMAT)
+        # fh.setFormatter(formatter)
+
+        Logger._ch.setFormatter(formatter)
+        return Logger._ch
+
+    def get(name_class, level=logging.DEBUG):
+        print ('class:', name_class, '- level:', Logger.main_level)
+        logger = logging.getLogger(name_class)
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(Logger._get_console_hadler())
+        assert isinstance(logger, logging.Logger)
+        return logger
 
 
 def get_attributes(args, nodes):
@@ -11,37 +39,37 @@ def get_attributes(args, nodes):
 def print_TOSCA(tosca, indent=2):
     space = ' ' * indent
 
-    def _rec_print(item, tab):
+    def _rec_print(item, tab, res):
         if type(item) is dict:
             for key, value in item.items():
                 if type(value) is str or (type(value) is dict and 'get_input' in value):
-                    print(tab + str(key) + ': ' + str(value))
+                    return res + tab + str(key) + ': ' + str(value)
                 else:
-                    print(tab + str(key) + ':')
-                    _rec_print(value, tab + space)
+                    res += tab + str(key) + ':\n'
+                    return _rec_print(value, tab + space, res)
         elif type(item) is list:
             for value in item:
                 if type(value) is str:
-                    print(tab + '- ' + value)
+                    return res + tab + '- ' + value + '\n'
                 else:
-                    # print ('DEBUG:', value)
                     key, value = list(value.items())[0]
-                    print(tab + '- ' + key + ':')
-                    _rec_print(value, tab + space + '  ')
-
+                    res += res + tab + '- ' + key + ':\n'
+                    return _rec_print(value, tab + space + '  ', res)
+    res = ''
     if hasattr(tosca, 'nodetemplates'):
         if tosca.inputs:
-            print ("\ninputs:")
+            res += "\ninputs:\n"
             for input in tosca.inputs:
-                print (space + input.name)
+                res += space + input.name
 
         nodetemplates = tosca.nodetemplates
         if nodetemplates:
-            print ("\nnodetemplates:")
+            res += "\nnodetemplates:\n"
             for node in nodetemplates:
-                print (space + node.name)
-                _rec_print(node.entity_tpl, space + space)
-                print()
+                res += space + node.name + '\n'
+                res += _rec_print(node.entity_tpl, space + space, '')
+                res += '\n'
+    return res
 
 
 def print_json(stream):

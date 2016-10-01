@@ -6,6 +6,8 @@ from . import utility
 from .nodes import Container, Software, Volume
 from .template import Template
 
+log = utility.Logger.get(__name__)
+
 
 def _check_requirements(node, running):
     for req in node.requirements:
@@ -116,7 +118,7 @@ def _parse_conf(node, inputs, repos, file_path):
         if 'artifacts' in node.entity_tpl:
             artifacts = node.entity_tpl['artifacts']
             for key, value in artifacts.items():
-                print ('artifacts', value)
+                log.debug('artifacts: {}'.format(value))
                 abs_path = path.abspath(
                     path.join(base_path, value)
                 )
@@ -132,7 +134,7 @@ def _parse_conf(node, inputs, repos, file_path):
                 for key, value in value['inputs'].items():
                     if type(value) is dict:
                         if 'get_artifact' in value:
-                            print ('DEBUG:', conf.artifacts)
+                            log.debug('artifacts: {}'.format(conf.artifacts))
                             conf.add_input(key, conf.artifacts[
                                            value['get_artifact'][1]])
                     else:
@@ -166,10 +168,11 @@ def _parse_conf(node, inputs, repos, file_path):
 
 def parse_TOSCA(file_path, inputs):
     tosca = ToscaTemplate(file_path, inputs, True)
-    print (dir(tosca))
-    print (dir(tosca.tpl))
+    log.debug('TOSCA dir: {}'.format(dir(tosca)))
+    log.debug('TOSCA vars: {}'.format(vars(tosca)))
+    log.debug('TOSCA.tpl dir: {}'.format(dir(tosca.tpl)))
 
-    utility.print_TOSCA(tosca)
+    # print(utility.print_TOSCA(tosca))
     tpl = Template()
 
     if hasattr(tosca, 'nodetemplates'):
@@ -182,7 +185,7 @@ def parse_TOSCA(file_path, inputs):
 
         if tosca.outputs:
             for out in tosca.outputs:
-                print('DEBUG: ', out)
+                log.debug('outputs: {}'.format(out))
                 tpl.outputs.append(out)
 
         if tosca.nodetemplates:

@@ -2,15 +2,16 @@ import os
 from docker import Client, errors
 from io import BytesIO
 from . import utility
+from .utility import Logger
 
 
 class Docker_engine:
 
     def __init__(self, socket='unix://var/run/docker.sock'):
+        self.log = Logger.get(__name__)
         self.cli = Client(base_url=socket)
 
     def create(self, conf):
-
         # create docker image
         def create_container():
             os.makedirs('/tmp/docker_tosca/' + conf.name, exist_ok=True)
@@ -46,17 +47,13 @@ class Docker_engine:
                 # print ('DEBUG:', conf.dockerfile)
                 # print ('DEBUG:', '/'.join(conf.dockerfile.split('/')[0:-1]))
                 # print ('DEBUG:', './' + conf.dockerfile.split('/')[-1])
-                utility.print_json(
-                    self.cli.build(
-                        path='/'.join(conf.dockerfile.split('/')[0:-1]),
-                        dockerfile='./' + conf.dockerfile.split('/')[-1],
-                        tag=conf.image, stream=True
-                    )
+                self.cli.build(
+                    path='/'.join(conf.dockerfile.split('/')[0:-1]),
+                    dockerfile='./' + conf.dockerfile.split('/')[-1],
+                    tag=conf.image, stream=True
                 )
             else:
-                utility.print_json(
-                    self.cli.pull(conf.image, stream=True)
-                )
+                self.cli.pull(conf.image, stream=True)
             container = create_container()
         except errors.APIError:
             remove_container()
@@ -68,7 +65,7 @@ class Docker_engine:
         try:
             return self.cli.stop(name)
         except errors.NotFound as e:
-            print(e)
+            self.log.error(e)
 
     def start(self, name):
         return self.cli.start(name)
@@ -77,7 +74,7 @@ class Docker_engine:
         try:
             return self.cli.remove_container(name)
         except errors.NotFound as e:
-            print (e)
+            self.log.error(e)
 
     def container_exec(self, name, cmd, stream=False):
         # print ('DEBUG:', 'name', name, 'cmd', cmd)
@@ -85,8 +82,36 @@ class Docker_engine:
         return self.cli.exec_start(exec_id, stream=stream)
 
     def create_volume(self, conf):
-        print ('DEBUG:', conf.get_all_opt())
+        self.log.debug('volume opt: {}'.format(conf.get_all_opt()))
         return self.cli.create_volume(conf.name, conf.driver, conf.get_all_opt())
 
     def delete_volume(self, name):
         return self.cli.remove_volume(name)
+
+    def get_container(self, all=False):
+        return self.cli.containers(all=all)
+
+    def get_volumes(self):
+        volumes = self.cli.volumes()
+        return volumes['Volumes'] or []
+
+    def container_inspect(self, name):
+        try:
+            return self.cli.inspect_container(name)
+        except errors.NotFound:
+            return None
+
+    def volume_inspect(self, name):
+        try:
+            return self.cli.inspect_volume(name)
+        except errors.NotFound:
+            return None
+
+    def remove_all_containers(self):
+        for c in self.get_container(all=True):
+            self.stop(c['Id'])
+            self.delete(c['Id'])
+
+    def remove_all_volumes(self):
+        for v in self.get_volumes():
+            self.delete_volume(v['Name'])
