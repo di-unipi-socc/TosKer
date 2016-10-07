@@ -9,7 +9,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ./../../in.lucar.docker.yaml
+  - docker_def: ../../tosca_deployer/in.lucar.docker.yaml
 
 topology_template:
   inputs:
@@ -23,20 +23,6 @@ topology_template:
       default: password
 
   node_templates:
-    my_theme:
-      type: tosca.nodes.SoftwareComponent
-      artifacts:
-        theme_zip: agama.1.2.3.zip
-      requirements:
-        - host: wordpress_container
-      interfaces:
-        Standard:
-          create:
-            implementation: install_theme.sh
-            inputs:
-              theme: { get_artifact: [ SELF, theme_zip ] }
-
-
     # The MYSQL container based on official MySQL image in Docker hub
     mysql_container:
       type: in.lucar.docker.container

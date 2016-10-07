@@ -9,7 +9,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../in.lucar.docker.yaml
+  - docker_def: ../../tosca_deployer/in.lucar.docker.yaml
 
 topology_template:
   inputs:
@@ -51,3 +51,6 @@ topology_template:
           file: wordpress
           type: tosca.artifacts.Deployment.Image.Container.Docker
           repository: docker_hub
+  outputs:
+    ports:
+      value: { get_attribute: [wordpress_container, ports]}

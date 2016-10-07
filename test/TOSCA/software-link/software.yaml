@@ -8,13 +8,12 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ./../../in.lucar.docker.yaml
+  - docker_def: ../../../tosca_deployer/in.lucar.docker.yaml
 
 topology_template:
   node_templates:
     server1:
       type: in.lucar.software
-      # type: tosca.nodes.SoftwareComponent
       artifacts:
         code: server1.js
         package: package.json
@@ -25,8 +24,12 @@ topology_template:
           create:
             implementation: install.sh
             inputs:
-              main: { get_artifact: [ SELF, code ] }
               package: { get_artifact: [ SELF, package ] }
+          start:
+            implementation: start.sh
+            inputs:
+              main: { get_artifact: [ SELF, code ] }
+              port: 8081
 
     server2:
       type: in.lucar.software
@@ -42,8 +45,33 @@ topology_template:
           create:
             implementation: install.sh
             inputs:
-              main: { get_artifact: [ SELF, code ] }
               package: { get_artifact: [ SELF, package ] }
+          start:
+            implementation: start.sh
+            inputs:
+              main: { get_artifact: [ SELF, code ] }
+              port: 8082
+
+    server3:
+      type: in.lucar.software
+      # type: tosca.nodes.SoftwareComponent
+      artifacts:
+        code: server2.js
+        package: package.json
+      requirements:
+        - host: nodejs3
+        - connectTo: server1
+      interfaces:
+        Standard:
+          create:
+            implementation: install.sh
+            inputs:
+              package: { get_artifact: [ SELF, package ] }
+          start:
+            implementation: start.sh
+            inputs:
+              main: { get_artifact: [ SELF, code ] }
+              port: 8083
 
     nodejs1:
       type: in.lucar.docker.container
@@ -61,6 +89,17 @@ topology_template:
       properties:
         ports:
           8082: 8082
+      artifacts:
+        my_image:
+          file: node:6
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          repository: docker_hub
+
+    nodejs3:
+      type: in.lucar.docker.container
+      properties:
+        ports:
+          8083: 8083
       artifacts:
         my_image:
           file: node:6

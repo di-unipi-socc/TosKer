@@ -9,7 +9,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../in.lucar.docker.yaml
+  - docker_def: ../../tosca_deployer/in.lucar.docker.yaml
 
 topology_template:
   inputs:

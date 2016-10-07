@@ -5,9 +5,6 @@ var bodyParser = require('body-parser');
 
 var app = express();
 
-// Environment configurations
-app.set('port', process.env.PORT || 8080);
-
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(bodyParser.json({type: 'application/vnd.api+json'}));
@@ -35,5 +32,5 @@ app.get('/', function (req, res) { //  /api
 });
 
 app.listen(process.env.PORT || 8082, function(){
-    console.log('server listen..');
+    console.log('server listen on port ' + (process.env.PORT || 8082));
 });

@@ -3,7 +3,7 @@ import logging
 
 
 class Logger:
-    main_level = logging.ERROR
+    main_level = logging.DEBUG
     _ch = None
 
     def _get_console_hadler():

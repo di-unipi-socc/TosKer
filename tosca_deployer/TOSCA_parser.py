@@ -24,6 +24,7 @@ def _parse_conf(node, inputs, repos, file_path):
 
     base_path = '/'.join(file_path.split('/')[:-1]) + '/'
 
+    # TODO: accept also derived type
     if node.type == 'in.lucar.docker.container':
         conf = Container(node.name)
 
@@ -126,19 +127,18 @@ def _parse_conf(node, inputs, repos, file_path):
 
         # get interfaces
         # try:
+            # TODO: implimement all the standard cycle
             interfaces = node.entity_tpl['interfaces']['Standard']
+            intf = {}
             for key, value in interfaces.items():
-                conf.cmd = path.abspath(
+                intf[key] = {}
+                intf[key]['cmd'] = path.abspath(
                     path.join(base_path, value['implementation'])
                 )
-                for key, value in value['inputs'].items():
-                    if type(value) is dict:
-                        if 'get_artifact' in value:
-                            log.debug('artifacts: {}'.format(conf.artifacts))
-                            conf.add_input(key, conf.artifacts[
-                                           value['get_artifact'][1]])
-                    else:
-                        conf.add_input(key, value)
+                intf[key]['inputs'] = value['inputs']
+
+            conf.interfaces = intf
+
         # except:
         #     print ('error:')
 
@@ -169,11 +169,11 @@ def _parse_conf(node, inputs, repos, file_path):
 def parse_TOSCA(file_path, inputs):
     tosca = ToscaTemplate(file_path, inputs, True)
     log.debug('TOSCA dir: {}'.format(dir(tosca)))
-    log.debug('TOSCA vars: {}'.format(vars(tosca)))
-    log.debug('TOSCA.tpl dir: {}'.format(dir(tosca.tpl)))
+    # log.debug('TOSCA vars: {}'.format(vars(tosca)))
+    # log.debug('TOSCA.tpl dir: {}'.format(dir(tosca.tpl)))
 
     # print(utility.print_TOSCA(tosca))
-    tpl = Template()
+    tpl = Template(tosca.input_path.split('/')[-1][:-5])
 
     if hasattr(tosca, 'nodetemplates'):
 

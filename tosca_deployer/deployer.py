@@ -18,20 +18,16 @@ class Deployer:
         self.log = Logger.get(__name__)
         self._inputs = {} if inputs is None else inputs
         self._tpl = parse_TOSCA(file_path, inputs)
-        self.log.info('Deploy order: ' + str(self._tpl))
+        print ('Deploy order: ' + str(self._tpl))
         self._docker = Docker_engine()
+        self._net_name = self._tpl.name
+        self._docker.create_network(self._net_name)
         # print('\nDeploy order:\n  - ' + '\n  - '.join([i.name for i in self._tpl.deploy_order]))
-
-    def _print_outputs(self):
-        if len(self._tpl.outputs) != 0:
-            print ('\nOutputs:')
-        for out in self._tpl.outputs:
-            print ('  - ' + out.name + ":", utility.get_attributes(out.value.args, self._tpl))
 
     def create(self):
         for node in self._tpl.deploy_order:
             if type(node) is Container:
-                node.id = self._docker.create(node)
+                node.id = self._docker.create(node, self._net_name)
             elif type(node) is Volume:
                 self._docker.create_volume(node)
 
@@ -45,28 +41,25 @@ class Deployer:
         for node in self._tpl.deploy_order:
             if type(node) is Container:
                 self._docker.start(node.name)
+                # self._docker.wait(node.name)
+
             elif type(node) is Software:
-                tmp = '/tmp/docker_tosca/' + node.host[0] + '/'
-                copy(node.cmd, tmp)
-                node.cmd = '/tmp/dt/' + node.cmd.split('/')[-1]
-                for key, value in node.artifacts.items():
-                    copy(value, tmp)
-                    value = '/tmp/dt/' + value.split('/')[-1]
-                self.log.debug('inputs {}'.format(node.inputs))
-                for key, value in node.inputs.items():
-                    node.inputs[key] = '/tmp/dt/' + value.split('/')[-1]
-                self.log.debug('inputs: {}'.format(node.inputs))
-                args = ' '.join(['--'+i[0]+' '+i[1] for i in node.inputs.items()])
-                cmd = 'sh ' + node.cmd
-                cmd_args = cmd + ' ' + args
-                self.log.debug('cmd: {}'.format(cmd_args))
+                self._copy_files(node)
 
+                if self._get_cmnd_args(node, 'create'):
+                    cmd = 'sh -c "{} ; {}"'.format(
+                        self._get_cmnd_args(node, 'create'),
+                        self._get_cmnd_args(node, 'start'))
+                else:
+                    cmd = self._get_cmnd_args(node, 'start')
+
+                self.log.debug('cmd: {}'.format(cmd))
+
+                # TODO: node.host[0] can be another software node
                 host_container = self._tpl[node.host[0]]
-
                 if node.link is not None:
                     def get_container(node):
                         self.log.debug('node: {}'.format(node))
-
                         if type(node) is Container:
                             return node
                         else:
@@ -78,15 +71,13 @@ class Deployer:
                         host_container.add_link((container_name, link))
 
                 try:
-                    sleep(1)
-                    stream = self._docker.container_exec(host_container.name,
-                                                         cmd_args,
-                                                         stream=True)
-                    # utility.print_byte(stream)
+                    # sleep(1)
+                    self._docker.container_exec(host_container.name, cmd)
                 except errors.APIError:
-                    host_container.cmd = cmd_args
+                    self.log.info('The cointainer {} is not running'.format(host_container.name))
+                    host_container.cmd = cmd
                     self.log.debug('container_conf: {}'.format(host_container))
-                    host_container.id = self._docker.create(host_container)
+                    host_container.id = self._docker.create(host_container, self._net_name)
                     self._docker.start(host_container.id)
 
         self._print_outputs()
@@ -99,3 +90,34 @@ class Deployer:
     # def run(self):
     #     self.create()
     #     self.start()
+
+    def _print_outputs(self):
+        if len(self._tpl.outputs) != 0:
+            print ('\nOutputs:')
+        for out in self._tpl.outputs:
+            print ('  - ' + out.name + ":", utility.get_attributes(out.value.args, self._tpl))
+
+    def _copy_files(self, node):
+        # TODO: node.host[0] is not correct if a solftware is hosted on another software
+        tmp = '/tmp/docker_tosca/' + node.host[0] + '/'
+        for key, value in node.interfaces.items():
+            copy(value['cmd'], tmp)
+            node.interfaces[key]['cmd'] = '/tmp/dt/' + value['cmd'].split('/')[-1]
+
+        for key, value in node.artifacts.items():
+            copy(value, tmp)
+            node.artifacts[key] = '/tmp/dt/' + value.split('/')[-1]
+
+    def _get_cmnd_args(self, node, interface):
+        if interface not in node.interfaces:
+            return None
+        self.log.debug('interface: {}'.format(node.interfaces[interface]))
+        args = []
+        for key, value in node.interfaces[interface]['inputs'].items():
+            if type(value) is dict:
+                if 'get_artifact' in value:
+                    self.log.debug('artifacts: {}'.format(node.artifacts))
+                    value = node.artifacts[value['get_artifact'][1]]
+            args.append('--{} {}'.format(key, value))
+
+        return 'sh {} {}'.format(node.interfaces[interface]['cmd'], ' '.join(args))

@@ -3,8 +3,9 @@ from .nodes import Container, Volume, Software
 
 class Template:
 
-    def __init__(self):
+    def __init__(self, name):
         self._nodes = {}
+        self.name = name
         self.deploy_order = []
         self.outputs = []
 

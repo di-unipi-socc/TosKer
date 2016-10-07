@@ -8,7 +8,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../in.lucar.docker.yaml
+  - docker_def: ../../../tosca_deployer/in.lucar.docker.yaml
 
 topology_template:
   inputs:
@@ -22,16 +22,10 @@ topology_template:
     hello_container:
       type: in.lucar.docker.container
       artifacts:
-        my_image:
-          file: ubuntu
-          type: tosca.artifacts.Deployment.Image.Container.Docker
-          repository: docker_hub
+        hello_image:
+          file: ./Dockerfile
+          type: tosca.artifacts.File
       properties:
         env_variable:
           NAME: { get_input: your_name }
-        cmd: bash -c "echo 'Hello World!'; printenv"
-
-  outputs:
-    container_id:
-      description: The id of the Docker container
-      value: { get_attribute: [hello_container, id] }
+        cmd: printenv
