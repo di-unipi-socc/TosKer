@@ -13,6 +13,7 @@ class Test_Dockerfile(Test_Deployer):
     def test(self):
         self.create()
         self.start()
+        # TODO: check volume creation and elimination
 
 if __name__ == '__main__':
     unittest.main()

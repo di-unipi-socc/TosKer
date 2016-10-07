@@ -13,6 +13,7 @@ class Test_Hello_Outputs(Test_Deployer):
     def test(self):
         self.create()
         self.start()
+        # TODO: check outputs
 
 if __name__ == '__main__':
     unittest.main()
