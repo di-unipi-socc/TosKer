@@ -7,11 +7,12 @@ from .utility import Logger
 
 class Docker_engine:
 
-    def __init__(self, socket='unix://var/run/docker.sock'):
-        self.log = Logger.get(__name__)
+    def __init__(self, net_name, socket='unix://var/run/docker.sock'):
+        self._log = Logger.get(__name__)
+        self._net_name = net_name
         self._cli = Client(base_url=socket)
 
-    def create(self, conf, net_name):
+    def create(self, conf):
         # create docker image
         def create_container():
             # TODO: why is this here?
@@ -36,17 +37,17 @@ class Docker_engine:
             #
             #     entrypoint = 'sh -c'
             #
-            #     self.log.debug('entrypoint: {}'.format(img["Config"]["Entrypoint"]))
-            #     self.log.debug('cmd: {}'.format(img["Config"]["Cmd"]))
+            #     self._log.debug('entrypoint: {}'.format(img["Config"]["Entrypoint"]))
+            #     self._log.debug('cmd: {}'.format(img["Config"]["Cmd"]))
             # else:
             #     entrypoint = None
             #     cmd = conf.cmd
-            # self.log.debug('entrypoint: {}'.format(entrypoint))
-            # self.log.debug('cmd: {}'.format(cmd))
-
-            return self._cli.create_container(
+            # self._log.debug('entrypoint: {}'.format(entrypoint))
+            # self._log.debug('cmd: {}'.format(cmd))
+            img_name = '{}/{}'.format(self._net_name, conf.image)
+            conf.id = self._cli.create_container(
                 name=conf.name,
-                image=conf.image,
+                image=img_name if self.image_inspect(img_name) else conf.image,
                 # entrypoint=entrypoint,
                 command=conf.cmd,
                 environment=conf.env,
@@ -57,7 +58,7 @@ class Docker_engine:
                 volumes=['/tmp/dt'] + ([k for k, v in conf.volume.items()]
                                        if conf.volume else []),
                 networking_config=self._cli.create_networking_config({
-                    net_name: self._cli.create_endpoint_config(
+                    self._net_name: self._cli.create_endpoint_config(
                         links=conf.link
                     )}),
                 host_config=self._cli.create_host_config(
@@ -67,9 +68,8 @@ class Docker_engine:
                     ([v+':'+k for k, v in conf.volume.items()]
                      if conf.volume else []),
                 )
-            )
+            ).get('Id')
 
-        container = None
         try:
             if conf.to_build():
                 # with open(conf['dockerfile']) as f:
@@ -84,28 +84,29 @@ class Docker_engine:
                 )
             else:
                 self._cli.pull(conf.image, stream=True)
-            container = create_container()
-        except errors.APIError:
+            create_container()
+        except errors.APIError as e:
+            self._log.debug(e)
             self.stop(conf.name)
             self.delete(conf.name)
-            container = create_container()
-
-        return container.get('Id')
+            create_container()
 
     def stop(self, name):
         try:
             return self._cli.stop(name)
         except errors.NotFound as e:
-            self.log.error(e)
+            self._log.error(e)
 
-    def start(self, name):
-        return self._cli.start(name)
+    def start(self, name, wait=False):
+        self._cli.start(name)
+        if wait:
+            self._cli.wait(name)
 
     def delete(self, name):
         try:
             return self._cli.remove_container(name, v=True)
         except errors.NotFound as e:
-            self.log.error(e)
+            self._log.error(e)
 
     def container_exec(self, name, cmd):
         # print ('DEBUG:', 'name', name, 'cmd', cmd)
@@ -113,7 +114,7 @@ class Docker_engine:
         return self._cli.exec_start(exec_id, stream=True)
 
     def create_volume(self, conf):
-        self.log.debug('volume opt: {}'.format(conf.get_all_opt()))
+        self._log.debug('volume opt: {}'.format(conf.get_all_opt()))
         return self._cli.create_volume(conf.name, conf.driver, conf.get_all_opt())
 
     def delete_volume(self, name):
@@ -135,6 +136,12 @@ class Docker_engine:
     def volume_inspect(self, name):
         try:
             return self._cli.inspect_volume(name)
+        except errors.NotFound:
+            return None
+
+    def image_inspect(self, name):
+        try:
+            self._cli.inspect_image(name)
         except errors.NotFound:
             return None
 
@@ -163,5 +170,10 @@ class Docker_engine:
     def connect_to_network(self, c, n, links):
         self._cli.connect_container_to_network(c, n, links=links)
 
-    def wait(self, container):
-        self._cli.wait(container)
+    def commit(self, node):
+        node.image = '{}/{}'.format(self._net_name, node.image)
+        self._cli.commit(node.id, node.image)
+
+    def is_running(self, name):
+        stat = self._cli.container_inspect(name)
+        return stat is not None and stat['State']['Running']
