@@ -5,6 +5,7 @@ import logging
 from tosca_deployer.deployer import Deployer
 from tosca_deployer.utility import Logger
 
+
 def usage():
     return '''
 deployer <tosca_file> <cmd> <inputs>
@@ -40,6 +41,7 @@ def parse_input(args):
 
 def parse_unix_input(args):
     inputs = {}
+    cmds = []
     p = re.compile('--.*')
     i = 0
     while i < len(args):
@@ -48,8 +50,10 @@ def parse_unix_input(args):
                 inputs[args[i][2:]] = args[i + 1]
                 i += 2
                 continue
+        else:
+            cmds.append(args[i])
         i += 1
-    return inputs
+    return (cmds, inputs)
 
 
 if __name__ == '__main__':
@@ -61,13 +65,14 @@ if __name__ == '__main__':
         print('error: first argument must be a TOSCA yaml file', usage())
         exit(-1)
 
-    inputs = parse_unix_input(argv[3:])
+    cmds, inputs = parse_unix_input(argv[2:])
     deployer = Deployer(argv[1], inputs, logging.DEBUG)
 
-    {
-        # 'run': deployer.run,
-        'create': deployer.create,
-        'start': deployer.start,
-        'stop': deployer.stop,
-        'delete': deployer.delete,
-    }.get(argv[2], lambda: print('error: command not found..', usage()))()
+    for c in cmds:
+        {
+            # 'run': deployer.run,
+            'create': deployer.create,
+            'start': deployer.start,
+            'stop': deployer.stop,
+            'delete': deployer.delete,
+        }.get(c, lambda: print('error: command not found..', usage()))()

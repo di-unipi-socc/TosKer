@@ -33,7 +33,6 @@ topology_template:
 
     server2:
       type: in.lucar.software
-      # type: tosca.nodes.SoftwareComponent
       artifacts:
         code: server2.js
         package: package.json
@@ -89,6 +88,8 @@ topology_template:
       properties:
         ports:
           8082: 8082
+        env_variable:
+          SERVER_NAME: nodejs1
       artifacts:
         my_image:
           file: node:6

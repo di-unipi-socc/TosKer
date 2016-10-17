@@ -13,6 +13,7 @@ from time import sleep
 
 
 class Deployer:
+
     def __init__(self, file_path, inputs={}, log_level=logging.ERROR):
         Logger.main_level = log_level
         self._log = Logger.get(__name__)
@@ -21,10 +22,10 @@ class Deployer:
         print ('Deploy order: ' + str(self._tpl))
         self._docker = Docker_engine(self._tpl.name)
         self._software = Software_engine(self._docker, self._tpl)
-        self._docker.create_network(self._tpl.name)
         # print('\nDeploy order:\n  - ' + '\n  - '.join([i.name for i in self._tpl.deploy_order]))
 
     def create(self):
+        self._docker.create_network(self._tpl.name)
         for node in self._tpl.deploy_order:
             if type(node) is Container:
                 self._docker.create(node)
@@ -35,15 +36,18 @@ class Deployer:
 
     def stop(self):
         for node in reversed(self._tpl.container_order):
+            self._log.debug('stop container: {}'.format(node.name))
             self._docker.stop(node.name)
+            self._docker.create(node, saved_image=True)
 
     def start(self):
         # TODO: check if the container arleady exists
-        self.create()
+        # self.create()
         for node in self._tpl.deploy_order:
             if type(node) is Container:
                 self._docker.start(node.name)
                 # self._docker.wait(node.name)
+                sleep(1)
 
             elif type(node) is Software:
                 self._software.start(node)
@@ -51,16 +55,22 @@ class Deployer:
         self._print_outputs()
 
     def delete(self):
-        self.stop()
+        # self.stop()
+        # TODO: remove files in /tmp/docker_tosca
+        self._docker.delete_network(self._tpl.name)
         for node in self._tpl.container_order:
             self._docker.delete(node.name)
+            self._docker.delete_image(
+                '{}/{}'.format(self._tpl.name, node.name)
+            )
 
-    # def run(self):
-    #     self.create()
-    #     self.start()
+#   def run(self):
+#     self.create()
+#     self.start()
 
     def _print_outputs(self):
         if len(self._tpl.outputs) != 0:
             print ('\nOutputs:')
         for out in self._tpl.outputs:
-            print ('  - ' + out.name + ":", utility.get_attributes(out.value.args, self._tpl))
+            print ('  - ' + out.name + ":",
+                   utility.get_attributes(out.value.args, self._tpl))

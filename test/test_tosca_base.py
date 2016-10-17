@@ -3,6 +3,7 @@ from tosca_deployer.docker_engine import Docker_engine
 
 
 class Test_Deployer(unittest.TestCase):
+
     def setUp(self):
         self.docker = Docker_engine()
         self.docker.remove_all_containers()
@@ -20,21 +21,26 @@ class Test_Deployer(unittest.TestCase):
                 self.docker.volume_inspect(c.name)
             )
 
-        self._delete_container()
-
     def start(self):
+        self._start()
+
+    def start_check_exit(self):
+        self._start(check=lambda x: x['State']['ExitCode'] == 0)
+
+    def _start(self, check=lambda x: x['State']['Running']):
         self.deployer.start()
         for c in self.deployer._tpl.container_order:
             stat = self.docker.container_inspect(c.name)
             # print('DEBUG: ', stat)
             self.assertIsNotNone(stat)
-            self.assertTrue(stat['State']['Running'])
+            self.assertTrue(check(stat))
 
         for c in self.deployer._tpl.volume_order:
             self.assertIsNotNone(
                 self.docker.volume_inspect(c.name)
             )
 
+    def stop(self):
         self.deployer.stop()
         for c in self.deployer._tpl.container_order:
             stat = self.docker.container_inspect(c.name)
@@ -47,9 +53,7 @@ class Test_Deployer(unittest.TestCase):
                 self.docker.volume_inspect(c.name)
             )
 
-        self._delete_container()
-
-    def _delete_container(self):
+    def delete(self):
         self.deployer.delete()
         for c in self.deployer._tpl.container_order:
             self.assertIsNone(

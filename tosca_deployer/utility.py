@@ -74,11 +74,11 @@ def print_TOSCA(tosca, indent=2):
 
 def print_json(stream):
     for line in stream:
-        print(json.dumps(json.loads(line.decode("utf-8")), indent=2))
+        print('\t' + json.dumps(json.loads(line.decode("utf-8")), indent=2), end='')
     # print()
 
 
 def print_byte(stream):
     for line in stream:
-        print(line.decode("utf-8"))
+        print('\t' + line.decode("utf-8"), end='')
     # print()

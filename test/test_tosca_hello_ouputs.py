@@ -6,13 +6,18 @@ from .test_tosca_base import Test_Deployer
 
 
 class Test_Hello_Outputs(Test_Deployer):
+
     def setUp(self):
         super().setUp()
         self.deployer = Deployer('test/TOSCA/hello-outputs.yaml')
 
     def test(self):
         self.create()
-        self.start()
+        self.start_check_exit()
+        self.stop()
+        self.start_check_exit()
+        self.stop()
+        self.delete()
         # TODO: check outputs
 
 if __name__ == '__main__':

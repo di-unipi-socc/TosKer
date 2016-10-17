@@ -1,5 +1,6 @@
 #!/bin/sh
 echo "$@"
+printenv | grep INPUT_
 while [ $# -gt 1 ]; do
 key="$1"
 case $key in

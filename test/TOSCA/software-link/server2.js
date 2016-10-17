@@ -13,7 +13,7 @@ var http = require('http');
 
 app.get('/', function (req, res) { //  /api
     var path = '/' + (req._parsedUrl.search || '');
-    console.log("\nRedirect to images_server: " +path);
+    console.log("\nRedirect to " + (process.env.SERVER_NAME || 'server1') + ' with path ' +path);
 
     var reqApi = http.request({
             host: process.env.SERVER_NAME || 'server1',
@@ -25,7 +25,7 @@ app.get('/', function (req, res) { //  /api
         function (resApi) {
             res.writeHead(resApi.statusCode);
             resApi.pipe(res);
-            console.log("Response received from images_server");
+            console.log("Response received!");
         }
     );
     reqApi.end();

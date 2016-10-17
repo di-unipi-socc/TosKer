@@ -23,12 +23,13 @@ class Base:
         self.host = None
         self.volume = None
         self.id = None
+        self._fuctions = {}
 
     def add_link(self, item):
         self.link = _add_to_list(self.link, item)
 
-    def add_host(self, item):
-        self.host = _add_to_list(self.host, item)
+    # def add_host(self, item):
+    #     self.host = _add_to_list(self.host, item)
 
     def add_volume(self, key, value):
         self.volume = _add_to_map(self.volume, key, value)
@@ -45,12 +46,19 @@ class Base:
 
 
 class Container(Base):
-    image = None
-    dockerfile = None
-    env = None
-    cmd = None
-    ports = None
 
+    def __init__(self, name):
+        super().__init__(name)
+        self.image_name = None
+        self.tag_name = None
+        self.dockerfile = None
+        self.env = None
+        self.cmd = None
+        self.entrypoint = None
+        self.ports = None
+        self.software_layer = []
+
+    @property
     def to_build(self):
         return self.dockerfile is not None
 
@@ -59,6 +67,18 @@ class Container(Base):
 
     def add_port(self, name, value):
         self.ports = _add_to_map(self.ports, name, value)
+
+    @property
+    def image(self):
+        return '{}:{}'.format(self.image_name, self.tag_name)
+
+    @image.setter
+    def image(self, attr):
+        if ':' in attr:
+            self.image_name, self.tag_name = attr.split(':')
+        else:
+            self.image_name = attr
+            self.tag_name = 'latest'
 
     def __getitem__(self, item):
         attr = super().__getitem__(item)
@@ -101,6 +121,7 @@ class Software(Base):
         super().__init__(name)
         self.artifacts = None
         self.interfaces = {}
+        self.host_container = None
 
     def add_artifact(self, name, value):
         self.artifacts = _add_to_map(self.artifacts, name, value)
@@ -111,7 +132,6 @@ class Software(Base):
     def __str__(self):
         return '{}, {}'.format(super().__str__(), _str_obj(self))
 
-#
 # class Interfaces:
 #     def __init__(self):
 #         self._create = None
