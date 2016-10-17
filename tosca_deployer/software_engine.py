@@ -78,17 +78,15 @@ class Software_engine:
         if 'inputs' in node.interfaces[interface]:
             for key, value in node.interfaces[interface]['inputs'].items():
                 if type(value) is dict:
-                    if 'get_artifact' in value:
-                        self._log.debug('artifacts: {}'.format(node.artifacts))
-                        value = _get_inside_path(
-                            node.artifacts[value['get_artifact'][1]]
-                        )
+                    value = _get_inside_path(value)
                 args.append('--{} {}'.format(key, value))
                 args_env.append('export INPUT_{}={}'.format(key.upper(), value))
 
-        # TODO: generate an incorrect comand when there aren't inputs
-        return 'sh -c \'{};sh {} {}\''.format(
-            ';'.join(args_env),
+            return 'sh -c \'{};sh {} {}\''.format(
+                ';'.join(args_env),
+                _get_inside_path(node.interfaces[interface]['cmd']),
+                ' '.join(args)
+            )
+        return 'sh {}'.format(
             _get_inside_path(node.interfaces[interface]['cmd']),
-            ' '.join(args)
         )

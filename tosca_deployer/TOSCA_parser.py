@@ -44,6 +44,16 @@ def _check_requirements(node, running):
 #         return value
 
 
+def _parse_path(base_path, value):
+    abs_path = path.abspath(
+        path.join(base_path, value)
+    )
+    split_path = abs_path.split('/')
+    return {'path': '/'.join(split_path[:-1]),
+            'file': split_path[-1],
+            'file_path': abs_path}
+
+
 def _parse_conf(node, inputs, repos, file_path):
     # conf = defaultdict(lambda: None)
     conf = None
@@ -89,10 +99,11 @@ def _parse_conf(node, inputs, repos, file_path):
         def _parse_map(m):
             res = {}
             for key, value in m.items():
-                if type(value) is dict and 'get_input' in value:
-                    res[key] = tpl.inputs[value['get_input']]
-                else:
-                    res[key] = value
+                # if type(value) is dict and 'get_input' in value:
+                #     res[key] = tpl.inputs[value['get_input']]
+                # else:
+                #     res[key] = value
+                res[key] = value
             return res
 
         # get properties
@@ -144,13 +155,7 @@ def _parse_conf(node, inputs, repos, file_path):
             artifacts = node.entity_tpl['artifacts']
             for key, value in artifacts.items():
                 log.debug('artifacts: {}'.format(value))
-                abs_path = path.abspath(
-                    path.join(base_path, value)
-                )
-                split_path = abs_path.split('/')
-                conf.add_artifact(key, {'path': '/'.join(split_path[:-1]),
-                                        'file': split_path[-1],
-                                        'file_path': abs_path})
+                conf.add_artifact(key, _parse_path(base_path, value))
                 log.debug('artifacts: {}'.format(conf.artifacts))
 
         # get interfaces
@@ -198,6 +203,7 @@ def _parse_conf(node, inputs, repos, file_path):
             if 'connectTo' in value:
                 conf.add_link(value['connectTo'])
             if 'host' in value:
+                log.debug('here ' + str(value))
                 conf.host = value['host']
             if 'volume' in value:
                 volume = value['volume']
@@ -209,8 +215,9 @@ def _parse_conf(node, inputs, repos, file_path):
 
 def parse_TOSCA(file_path, inputs):
     tosca = ToscaTemplate(file_path, inputs, True)
+    base_path = '/'.join(file_path.split('/')[:-1]) + '/'
 
-    _parse_function(tosca)
+    _parse_functions(tosca, inputs, base_path)
     print(json.dumps(tosca.topology_template.tpl, indent=2))
 
     # log.debug('TOSCA vars: {}'.format(vars(tosca)))
@@ -222,10 +229,10 @@ def parse_TOSCA(file_path, inputs):
     if hasattr(tosca, 'nodetemplates'):
 
         # get inputs
-        if tosca.inputs:
-            for input in tosca.inputs:
-                if input.name not in inputs:
-                    inputs[input.name] = input.default
+        # if tosca.inputs:
+        #     for input in tosca.inputs:
+        #         if input.name not in inputs:
+        #             inputs[input.name] = input.default
 
         if tosca.outputs:
             for out in tosca.outputs:
@@ -263,14 +270,15 @@ def parse_TOSCA(file_path, inputs):
                 tpl.push(tpl_node)
                 running_container.add(node.name)
 
-    _pre_computation(tpl)
+    _post_computation(tpl)
 
     # for node in tpl.deploy_order:
     #     log.debug('{}=> host: {}'.format(node.name, node.host))
     #     if type(node) is Software:
     #         log.debug('{}=> host_container: {}'.format(node.name, node.host_container))
     #     if type(node) is Container:
-    #         log.debug('{}=> software_layer: {}'.format(node.name, node.software_layer))
+    # log.debug('{}=> software_layer: {}'.format(node.name,
+    # node.software_layer))
 
     return tpl
 
@@ -279,7 +287,7 @@ def parse_TOSCA(file_path, inputs):
 # - add pointer on host property
 # - add software links to the corrisponding container
 # - pack together installation scripts
-def _pre_computation(tpl):
+def _post_computation(tpl):
     for node in tpl.software_order:
         if type(node.host) is str:
             node.host = tpl[node.host]
@@ -309,8 +317,10 @@ def _pre_computation(tpl):
     #         for k, v in node.ports:
 
 
-def _parse_function(tosca):
+def _parse_functions(tosca, inputs, base_path):
     tpl = tosca.topology_template.tpl['node_templates']
+    if 'inputs' in tosca.topology_template.tpl:
+        tosca_inputs = tosca.topology_template.tpl['inputs']
 
     def _parse_node(name, node):
         for k, v in node.items():
@@ -318,7 +328,13 @@ def _parse_function(tosca):
                 if 'get_property' in v:
                     node[k] = _get(name, 'properties', v['get_property'])
                 elif 'get_artifact' in v:
-                    node[k] = _get(name, 'artifacts', v['get_artifact'])
+                    node[k] = _parse_path(base_path, _get(
+                        name, 'artifacts', v['get_artifact']))
+                elif 'get_input' in v:
+                    if v['get_input'] in inputs:
+                        node[k] = inputs[v['get_input']]
+                    else:
+                        node[k] = tosca_inputs[v['get_input']]['default']
                 else:
                     _parse_node(name, v)
             if type(v) is toscaparser.functions.GetProperty:
