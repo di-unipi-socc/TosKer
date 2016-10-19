@@ -14,6 +14,8 @@ esac
 shift # past argument or value
 done
 
+pwd
+ls -l
 echo "theme path is $THEME_ZIP"
 
 apt-get update && apt-get install zip -y

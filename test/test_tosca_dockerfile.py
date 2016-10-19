@@ -13,9 +13,9 @@ class Test_Dockerfile(Test_Deployer):
 
     def test(self):
         self.create()
-        self.start_check_exit
+        self.start_check_exit()
         self.stop()
-        self.start_check_exit
+        self.start_check_exit()
         self.stop()
         self.delete()
 

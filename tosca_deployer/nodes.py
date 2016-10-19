@@ -22,7 +22,6 @@ class Base:
         self.link = None
         self.host = None
         self.volume = None
-        self.id = None
         self._fuctions = {}
 
     def add_link(self, item):
@@ -49,6 +48,7 @@ class Container(Base):
 
     def __init__(self, name):
         super().__init__(name)
+        self.id = None
         self.image_name = None
         self.tag_name = None
         self.dockerfile = None

@@ -2,14 +2,16 @@ from .utility import Logger
 from .nodes import Container
 from shutil import copy
 import os
+from os import path
 
 
 class Software_engine:
 
-    def __init__(self, docker, tpl):
+    def __init__(self, docker, tpl, tmp_dir):
         self._log = Logger.get(__name__)
         self._docker = docker
         self._tpl = tpl
+        self._tmp_dir = tmp_dir
 
     def create(self, node):
         self._copy_files(node)
@@ -31,9 +33,6 @@ class Software_engine:
         # self._docker.update_container(node.host_container)
 
     def start(self, node):
-        # TODO: here only to update artifact path inside the Container
-        # self._copy_files(node)
-
         host_container = node.host_container
         cmd = self._get_cmnd_args(node, 'start')
 
@@ -53,7 +52,7 @@ class Software_engine:
             self._docker.start(host_container.id)
 
     def _copy_files(self, node):
-        tmp = '/tmp/docker_tosca/' + node.host_container.name + '/' + node.name
+        tmp = path.join(self._tmp_dir, node.host_container.name, node.name)
         os.makedirs(tmp, exist_ok=True)
 
         for key, value in node.interfaces.items():
@@ -66,8 +65,8 @@ class Software_engine:
                 # node.artifacts[key] = '/tmp/dt/' + value.split('/')[-1]
 
     def _get_cmnd_args(self, node, interface):
-        def _get_inside_path(path):
-            return '/tmp/dt/' + node.name + '/' + path['file']
+        def _get_inside_path(p):
+            return path.join('/tmp/dt/', node.name, p['file'])
 
         self._log.debug('interface: {}'.format(node.interfaces))
         if interface not in node.interfaces:

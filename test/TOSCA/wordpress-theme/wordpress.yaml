@@ -24,14 +24,16 @@ topology_template:
 
   node_templates:
     my_theme:
-      type: tosca.nodes.SoftwareComponent
+      type: in.lucar.software
       artifacts:
         theme_zip: agama.1.2.3.zip
       requirements:
         - host: wordpress_container
       interfaces:
         Standard:
-          create:
+          # TODO: the installation of the theme have to be put at start because
+          #       the wordpress image download worpress files at start
+          start:
             implementation: install_theme.sh
             inputs:
               theme: { get_artifact: [ SELF, theme_zip ] }

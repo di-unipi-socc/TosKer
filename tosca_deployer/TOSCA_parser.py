@@ -187,6 +187,9 @@ def _parse_conf(node, inputs, repos, file_path):
 
         # except:
         #     print ('error:')
+    else:
+        log.error('node type "{}" not supported!'.format(node.type))
+        # TODO: collect error like a real parser..
 
     def add_to_list(l, value):
         if l is None:
@@ -218,7 +221,7 @@ def parse_TOSCA(file_path, inputs):
     base_path = '/'.join(file_path.split('/')[:-1]) + '/'
 
     _parse_functions(tosca, inputs, base_path)
-    print(json.dumps(tosca.topology_template.tpl, indent=2))
+    # print(json.dumps(tosca.topology_template.tpl, indent=2))
 
     # log.debug('TOSCA vars: {}'.format(vars(tosca)))
     # log.debug('TOSCA.tpl dir: {}'.format(dir(tosca.tpl)))
@@ -235,9 +238,7 @@ def parse_TOSCA(file_path, inputs):
         #             inputs[input.name] = input.default
 
         if tosca.outputs:
-            for out in tosca.outputs:
-                log.debug('outputs: {}'.format(out))
-                tpl.outputs.append(out)
+            tpl.outputs = tosca.outputs
 
         if tosca.nodetemplates:
             running_container = set()
@@ -322,9 +323,17 @@ def _parse_functions(tosca, inputs, base_path):
     if 'inputs' in tosca.topology_template.tpl:
         tosca_inputs = tosca.topology_template.tpl['inputs']
 
+    if 'outputs' in tosca.topology_template.tpl:
+        for k, v in tosca.topology_template.tpl['outputs'].items():
+            print(type(v['value']))
+            print(dir(v['value']))
+            print(dir(v['value'].result().result()))
+
+            # print(v.result())
+
     def _parse_node(name, node):
         for k, v in node.items():
-            if type(v) == dict:
+            if type(v) is dict:
                 if 'get_property' in v:
                     node[k] = _get(name, 'properties', v['get_property'])
                 elif 'get_artifact' in v:
@@ -337,8 +346,7 @@ def _parse_functions(tosca, inputs, base_path):
                         node[k] = tosca_inputs[v['get_input']]['default']
                 else:
                     _parse_node(name, v)
-            if type(v) is toscaparser.functions.GetProperty:
-                print(v.result())
+            elif type(v) is toscaparser.functions.GetProperty:
                 node[k] = v.result()
 
     def _get(name, value, args):

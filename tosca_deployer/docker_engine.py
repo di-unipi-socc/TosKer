@@ -3,48 +3,23 @@ from docker import Client, errors
 from io import BytesIO
 from . import utility
 from .utility import Logger
+from os import path
 
 
 class Docker_engine:
-
-    def __init__(self, net_name='tosker_net',
+    def __init__(self, net_name='tosker_net', tmp_dir='/tmp',
                  socket='unix://var/run/docker.sock'):
         self._log = Logger.get(__name__)
         self._net_name = net_name
         self._cli = Client(base_url=socket)
+        self._tmp_dir = tmp_dir
 
     def create(self, conf, cmd=None, entrypoint=None, saved_image=False):
         # create docker image
         def create_container():
-            # TODO: why is this here?
-            os.makedirs('/tmp/docker_tosca/' + conf.name, exist_ok=True)
+            tmp_dir = path.join(self._tmp_dir, conf.name)
+            os.makedirs(tmp_dir, exist_ok=True)
 
-            # if forse_up:
-            #     img = self._cli.inspect_image(conf.image)
-            #     if img["Config"]["Entrypoint"] is not None:
-            #         entrypoint = img["Config"]["Entrypoint"]
-            #     else:
-            #         entrypoint = []
-            #
-            #     if conf.cmd is not None:
-            #         cmd = [conf.cmd]
-            #     elif img["Config"]["Cmd"] is not None:
-            #         cmd = img["Config"]["Cmd"]
-            #     else:
-            #         cmd = []
-            #
-            #     cmd = '"{} && sh -c \\"while true; do sleep 2; done\\""'.format(
-            #         ' '.join(entrypoint + cmd))
-            #
-            #     entrypoint = 'sh -c'
-            #
-            #     self._log.debug('entrypoint: {}'.format(img["Config"]["Entrypoint"]))
-            #     self._log.debug('cmd: {}'.format(img["Config"]["Cmd"]))
-            # else:
-            #     entrypoint = None
-            #     cmd = conf.cmd
-            # self._log.debug('entrypoint: {}'.format(entrypoint))
-            # self._log.debug('cmd: {}'.format(cmd))
             saved_img_name = '{}/{}'.format(self._net_name, conf.name)
             img_name = conf.image
             if saved_image and self.image_inspect(saved_img_name):
@@ -72,29 +47,36 @@ class Docker_engine:
                 host_config=self._cli.create_host_config(
                     port_bindings=conf.ports,
                     # links=conf.link,
-                    binds=['/tmp/docker_tosca/' + conf.name + ':/tmp/dt'] +
+                    binds=[tmp_dir + ':/tmp/dt'] +
                     ([v + ':' + k for k, v in conf.volume.items()]
                      if conf.volume else []),
                 )
             ).get('Id')
 
+        if conf.to_build:
+            self._log.info('start building..')
+            # utility.print_json(
+            res = self._cli.build(
+                path='/'.join(conf.dockerfile.split('/')[0:-1]),
+                dockerfile='./' + conf.dockerfile.split('/')[-1],
+                tag=conf.image,
+                pull=True,
+                quiet=True
+            )
+            self._log.debug(res)
+            # )
+            self._log.info('stop building..')
+        else:
+            self._log.info('start pulling..')
+            # utility.print_json(
+            self._cli.pull(conf.image)
+            # )
+            self._log.info('end pulling..')
+
         try:
-            if conf.to_build:
-                self._log.debug('to build!')
-                # utility.print_json(
-                self._cli.build(
-                    path='/'.join(conf.dockerfile.split('/')[0:-1]),
-                    dockerfile='./' + conf.dockerfile.split('/')[-1],
-                    tag=conf.image, stream=True
-                )
-                # )
-            else:
-                # utility.print_json(
-                self._cli.pull(conf.image, stream=True)
-                # )
             create_container()
         except errors.APIError as e:
-            # self._log.debug(e)
+            self._log.debug(e)
             self.stop(conf.name)
             self.delete(conf.name)
             create_container()
@@ -108,9 +90,8 @@ class Docker_engine:
     def start(self, name, wait=False):
         self._cli.start(name)
         if wait:
-            self._log.debug('start waiting!')
+            self._log.debug('wait container..')
             self._cli.wait(name)
-            self._log.debug('stop waiting!')
             utility.print_byte(
                 self._cli.logs(name, stream=True)
             )
