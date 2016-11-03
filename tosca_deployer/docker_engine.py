@@ -4,6 +4,7 @@ from io import BytesIO
 from . import utility
 from .utility import Logger
 from os import path
+from .nodes import Container, Volume
 
 
 class Docker_engine:
@@ -14,52 +15,53 @@ class Docker_engine:
         self._cli = Client(base_url=socket)
         self._tmp_dir = tmp_dir
 
-    def create(self, conf, cmd=None, entrypoint=None, saved_image=False):
-        # create docker image
+    # TODO: aggiungere un parametro per eliminare i container se esistono già!
+    def create(self, con, cmd=None, entrypoint=None, saved_image=False):
         def create_container():
-            tmp_dir = path.join(self._tmp_dir, conf.name)
+            tmp_dir = path.join(self._tmp_dir, con.name)
             os.makedirs(tmp_dir, exist_ok=True)
 
-            saved_img_name = '{}/{}'.format(self._net_name, conf.name)
-            img_name = conf.image
-            if saved_image and self.image_inspect(saved_img_name):
+            saved_img_name = '{}/{}'.format(self._net_name, con.name)
+            img_name = con.image
+            if saved_image and self.inspect(saved_img_name):
                 img_name = saved_img_name
 
             self._log.debug('image name: {}'.format(img_name))
 
-            conf.id = self._cli.create_container(
-                name=conf.name,
+            con.id = self._cli.create_container(
+                name=con.name,
                 image=img_name,
-                entrypoint=entrypoint if entrypoint else conf.entrypoint,
-                command=cmd if cmd else conf.cmd,
-                environment=conf.env,
+                entrypoint=entrypoint if entrypoint else con.entrypoint,
+                command=cmd if cmd else con.cmd,
+                environment=con.env,
                 detach=True,
                 # stdin_open=True,
-                ports=[key for key in conf.ports.keys()]
-                if conf.ports else None,
-                volumes=['/tmp/dt'] + ([k for k, v in conf.volume.items()]
-                                       if conf.volume else []),
+                ports=[key for key in con.ports.keys()]
+                if con.ports else None,
+                volumes=['/tmp/dt'] + ([k for k, v in con.volume.items()]
+                                       if con.volume else []),
                 networking_config=self._cli.create_networking_config({
                     self._net_name: self._cli.create_endpoint_config(
-                        links=conf.link,
+                        links=con.link,
                         # aliases=['db']
                     )}),
                 host_config=self._cli.create_host_config(
-                    port_bindings=conf.ports,
-                    # links=conf.link,
+                    port_bindings=con.ports,
+                    # links=con.link,
                     binds=[tmp_dir + ':/tmp/dt'] +
-                    ([v + ':' + k for k, v in conf.volume.items()]
-                     if conf.volume else []),
+                    ([v + ':' + k for k, v in con.volume.items()]
+                     if con.volume else []),
                 )
             ).get('Id')
 
-        if conf.to_build:
+        assert isinstance(con, Container)
+        if con.to_build:
             self._log.info('start building..')
             # utility.print_json(
             res = self._cli.build(
-                path='/'.join(conf.dockerfile.split('/')[0:-1]),
-                dockerfile='./' + conf.dockerfile.split('/')[-1],
-                tag=conf.image,
+                path='/'.join(con.dockerfile.split('/')[0:-1]),
+                dockerfile='./' + con.dockerfile.split('/')[-1],
+                tag=con.image,
                 pull=True,
                 quiet=True
             )
@@ -69,25 +71,26 @@ class Docker_engine:
         else:
             self._log.info('start pulling..')
             # utility.print_json(
-            self._cli.pull(conf.image)
+            self._cli.pull(con.image)
             # )
             self._log.info('end pulling..')
 
         try:
             create_container()
         except errors.APIError as e:
-            self._log.debug(e)
-            self.stop(conf.name)
-            self.delete(conf.name)
+            self.stop(con.name)
+            self.delete(con.name)
             create_container()
 
-    def stop(self, name):
+    def stop(self, container):
+        name = self._get_name(container)
         try:
             return self._cli.stop(name)
         except errors.NotFound as e:
             self._log.error(e)
 
-    def start(self, name, wait=False):
+    def start(self, container, wait=False):
+        name = self._get_name(container)
         self._cli.start(name)
         if wait:
             self._log.debug('wait container..')
@@ -96,55 +99,60 @@ class Docker_engine:
                 self._cli.logs(name, stream=True)
             )
 
-    def delete(self, name):
+    def delete(self, container):
+        name = self._get_name(container)
         try:
             return self._cli.remove_container(name, v=True)
         except errors.NotFound as e:
             self._log.error(e)
 
-    def container_exec(self, name, cmd):
-        # print ('DEBUG:', 'name', name, 'cmd', cmd)
-        exec_id = self._cli.exec_create(name, cmd)
-        # utility.print_byte(
-        self._cli.exec_start(exec_id, stream=True)
-        # )
+    def exec_cmd(self, container, cmd):
+        name = self._get_name(container)
+        try:
+            exec_id = self._cli.exec_create(name, cmd)
+            # utility.print_byte(
+            status = self._cli.exec_start(exec_id)
+            # )
+            # TODO: verificare attendibilità di questo check!
+            return 'rpc error' not in str(status)
+        except errors.APIError:
+            return False
 
-    def create_volume(self, conf):
-        self._log.debug('volume opt: {}'.format(conf.get_all_opt()))
+    def create_volume(self, volume):
+        assert isinstance(volume, Volume)
+        self._log.debug('volume opt: {}'.format(volume.get_all_opt()))
         return self._cli.create_volume(
-            conf.name, conf.driver, conf.get_all_opt()
+            volume.name, volume.driver, volume.get_all_opt()
         )
 
-    def delete_volume(self, name):
+    def delete_volume(self, volume):
+        name = self._get_name(volume)
         return self._cli.remove_volume(name)
 
-    def get_container(self, all=False):
+    def get_containers(self, all=False):
         return self._cli.containers(all=all)
 
     def get_volumes(self):
         volumes = self._cli.volumes()
         return volumes['Volumes'] or []
 
-    def container_inspect(self, name):
+    def inspect(self, item):
+        name = self._get_name(item)
         try:
             return self._cli.inspect_container(name)
         except errors.NotFound:
-            return None
-
-    def volume_inspect(self, name):
+            pass
+        try:
+            return self._cli.inspect_image(name)
+        except errors.NotFound:
+            pass
         try:
             return self._cli.inspect_volume(name)
         except errors.NotFound:
             return None
 
-    def image_inspect(self, name):
-        try:
-            return self._cli.inspect_image(name)
-        except errors.NotFound:
-            return None
-
     def remove_all_containers(self):
-        for c in self.get_container(all=True):
+        for c in self.get_containers(all=True):
             self.stop(c['Id'])
             self.delete(c['Id'])
 
@@ -164,6 +172,7 @@ class Docker_engine:
             self._log.info('network already exists!')
 
     def delete_network(self, name):
+        assert isinstance(name, str)
         try:
             self._cli.remove_network(name)
         except errors.APIError:
@@ -171,39 +180,39 @@ class Docker_engine:
             pass
 
     def delete_image(self, name):
+        assert isinstance(name, str)
         try:
             self._cli.remove_image(name)
         except errors.NotFound:
             pass
 
-    def connect_to_network(self, c, n, links):
-        self._cli.connect_container_to_network(c, n, links=links)
-
-    def update_container(self, node, cmd):
+    # TODO: splittare questo metodo in due, semantica non chiara!
+    def update_container(self, node, cmd, saved_image=True):
+        assert isinstance(node, Container)
         # self._log.debug('container_conf: {}'.format(node.host_container))
-        stat = self.image_inspect(node.image)
+        stat = self.inspect(node.image)
         old_cmd = stat['Config']['Cmd'] or ''
         old_entry = stat['Config']['Entrypoint'] or ''
 
-        self.create(node, cmd=cmd, entrypoint='', saved_image=True)
+        self.create(node, cmd=cmd, entrypoint='', saved_image=saved_image)
         self.start(node.id, wait=True)
-        utility.print_byte(
-            self._cli.logs(node.id, stream=True)
-        )
         self.stop(node.id)
 
         name = '{}/{}'.format(self._net_name, node.name)
 
-        # changes = 'CMD {}\nENTRYPOINT {}'.format(
-        #     (' '.join(old_cmd) if old_cmd else 'null'),
-        #     (' '.join(old_entry) if old_entry else 'null')
-        # )
-        # self._log.debug('commit changes: {}'.format(changes))
         self._cli.commit(node.id, name)
         self.create(node, cmd=old_cmd, entrypoint=old_entry, saved_image=True,)
         self._cli.commit(node.id, name)
 
-    def is_running(self, name):
-        stat = self.container_inspect(name)
+    def is_running(self, container):
+        name = self._get_name(container)
+        stat = self.inspect(name)
         self._log.debug('State.Running: {}'.format(stat['State']['Running']))
         return stat is not None and stat['State']['Running'] is True
+
+    def _get_name(self, name):
+        if type(name) is str:
+            return name
+        else:
+            assert isinstance(name, (Container, Volume))
+            return name.name

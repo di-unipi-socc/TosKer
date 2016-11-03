@@ -39,24 +39,19 @@ class Deployer:
                 self._docker.create_volume(node)
             elif type(node) is Software:
                 self._software.create(node)
+                self._software.configure(node)
 
         self._print_outputs()
-
-    def stop(self):
-        for node in reversed(self._tpl.container_order):
-            self._log.debug('stop container: {}'.format(node.name))
-            self._docker.stop(node.name)
-            self._docker.create(node, saved_image=True)
 
     def start(self):
         # self.create()
         for node in self._tpl.deploy_order:
             if type(node) is Container:
-                stat = self._docker.container_inspect(node.name)
+                stat = self._docker.inspect(node.name)
                 if stat is not None:
                     node.id = stat['Id']
                     self._docker.start(node.name)
-                    sleep(1)
+                    # sleep(1)
                 else:
                     self._log.error(
                         'Container "{}" not exists!'.format(node.name))
@@ -66,15 +61,26 @@ class Deployer:
 
         self._print_outputs()
 
+    def stop(self):
+        for node in reversed(self._tpl.deploy_order):
+            if isinstance(node, Container):
+                self._docker.stop(node.name)
+                self._docker.create(node, saved_image=True)
+            elif isinstance(node, Software):
+                self._software.stop(node)
+
     def delete(self):
         # self.stop()
-        # TODO: remove files in /tmp/docker_tosca
+        for node in reversed(self._tpl.deploy_order):
+            if isinstance(node, Container):
+                self._docker.delete(node.name)
+                self._docker.delete_image(
+                    '{}/{}'.format(self._tpl.name, node.name)
+                )
+            elif isinstance(node, Software):
+                self._software.delete(node)
+
         self._docker.delete_network(self._tpl.name)
-        for node in self._tpl.container_order:
-            self._docker.delete(node.name)
-            self._docker.delete_image(
-                '{}/{}'.format(self._tpl.name, node.name)
-            )
         shutil.rmtree(self._tmp_dir)
 
 #   def run(self):

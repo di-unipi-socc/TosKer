@@ -13,12 +13,12 @@ class Test_Deployer(unittest.TestCase):
         self.deployer.create()
         for c in self.deployer._tpl.container_order:
             self.assertIsNotNone(
-                self.docker.container_inspect(c.name)
+                self.docker.inspect(c.name)
             )
 
         for c in self.deployer._tpl.volume_order:
             self.assertIsNotNone(
-                self.docker.volume_inspect(c.name)
+                self.docker.inspect(c.name)
             )
 
     def start(self):
@@ -30,37 +30,37 @@ class Test_Deployer(unittest.TestCase):
     def _start(self, check=lambda x: x['State']['Running']):
         self.deployer.start()
         for c in self.deployer._tpl.container_order:
-            stat = self.docker.container_inspect(c.name)
+            stat = self.docker.inspect(c.name)
             # print('DEBUG: ', stat)
             self.assertIsNotNone(stat)
             self.assertTrue(check(stat))
 
         for c in self.deployer._tpl.volume_order:
             self.assertIsNotNone(
-                self.docker.volume_inspect(c.name)
+                self.docker.inspect(c.name)
             )
 
     def stop(self):
         self.deployer.stop()
         for c in self.deployer._tpl.container_order:
-            stat = self.docker.container_inspect(c.name)
+            stat = self.docker.inspect(c.name)
             # print('DEBUG: ', stat)
             self.assertIsNotNone(stat)
             self.assertFalse(stat['State']['Running'])
 
         for c in self.deployer._tpl.volume_order:
             self.assertIsNotNone(
-                self.docker.volume_inspect(c.name)
+                self.docker.inspect(c.name)
             )
 
     def delete(self):
         self.deployer.delete()
         for c in self.deployer._tpl.container_order:
             self.assertIsNone(
-                self.docker.container_inspect(c.name)
+                self.docker.inspect(c.name)
             )
 
         for c in self.deployer._tpl.volume_order:
             self.assertIsNotNone(
-                self.docker.volume_inspect(c.name)
+                self.docker.inspect(c.name)
             )

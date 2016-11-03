@@ -1,6 +1,8 @@
 from sys import argv
 from os import path
 import re
+import glob
+import os
 import logging
 from tosca_deployer.deployer import Deployer
 from tosca_deployer.utility import Logger
@@ -61,12 +63,21 @@ if __name__ == '__main__':
         print('error: few arguments..', usage())
         exit(-1)
 
-    if not (path.exists(argv[1]) and argv[1].split('.')[-1] == 'yaml'):
-        print('error: first argument must be a TOSCA yaml file', usage())
+    file_name = None
+    if path.exists(argv[1]):
+        if path.isdir(argv[1]):
+            files = glob.glob(path.join(argv[1], "*.yaml"))
+            if len(files) != 0:
+                file_name = files[0]
+        else:
+            if argv[1].split('.')[-1] == 'yaml':
+                file_name = argv[1]
+    if not file_name:
+        print('error: first argument must be a TOSCA yaml file or a directory with a TOSCA yaml file', usage())
         exit(-1)
 
     cmds, inputs = parse_unix_input(argv[2:])
-    deployer = Deployer(argv[1], inputs, logging.DEBUG)
+    deployer = Deployer(file_name, inputs, logging.DEBUG)
 
     for c in cmds:
         {

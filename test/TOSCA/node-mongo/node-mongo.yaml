@@ -30,7 +30,7 @@ topology_template:
           start:
             implementation: app/start.sh
             inputs:
-              port: { get_property: [ server1, ports , 8080 ] }
+              port: 8080
 
     db:
       type: in.lucar.software

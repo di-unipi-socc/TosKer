@@ -22,34 +22,61 @@ class Software_engine:
         if cmd is None:
             return
 
+        # The first software node above the container have to be installed on
+        # the original image
+        saved_image = not isinstance(node.host, Container)
+        self._docker.update_container(node.host_container, cmd,
+                                      saved_image=saved_image)
+
+    def configure(self, node):
+        cmd = self._get_cmnd_args(node, 'configure')
+        self._log.debug('cmd: {}'.format(cmd))
+
+        if cmd is None:
+            return
+
         self._docker.update_container(node.host_container, cmd)
-        # node.host_container.cmd, old_cmd = cmd, node.host_container.cmd
-        # # self._log.debug('container_conf: {}'.format(node.host_container))
-        # self._docker.create(node.host_container)
-        # self._docker.start(node.host_container.id, wait=True)
-        # self._docker.stop(node.host_container.id)
-        # node.host_container.cmd = old_cmd
-        # self._log.debug('old_cmd: {}'.format(node.host_container.cmd))
-        # self._docker.update_container(node.host_container)
 
     def start(self, node):
-        host_container = node.host_container
         cmd = self._get_cmnd_args(node, 'start')
 
         if cmd is None:
             return
+
         self._log.debug('start cmd: {}'.format(cmd))
 
-        if self._docker.is_running(host_container.name):
-            self._log.debug('is running!')
-            self._docker.container_exec(host_container.name, cmd)
-        else:
+        status = self._docker.exec_cmd(node.host_container, cmd)
+        if not status:
             self._log.debug('is not running!')
-            self._docker.create(host_container,
+            self._docker.create(node.host_container,
                                 cmd=cmd,
                                 entrypoint='',
                                 saved_image=True)
-            self._docker.start(host_container.id)
+            self._docker.start(node.host_container)
+
+    def stop(self, node):
+        cmd = self._get_cmnd_args(node, 'stop')
+
+        if cmd is None:
+            return
+
+        self._log.debug('stop cmd: {}'.format(cmd))
+
+        if self._docker.is_running(node.host_container):
+            self._log.debug('exec stop command!')
+            self._docker.exec_cmd(node.host_container, cmd)
+
+    def delete(self, node):
+        cmd = self._get_cmnd_args(node, 'delete')
+
+        if cmd is None:
+            return
+
+        self._log.debug('delete cmd: {}'.format(cmd))
+
+        if self._docker.is_running(node.host_container):
+            self._log.debug('exec delete command!')
+            self._docker.exec_cmd(node.host_container, cmd)
 
     def _copy_files(self, node):
         tmp = path.join(self._tmp_dir, node.host_container.name, node.name)
@@ -57,12 +84,10 @@ class Software_engine:
 
         for key, value in node.interfaces.items():
             copy(value['cmd']['file_path'], tmp)
-            # node.interfaces[key]['cmd'] = '/tmp/dt/' + value['cmd'].split('/')[-1]
 
         if node.artifacts:
             for key, value in node.artifacts.items():
                 copy(value['file_path'], tmp)
-                # node.artifacts[key] = '/tmp/dt/' + value.split('/')[-1]
 
     def _get_cmnd_args(self, node, interface):
         def _get_inside_path(p):
@@ -79,7 +104,8 @@ class Software_engine:
                 if type(value) is dict:
                     value = _get_inside_path(value)
                 args.append('--{} {}'.format(key, value))
-                args_env.append('export INPUT_{}={}'.format(key.upper(), value))
+                args_env.append(
+                    'export INPUT_{}={}'.format(key.upper(), value))
 
             return 'sh -c \'{};sh {} {}\''.format(
                 ';'.join(args_env),
