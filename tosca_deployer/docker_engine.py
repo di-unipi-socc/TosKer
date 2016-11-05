@@ -69,6 +69,7 @@ class Docker_engine:
             # )
             self._log.info('stop building..')
         else:
+            # TODO: da evitare se si deve utilizzare un'immagine custom
             self._log.info('start pulling..')
             # utility.print_json(
             self._cli.pull(con.image)

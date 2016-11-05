@@ -306,6 +306,7 @@ def _post_computation(tpl):
                 log.debug('link: {}'.format((container_name, link)))
                 node.host_container.add_link((container_name, link))
 
+    # TODO: si può togliere, visto che per ora non viene utilizzato!
     for node in tpl.software_order:
         node.host_container.software_layer.append(node)
 
