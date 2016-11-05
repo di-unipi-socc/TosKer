@@ -1,13 +1,23 @@
-**requirements**
+**Requirements**
   - python>=3.2
   - pip
 
-**installation:**
+**Installation:**
 ```
 pip install -r requirements.txt
 ```
 
-**execution**
+**Execution**
 ```
-python main.py <TOSCA-file-name> <run/create/start/stop/delete>
+./tosKer <TOSCA-file-name> <operations>
+```
+example:
+```
+./tosKer test/TOSCA/wordpress.yaml create start
+./tosKer test/TOSCA/wordpress.yaml stop delete
+```
+
+run the tests:
+```
+python -m unittest
 ```
