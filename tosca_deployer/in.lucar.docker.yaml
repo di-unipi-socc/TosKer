@@ -61,11 +61,6 @@ node_types:
           node: in.lucar.docker.container
           relationship: tosca.relationships.AttachesTo
           occurrences: 1
-      - volumeFrom:
-          capability: tosca.capabilities.Attachment
-          node: in.lucar.docker.container
-          relationship: tosca.relationships.AttachesTo
-          occurrences: [0, UNBOUNDED]
       - volume:
           capability: tosca.capabilities.Attachment
           node: in.lucar.docker.volume
