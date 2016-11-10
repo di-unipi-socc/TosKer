@@ -115,7 +115,7 @@ class Docker_engine:
         try:
             exec_id = self._cli.exec_create(name, cmd)
             status = self._cli.exec_start(exec_id)
-            
+
             # TODO: verificare attendibilità di questo check!
             return 'rpc error:' != status[:10].decode("utf-8")
         except errors.APIError:
