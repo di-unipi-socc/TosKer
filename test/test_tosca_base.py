@@ -1,10 +1,13 @@
 import unittest
+import logging
 from tosca_deployer.docker_engine import Docker_engine
+from tosca_deployer.utility import Logger
 
 
 class Test_Deployer(unittest.TestCase):
 
     def setUp(self):
+        Logger.main_level = logging.ERROR
         self.docker = Docker_engine()
         self.docker.remove_all_containers()
         self.docker.remove_all_volumes()

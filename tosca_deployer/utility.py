@@ -24,7 +24,7 @@ class Logger:
     def get(name_class, level=logging.DEBUG):
         # print ('class:', name_class, '- level:', Logger.main_level)
         logger = logging.getLogger(name_class)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(level)
         logger.addHandler(Logger._get_console_hadler())
         assert isinstance(logger, logging.Logger)
         return logger
