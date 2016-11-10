@@ -5,9 +5,9 @@ var express = require('express');
 var app = express();
 
 app.get('/', function (req, res) {
-    res.send('hello-world');
+    res.send('hi! from server1');
 });
 
-app.listen(process.env.PORT || 8081, function(){
-    console.log('server listen..');
+app.listen(process.env.PORT || 80, function(){
+  console.log('server listen on port ' + (process.env.PORT || 80));
 });

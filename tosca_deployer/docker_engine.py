@@ -1,5 +1,6 @@
 import os
 from docker import Client, errors
+import requests.exceptions
 from io import BytesIO
 from . import utility
 from .utility import Logger
@@ -42,8 +43,8 @@ class Docker_engine:
                                        if con.volume else []),
                 networking_config=self._cli.create_networking_config({
                     self._net_name: self._cli.create_endpoint_config(
-                        links=con.link,
-                        # aliases=['db']
+                        links=con.link
+                        # ,aliases=['db']
                     )}),
                 host_config=self._cli.create_host_config(
                     port_bindings=con.ports,
@@ -109,6 +110,8 @@ class Docker_engine:
 
     def exec_cmd(self, container, cmd):
         name = self._get_name(container)
+        if not self.is_running(name):
+            return False
         try:
             exec_id = self._cli.exec_create(name, cmd)
             # utility.print_byte(
@@ -117,6 +120,8 @@ class Docker_engine:
             # TODO: verificare attendibilità di questo check!
             return 'rpc error' not in str(status)
         except errors.APIError:
+            return False
+        except requests.exceptions.ConnectionError:
             return False
 
     def create_volume(self, volume):
@@ -208,7 +213,7 @@ class Docker_engine:
     def is_running(self, container):
         name = self._get_name(container)
         stat = self.inspect(name)
-        self._log.debug('State.Running: {}'.format(stat['State']['Running']))
+        # self._log.debug('State.Running: {}'.format(stat['State']['Running']))
         return stat is not None and stat['State']['Running'] is True
 
     def _get_name(self, name):

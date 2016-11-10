@@ -7,12 +7,12 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../../../tosca_deployer/in.lucar.docker.yaml
+  - docker_def: ../../../tosca_deployer/tosker-type.yaml
 
 topology_template:
   node_templates:
     nginx:
-      type: in.lucar.software
+      type: tosker.software
       requirements:
         - host: server1
       interfaces:
@@ -22,7 +22,7 @@ topology_template:
           configure:
             implementation: configure.sh
             inputs:
-              port: 8000
+              port: 80
           start:
             implementation: start.sh
           stop:
@@ -31,10 +31,10 @@ topology_template:
             implementation: delete.sh
 
     server1:
-      type: in.lucar.docker.container
+      type: tosker.docker.container
       properties:
         ports:
-          8000: 8080
+          80: 8080
       artifacts:
         my_image:
           file: ubuntu:latest

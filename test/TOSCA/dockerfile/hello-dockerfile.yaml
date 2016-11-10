@@ -8,7 +8,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../../../tosca_deployer/in.lucar.docker.yaml
+  - docker_def: ../../../tosca_deployer/tosker-type.yaml
 
 topology_template:
   inputs:
@@ -20,7 +20,7 @@ topology_template:
   node_templates:
     # The ubuntu container that print enviroment variable
     hello_container:
-      type: in.lucar.docker.container
+      type: tosker.docker.container
       artifacts:
         hello_image:
           file: ./Dockerfile

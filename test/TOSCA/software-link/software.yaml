@@ -8,12 +8,12 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../../../tosca_deployer/in.lucar.docker.yaml
+  - docker_def: ../../../tosca_deployer/tosker-type.yaml
 
 topology_template:
   node_templates:
     server1:
-      type: in.lucar.software
+      type: tosker.software
       artifacts:
         code: server1.js
         package: package.json
@@ -29,16 +29,15 @@ topology_template:
             implementation: start.sh
             inputs:
               main: { get_artifact: [ SELF, code ] }
-              port: 8081
+              port: 80
 
     server2:
-      type: in.lucar.software
+      type: tosker.software
       artifacts:
         code: server2.js
         package: package.json
       requirements:
         - host: nodejs2
-        - connectTo: server1
       interfaces:
         Standard:
           create:
@@ -49,17 +48,17 @@ topology_template:
             implementation: start.sh
             inputs:
               main: { get_artifact: [ SELF, code ] }
-              port: 8082
+              port: 80
 
     server3:
-      type: in.lucar.software
-      # type: tosca.nodes.SoftwareComponent
+      type: tosker.software
       artifacts:
-        code: server2.js
+        code: server3.js
         package: package.json
       requirements:
         - host: nodejs3
-        - connectTo: server1
+        - link: server1
+        - link: server2
       interfaces:
         Standard:
           create:
@@ -70,13 +69,13 @@ topology_template:
             implementation: start.sh
             inputs:
               main: { get_artifact: [ SELF, code ] }
-              port: 8083
+              port: 80
 
     nodejs1:
-      type: in.lucar.docker.container
+      type: tosker.docker.container
       properties:
         ports:
-          8081: 8081
+          80: 8081
       artifacts:
         my_image:
           file: node:6
@@ -84,12 +83,10 @@ topology_template:
           repository: docker_hub
 
     nodejs2:
-      type: in.lucar.docker.container
+      type: tosker.docker.container
       properties:
         ports:
-          8082: 8082
-        env_variable:
-          SERVER_NAME: nodejs1
+          80: 8082
       artifacts:
         my_image:
           file: node:6
@@ -97,10 +94,13 @@ topology_template:
           repository: docker_hub
 
     nodejs3:
-      type: in.lucar.docker.container
+      type: tosker.docker.container
       properties:
         ports:
-          8083: 8083
+          80: 8083
+        env_variable:
+          SERVER_NAME1: server1
+          SERVER_NAME2: server2
       artifacts:
         my_image:
           file: node:6

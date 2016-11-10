@@ -16,7 +16,7 @@ class Software_engine:
     def create(self, node):
         self._copy_files(node)
 
-        cmd = self._get_cmnd_args(node, 'create')
+        cmd = self._get_cmd_args(node, 'create')
         self._log.debug('cmd: {}'.format(cmd))
 
         if cmd is None:
@@ -29,7 +29,7 @@ class Software_engine:
                                       saved_image=saved_image)
 
     def configure(self, node):
-        cmd = self._get_cmnd_args(node, 'configure')
+        cmd = self._get_cmd_args(node, 'configure')
         self._log.debug('cmd: {}'.format(cmd))
 
         if cmd is None:
@@ -38,7 +38,7 @@ class Software_engine:
         self._docker.update_container(node.host_container, cmd)
 
     def start(self, node):
-        cmd = self._get_cmnd_args(node, 'start')
+        cmd = self._get_cmd_args(node, 'start')
 
         if cmd is None:
             return
@@ -55,7 +55,7 @@ class Software_engine:
             self._docker.start(node.host_container)
 
     def stop(self, node):
-        cmd = self._get_cmnd_args(node, 'stop')
+        cmd = self._get_cmd_args(node, 'stop')
 
         if cmd is None:
             return
@@ -67,7 +67,7 @@ class Software_engine:
             self._docker.exec_cmd(node.host_container, cmd)
 
     def delete(self, node):
-        cmd = self._get_cmnd_args(node, 'delete')
+        cmd = self._get_cmd_args(node, 'delete')
 
         if cmd is None:
             return
@@ -89,7 +89,7 @@ class Software_engine:
             for key, value in node.artifacts.items():
                 copy(value['file_path'], tmp)
 
-    def _get_cmnd_args(self, node, interface):
+    def _get_cmd_args(self, node, interface):
         def _get_inside_path(p):
             return path.join('/tmp/dt/', node.name, p['file'])
 

@@ -61,7 +61,7 @@ def _parse_conf(node, inputs, repos, file_path):
     base_path = '/'.join(file_path.split('/')[:-1]) + '/'
 
     # TODO: accept also derived type
-    if node.type == 'in.lucar.docker.container':
+    if node.type == 'tosker.docker.container':
         conf = Container(node.name)
 
         def parse_dockerfile(image, dockerfile):
@@ -141,7 +141,7 @@ def _parse_conf(node, inputs, repos, file_path):
         #                 else:
         #                     conf['link'] = [(value, value)]
 
-    elif node.type == 'in.lucar.docker.volume':
+    elif node.type == 'tosker.docker.volume':
         conf = Volume(node.name)
         if 'properties' in node.entity_tpl:
             properties = node.entity_tpl['properties']
@@ -149,7 +149,7 @@ def _parse_conf(node, inputs, repos, file_path):
             conf.type = properties.get('type', None)
             conf.device = properties.get('device', None)
             conf.driver_opt = properties.get('driver_opt', None)
-    elif node.type == 'in.lucar.software':
+    elif node.type == 'tosker.software':
         conf = Software(node.name)
         if 'artifacts' in node.entity_tpl:
             artifacts = node.entity_tpl['artifacts']
@@ -203,10 +203,10 @@ def _parse_conf(node, inputs, repos, file_path):
         for value in requirements:
             if 'link' in value:
                 conf.add_link((value['link'], value['link']))
-            if 'connectTo' in value:
-                conf.add_link(value['connectTo'])
+            # if 'connectTo' in value:
+            #     conf.add_link(value['connectTo'])
             if 'host' in value:
-                log.debug('here ' + str(value))
+                # log.debug('here ' + str(value))
                 conf.host = value['host']
             if 'volume' in value:
                 volume = value['volume']
@@ -302,6 +302,7 @@ def _post_computation(tpl):
     for node in tpl.software_order:
         if node.link is not None:
             for link in node.link:
+                link = link[0]
                 container_name = tpl[link].host_container.name
                 log.debug('link: {}'.format((container_name, link)))
                 node.host_container.add_link((container_name, link))

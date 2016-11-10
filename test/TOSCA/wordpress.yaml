@@ -9,7 +9,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../../tosca_deployer/in.lucar.docker.yaml
+  - docker_def: ../../tosca_deployer/tosker-type.yaml
 
 topology_template:
   inputs:
@@ -25,7 +25,7 @@ topology_template:
   node_templates:
     # The MYSQL container based on official MySQL image in Docker hub
     mysql_container:
-      type: in.lucar.docker.container
+      type: tosker.docker.container
       properties:
         env_variable:
           MYSQL_ROOT_PASSWORD: { get_input: db_root_pwd }
@@ -37,7 +37,7 @@ topology_template:
 
     # The WordPress container based on official WordPress image in Docker hub
     wordpress_container:
-      type: in.lucar.docker.container
+      type: tosker.docker.container
       properties:
         env_variable:
           WORDPRESS_DB_PASSWORD: { get_input: db_root_pwd }

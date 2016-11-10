@@ -8,12 +8,12 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../../../tosca_deployer/in.lucar.docker.yaml
+  - docker_def: ../../../tosca_deployer/tosker-type.yaml
 
 topology_template:
   node_templates:
     app:
-      type: in.lucar.software
+      type: tosker.software
       artifacts:
         code: app/main.js
         package: app/package.json
@@ -30,10 +30,10 @@ topology_template:
           start:
             implementation: app/start.sh
             inputs:
-              port: 8080
+              port: 80
 
     db:
-      type: in.lucar.software
+      type: tosker.software
       requirements:
         - host: server1
       interfaces:
@@ -44,7 +44,7 @@ topology_template:
             implementation: mongo/start.sh
 
     node:
-      type: in.lucar.software
+      type: tosker.software
       requirements:
         - host: server1
       interfaces:
@@ -53,10 +53,10 @@ topology_template:
             implementation: install_node.sh
 
     server1:
-      type: in.lucar.docker.container
+      type: tosker.docker.container
       properties:
         ports:
-          8080: 8080
+          80: 8080
       artifacts:
         my_image:
           file: ubuntu:latest

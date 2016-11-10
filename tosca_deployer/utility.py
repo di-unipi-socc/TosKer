@@ -7,21 +7,22 @@ class Logger:
     _ch = None
 
     def _get_console_hadler():
-        # if Logger._ch is None:
-        Logger._ch = logging.StreamHandler()
-        Logger._ch.setLevel(Logger.main_level)
+        if Logger._ch is None:
+            Logger._ch = logging.StreamHandler()
+            Logger._ch.setLevel(Logger.main_level)
 
-        # create formatter and add it to the handlers
-        LOG_FORMAT = ('%(levelname) -3s %(asctime)s %(name) -3s %(funcName)'
-                      '-1s %(lineno) -0s: %(message)s')
-        formatter = logging.Formatter(LOG_FORMAT)
-        # fh.setFormatter(formatter)
+            # create formatter and add it to the handlers
+            LOG_FORMAT = ('%(levelname) -3s %(asctime)s %(name)'
+                          '-3s %(funcName)'
+                          '-1s %(lineno) -0s: %(message)s')
+            formatter = logging.Formatter(LOG_FORMAT)
+            # fh.setFormatter(formatter)
 
-        Logger._ch.setFormatter(formatter)
+            Logger._ch.setFormatter(formatter)
         return Logger._ch
 
     def get(name_class, level=logging.DEBUG):
-        print ('class:', name_class, '- level:', Logger.main_level)
+        # print ('class:', name_class, '- level:', Logger.main_level)
         logger = logging.getLogger(name_class)
         logger.setLevel(logging.DEBUG)
         logger.addHandler(Logger._get_console_hadler())

@@ -10,7 +10,7 @@ from tosca_deployer.utility import Logger
 
 def usage():
     return '''
-deployer <tosca_file> <cmd> <inputs>
+deployer <tosca_file> <cmds> <inputs>
 
 cmd:
     create
@@ -19,7 +19,7 @@ cmd:
     delete
 
 example:
-    deployer hello.yaml start --name mario
+    deployer hello.yaml create start --name mario
     '''
 
 
@@ -81,7 +81,6 @@ if __name__ == '__main__':
 
     for c in cmds:
         {
-            # 'run': deployer.run,
             'create': deployer.create,
             'start': deployer.start,
             'stop': deployer.stop,
