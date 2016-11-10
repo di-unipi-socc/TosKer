@@ -10,8 +10,7 @@ class Test_Software_Link(Test_Deployer):
 
     def setUp(self):
         super().setUp()
-        self.deployer = Deployer(
-            'test/TOSCA/software-link/software.yaml', log_level=logging.DEBUG)
+        self.deployer = Deployer('test/TOSCA/software-link/software.yaml')
 
     def test(self):
         self.create()

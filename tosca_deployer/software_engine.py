@@ -93,7 +93,7 @@ class Software_engine:
         def _get_inside_path(p):
             return path.join('/tmp/dt/', node.name, p['file'])
 
-        self._log.debug('interface: {}'.format(node.interfaces))
+        # self._log.debug('interface: {}'.format(node.interfaces))
         if interface not in node.interfaces:
             return None
         self._log.debug('interface: {}'.format(node.interfaces[interface]))

@@ -97,9 +97,9 @@ class Docker_engine:
         if wait:
             self._log.debug('wait container..')
             self._cli.wait(name)
-            utility.print_byte(
-                self._cli.logs(name, stream=True)
-            )
+            # utility.print_byte(
+            self._cli.logs(name, stream=True)
+            # )
 
     def delete(self, container):
         name = self._get_name(container)
@@ -114,11 +114,10 @@ class Docker_engine:
             return False
         try:
             exec_id = self._cli.exec_create(name, cmd)
-            # utility.print_byte(
             status = self._cli.exec_start(exec_id)
-            # )
+            
             # TODO: verificare attendibilità di questo check!
-            return 'rpc error' not in str(status)
+            return 'rpc error:' != status[:10].decode("utf-8")
         except errors.APIError:
             return False
         except requests.exceptions.ConnectionError:

@@ -16,9 +16,7 @@ from time import sleep
 
 class Deployer:
 
-    def __init__(self, file_path, inputs={}, log_level=logging.ERROR,
-                 tmp_dir='/tmp/docker_tosca/'):
-        Logger.main_level = log_level
+    def __init__(self, file_path, inputs={}, tmp_dir='/tmp/docker_tosca/'):
         self._log = Logger.get(__name__)
         self._tmp_dir = '/tmp/tosker/'
         self._inputs = {} if inputs is None else inputs

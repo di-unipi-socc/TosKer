@@ -77,7 +77,8 @@ if __name__ == '__main__':
         exit(-1)
 
     cmds, inputs = parse_unix_input(argv[2:])
-    deployer = Deployer(file_name, inputs, logging.DEBUG)
+    Logger.main_level = logging.ERROR
+    deployer = Deployer(file_name, inputs)
 
     for c in cmds:
         {
