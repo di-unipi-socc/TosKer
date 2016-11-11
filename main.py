@@ -10,7 +10,7 @@ from tosca_deployer.utility import Logger
 
 def usage():
     return '''
-deployer <tosca_file> <cmds> <inputs>
+tosker <tosca_file> <cmds> <inputs>
 
 cmd:
     create
@@ -19,26 +19,26 @@ cmd:
     delete
 
 example:
-    deployer hello.yaml create start --name mario
+    tosker hello.yaml create start --name mario
     '''
 
 
-def parse_input(args):
-    string = ' '.join(args)
-    inputs = {}
-    inputs_list = string.split(':')
-    key = None
-    for i, val in enumerate(inputs_list):
-        val = val.strip()
-        if i == 0:
-            key = val
-        elif i == len(inputs_list) - 1:
-            inputs[key] = val
-        else:
-            val = val.split(" ")
-            inputs[key] = ' '.join(val[0:len(val) - 1])
-            key = val[len(val) - 1]
-    return inputs
+# def parse_input(args):
+#     string = ' '.join(args)
+#     inputs = {}
+#     inputs_list = string.split(':')
+#     key = None
+#     for i, val in enumerate(inputs_list):
+#         val = val.strip()
+#         if i == 0:
+#             key = val
+#         elif i == len(inputs_list) - 1:
+#             inputs[key] = val
+#         else:
+#             val = val.split(" ")
+#             inputs[key] = ' '.join(val[0:len(val) - 1])
+#             key = val[len(val) - 1]
+#     return inputs
 
 
 def parse_unix_input(args):

@@ -56,17 +56,17 @@ class Docker_engine:
             ).get('Id')
 
         assert isinstance(con, Container)
+
         if con.to_build:
             self._log.info('start building..')
             # utility.print_json(
-            res = self._cli.build(
+            self._cli.build(
                 path='/'.join(con.dockerfile.split('/')[0:-1]),
                 dockerfile='./' + con.dockerfile.split('/')[-1],
                 tag=con.image,
                 pull=True,
                 quiet=True
             )
-            self._log.debug(res)
             # )
             self._log.info('stop building..')
         else:

@@ -3,13 +3,15 @@ from tosca_deployer.deployer import Deployer
 from tosca_deployer.docker_engine import Docker_engine
 from tosca_deployer.utility import Logger
 from .test_tosca_base import Test_Deployer
+import logging
 
 
-class Test_Wordpress_Volume(Test_Deployer):
+class Test_Software_Linkcycle(Test_Deployer):
 
     def setUp(self):
         super().setUp()
-        self.deployer = Deployer('test/TOSCA/wordpress-volume.yaml')
+        self.deployer = \
+            Deployer('test/TOSCA/software-lifecycle/lifecycle.yaml')
 
     def test(self):
         self.create()

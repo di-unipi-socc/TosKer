@@ -42,6 +42,6 @@ app.get('/', function(req, res) {
     });
 });
 
-app.listen(process.env.PORT || 8080, function() {
-    console.log('server listen..');
+app.listen(process.env.PORT || 80, function() {
+    console.log('server listen on port ' + (process.env.PORT || 80));
 });

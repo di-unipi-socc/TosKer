@@ -5,7 +5,7 @@ from tosca_deployer.utility import Logger
 from .test_tosca_base import Test_Deployer
 
 
-class Test_Dockerfile(Test_Deployer):
+class Test_Wordpress(Test_Deployer):
 
     def setUp(self):
         super().setUp()

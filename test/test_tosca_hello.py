@@ -5,19 +5,20 @@ from tosca_deployer.utility import Logger
 from .test_tosca_base import Test_Deployer
 
 
-class Test_Wordpress_Volume(Test_Deployer):
+class Test_Hello(Test_Deployer):
 
     def setUp(self):
         super().setUp()
-        self.deployer = Deployer('test/TOSCA/wordpress-volume.yaml')
+        self.deployer = Deployer('test/TOSCA/hello.yaml')
 
     def test(self):
         self.create()
-        self.start()
+        self.start_check_exit()
         self.stop()
-        self.start()
+        self.start_check_exit()
         self.stop()
         self.delete()
+        # TODO: check outputs
 
 if __name__ == '__main__':
     unittest.main()

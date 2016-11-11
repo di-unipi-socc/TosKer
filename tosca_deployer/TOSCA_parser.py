@@ -55,7 +55,6 @@ def _parse_path(base_path, value):
 
 
 def _parse_conf(node, inputs, repos, file_path):
-    # conf = defaultdict(lambda: None)
     conf = None
 
     base_path = '/'.join(file_path.split('/')[:-1]) + '/'
@@ -118,28 +117,6 @@ def _parse_conf(node, inputs, repos, file_path):
             if 'ports' in node.entity_tpl['properties']:
                 values = node.entity_tpl['properties']['ports']
                 conf.ports = _parse_map(values)
-
-            # if 'volumes' in node.entity_tpl['properties']:
-            #     values = node.entity_tpl['properties']['volumes']
-            #     conf.volumes = _parse_map(values)
-            #     # check if is a relative_path
-            #     for key, value in conf.volumes.items():
-            #         if '/' in value and value[0] != '/':
-            #             conf.volumes.[key] = path.abspath(
-            #                 path.join(base_path, value)
-            #             )
-
-        # # get requirements
-        # if 'requirements' in node.entity_tpl:
-        #     requirements = node.entity_tpl['requirements']
-        #     for value in requirements:
-        #         for key, value in value.items():
-        #             if key == 'link':
-        #                 if conf['link'] is list:
-        #                     conf['link'].append(
-        #                         (value, value))
-        #                 else:
-        #                     conf['link'] = [(value, value)]
 
     elif node.type == 'tosker.docker.volume':
         conf = Volume(node.name)
@@ -221,25 +198,13 @@ def parse_TOSCA(file_path, inputs):
     base_path = '/'.join(file_path.split('/')[:-1]) + '/'
 
     _parse_functions(tosca, inputs, base_path)
-    # print(json.dumps(tosca.topology_template.tpl, indent=2))
-
-    # log.debug('TOSCA vars: {}'.format(vars(tosca)))
-    # log.debug('TOSCA.tpl dir: {}'.format(dir(tosca.tpl)))
-
     # print(utility.print_TOSCA(tosca))
+
     tpl = Template(tosca.input_path.split('/')[-1][:-5])
 
     if hasattr(tosca, 'nodetemplates'):
-
-        # get inputs
-        # if tosca.inputs:
-        #     for input in tosca.inputs:
-        #         if input.name not in inputs:
-        #             inputs[input.name] = input.default
-
         if tosca.outputs:
             tpl.outputs = tosca.outputs
-
         if tosca.nodetemplates:
             running_container = set()
             nodes = tosca.nodetemplates
@@ -252,35 +217,16 @@ def parse_TOSCA(file_path, inputs):
                     i += 1
                     continue
 
-                # print('requirements:', node.requirements)
-                # print('running_container:', running_container)
-
                 if not _check_requirements(node, running_container):
                     i += 1
                     continue
 
-                # if node.type == 'tosca.nodes.SoftwareComponent':
-                #     docker = Docker_engine()
-                #     conf = deploy_order[node.requirements[0]['host']]
-                #     conf['name'] += '_before_' + node.name
-                #     docker.create(conf)
-                #     docker.container_exec(conf['name'], )
-                # else:
                 tpl_node = _parse_conf(node, inputs, tosca.tpl.get(
                     'repositories', None), file_path)
                 tpl.push(tpl_node)
                 running_container.add(node.name)
 
     _post_computation(tpl)
-
-    # for node in tpl.deploy_order:
-    #     log.debug('{}=> host: {}'.format(node.name, node.host))
-    #     if type(node) is Software:
-    #         log.debug('{}=> host_container: {}'.format(node.name, node.host_container))
-    #     if type(node) is Container:
-    # log.debug('{}=> software_layer: {}'.format(node.name,
-    # node.software_layer))
-
     return tpl
 
 
@@ -293,31 +239,39 @@ def _post_computation(tpl):
         if type(node.host) is str:
             node.host = tpl[node.host]
 
+    # add property host_container
     for node in tpl.software_order:
         if type(node.host) is Container:
             node.host_container = node.host
         elif type(node.host) is Software:
             node.host_container = node.host.host_container
 
+    # manage the case when a software node is connected to a software node or a container
     for node in tpl.software_order:
         if node.link is not None:
             for link in node.link:
                 link = link[0]
-                container_name = tpl[link].host_container.name
+                if type(tpl[link]) is Container:
+                    container_name = tpl[link].name
+                else:
+                    container_name = tpl[link].host_container.name
                 log.debug('link: {}'.format((container_name, link)))
                 node.host_container.add_link((container_name, link))
 
-    # TODO: si può togliere, visto che per ora non viene utilizzato!
-    for node in tpl.software_order:
-        node.host_container.software_layer.append(node)
+    # manage the case when the container is connected to a softeware node
+    for node in tpl.container_order:
+        log.debug(node)
+        if node.link is not None:
+            for i, link in enumerate(node.link):
+                link = link[0]
+                if type(tpl[link]) is Software:
+                    container_name = tpl[link].host_container.name
+                    log.debug('link: {}'.format((container_name, link)))
+                    node.link[i] = (container_name, link)
 
-    # for node in tpl.deploy_order:
-    #     if type(node) is Container:
-    #         for k, v in node.ports:
-    #             if type(v) is def:
-    #                 node.ports[k] = v()
-    #
-    #         for k, v in node.ports:
+    # TODO: si può togliere, visto che per ora non viene utilizzato!
+    # for node in tpl.software_order:
+    #     node.host_container.software_layer.append(node)
 
 
 def _parse_functions(tosca, inputs, base_path):
