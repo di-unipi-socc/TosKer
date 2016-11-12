@@ -25,12 +25,12 @@ class Test_Deployer(unittest.TestCase):
             )
 
     def start(self):
-        self._start()
+        self._start(check=lambda x: x['State']['Running'])
 
     def start_check_exit(self):
         self._start(check=lambda x: x['State']['ExitCode'] == 0)
 
-    def _start(self, check=lambda x: x['State']['Running']):
+    def _start(self, check):
         self.deployer.start()
         for c in self.deployer._tpl.container_order:
             stat = self.docker.inspect(c.name)

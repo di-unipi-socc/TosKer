@@ -118,9 +118,12 @@ class Docker_engine:
 
             # TODO: verificare attendibilità di questo check!
             return 'rpc error:' != status[:10].decode("utf-8")
-        except errors.APIError:
+        except errors.APIError as e:
+            self._log.info(e)
             return False
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError as e:
+            # TODO: questo errore arriva dopo un timeout di 10 secodi
+            self._log.info(e)
             return False
 
     def create_volume(self, volume):
