@@ -9,11 +9,12 @@ from .nodes import Container, Volume
 
 
 class Docker_engine:
+
     def __init__(self, net_name='tosker_net', tmp_dir='/tmp',
                  socket='unix://var/run/docker.sock'):
         self._log = Logger.get(__name__)
         self._net_name = net_name
-        self._cli = Client(base_url=socket)
+        self._cli = Client(base_url=os.environ.get('DOCKER_HOST') or socket)
         self._tmp_dir = tmp_dir
 
     # TODO: aggiungere un parametro per eliminare i container se esistono già!
@@ -80,8 +81,8 @@ class Docker_engine:
         try:
             create_container()
         except errors.APIError as e:
-            self.stop(con.name)
-            self.delete(con.name)
+            self.stop(con)
+            self.delete(con)
             create_container()
 
     def stop(self, container):

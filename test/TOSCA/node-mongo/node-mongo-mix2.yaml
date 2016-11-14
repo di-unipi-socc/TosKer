@@ -23,7 +23,7 @@ topology_template:
           start:
             implementation: mongo/start.sh
 
-    app:
+    app_container:
       type: tosker.docker.container
       properties:
         ports:
