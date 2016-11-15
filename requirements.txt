@@ -1,15 +1,2 @@
-Babel==2.3.4
-cliff==2.1.0
-cmd2==0.6.8
 docker-py==1.9.0
-pbr==1.10.0
-prettytable==0.7.2
-pyparsing==2.1.5
-python-dateutil==2.5.3
-pytz==2016.6.1
-PyYAML==3.11
-requests==2.10.0
-six==1.10.0
-stevedore==1.16.0
 tosca-parser==0.5.0
-websocket-client==0.37.0

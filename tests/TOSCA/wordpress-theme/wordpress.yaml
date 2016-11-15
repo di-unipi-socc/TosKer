@@ -1,0 +1,69 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: >
+  TOSCA simple profile with wordpress, web server and mysql on the same server.
+
+
+# Repositories to retrieve code artifacts from
+repositories:
+  docker_hub: https://registry.hub.docker.com/
+
+imports:
+  - docker_def: ../../../tosker/tosker-types.yaml
+
+topology_template:
+  inputs:
+    wp_host_port:
+      type: integer
+      description: The host port that maps to port 80 of the WordPress container.
+      default: 8080
+    db_root_pwd:
+      type: string
+      description: Root password for MySQL.
+      default: password
+
+  node_templates:
+    my_theme:
+      type: tosker.software
+      artifacts:
+        theme_zip: agama.1.2.3.zip
+      requirements:
+        - host: wordpress_container
+      interfaces:
+        Standard:
+          # TODO: the installation of the theme have to be put at start because
+          #       the wordpress image download worpress files at start
+          start:
+            implementation: install_theme.sh
+            inputs:
+              theme: { get_artifact: [ SELF, theme_zip ] }
+
+
+    # The MYSQL container based on official MySQL image in Docker hub
+    mysql_container:
+      type: tosker.docker.container
+      properties:
+        env_variable:
+          MYSQL_ROOT_PASSWORD: { get_input: db_root_pwd }
+      artifacts:
+        my_image:
+          file: mysql
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          repository: docker_hub
+
+    # The WordPress container based on official WordPress image in Docker hub
+    wordpress_container:
+      type: tosker.docker.container
+      properties:
+        env_variable:
+          WORDPRESS_DB_PASSWORD: { get_input: db_root_pwd }
+          WORDPRESS_DB_HOST: mysql_container
+        ports:
+          80: { get_input: wp_host_port }
+      requirements:
+        - link: mysql_container
+      artifacts:
+        my_image:
+          file: wordpress
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          repository: docker_hub

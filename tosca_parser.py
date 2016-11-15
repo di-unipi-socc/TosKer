@@ -1,7 +1,7 @@
 from sys import argv
 from os import path
 from toscaparser.tosca_template import ToscaTemplate
-from tosca_deployer import utility
+from tosker import utility
 
 
 def parse_input(str):

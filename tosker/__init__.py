@@ -23,24 +23,6 @@ example:
     '''
 
 
-# def parse_input(args):
-#     string = ' '.join(args)
-#     inputs = {}
-#     inputs_list = string.split(':')
-#     key = None
-#     for i, val in enumerate(inputs_list):
-#         val = val.strip()
-#         if i == 0:
-#             key = val
-#         elif i == len(inputs_list) - 1:
-#             inputs[key] = val
-#         else:
-#             val = val.split(" ")
-#             inputs[key] = ' '.join(val[0:len(val) - 1])
-#             key = val[len(val) - 1]
-#     return inputs
-
-
 def parse_unix_input(args):
     inputs = {}
     cmds = []
@@ -58,7 +40,7 @@ def parse_unix_input(args):
     return (cmds, inputs)
 
 
-if __name__ == '__main__':
+def main():
     if len(argv) < 3:
         print('error: few arguments..', usage())
         exit(-1)
