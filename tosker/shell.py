@@ -9,6 +9,7 @@ from six import print_
 
 from tosker.deployer import Deployer
 from tosker.utility import Logger
+from tosker import utility
 
 
 def _usage():
@@ -26,21 +27,46 @@ example:
     '''
 
 
+def _get_debug_handler():
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter((
+        '%(levelname) -3s %(asctime)s %(name)'
+        '-3s %(funcName)'
+        '-1s %(lineno) -0s: %(message)s'
+    ))
+    ch.setFormatter(formatter)
+    return ch
+
+_FLAG = {
+    '--debug': 'debug',
+    '-q': 'quiet',
+    '--quiet': 'quiet'
+}
+
+
 def _parse_unix_input(args):
     inputs = {}
     cmds = []
-    p = re.compile('--.*')
+    flag = {}
+    p1 = re.compile('--.*')
+    p2 = re.compile('-.?')
     i = 0
     while i < len(args):
-        if p.match(args[i]):
-            if not p.match(args[i + 1]):
+        if p1.match(args[i]):
+            if _FLAG[args[i]]:
+                flag[_FLAG[args[i]]] = True
+            elif not p.match(args[i + 1]):
                 inputs[args[i][2:]] = args[i + 1]
                 i += 2
                 continue
+        elif p2.match(args[i]):
+            if _FLAG[args[i]]:
+                flag[_FLAG[args[i]]] = True
         else:
             cmds.append(args[i])
         i += 1
-    return (cmds, inputs)
+    return cmds, flag, inputs
 
 
 def run():
@@ -61,9 +87,12 @@ def run():
         print_('error: first argument must be a TOSCA yaml file or a directory with a TOSCA yaml file', _usage())
         exit(-1)
 
-    cmds, inputs = _parse_unix_input(argv[2:])
-    Logger.main_level = logging.ERROR
-    deployer = Deployer(file_name, inputs)
+    cmds, flags, inputs = _parse_unix_input(argv[2:])
+    if flags.get('debug', False):
+        deployer = Deployer(file_name, inputs,
+                            log_handler=_get_debug_handler())
+    else:
+        deployer = Deployer(file_name, inputs, quiet=flags.get('quiet', False))
 
     for c in cmds:
         {
@@ -72,3 +101,5 @@ def run():
             'stop': deployer.stop,
             'delete': deployer.delete,
         }.get(c, lambda: print_('error: command not found..', _usage()))()
+
+    deployer.print_outputs()

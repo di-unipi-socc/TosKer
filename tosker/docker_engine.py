@@ -63,7 +63,7 @@ class Docker_engine:
         assert isinstance(con, Container)
 
         if con.to_build:
-            self._log.info('start building..')
+            self._log.debug('start building..')
             # utility.print_json(
             self._cli.build(
                 path='/'.join(con.dockerfile.split('/')[0:-1]),
@@ -73,21 +73,21 @@ class Docker_engine:
                 quiet=True
             )
             # )
-            self._log.info('stop building..')
-        else:
+            self._log.debug('stop building..')
+        elif not saved_image:
             # TODO: da evitare se si deve utilizzare un'immagine custom
-            self._log.info('start pulling..')
-            # utility.print_json(
-            self._cli.pull(con.image)
-            # )
-            self._log.info('end pulling..')
+            self._log.debug('start pulling..')
+            utility.print_json(
+                self._cli.pull(con.image, stream=True), self._log.debug)
+            self._log.debug('end pulling..')
 
         try:
             create_container()
         except errors.APIError as e:
-            self.stop(con)
+            # self.stop(con)
             self.delete(con)
             create_container()
+            # raise e
 
     def stop(self, container):
         name = self._get_name(container)
@@ -103,15 +103,17 @@ class Docker_engine:
             self._log.debug('wait container..')
             self._cli.wait(name)
             utility.print_byte(
-                self._cli.logs(name, stream=True)
+                self._cli.logs(name, stream=True),
+                self._log.debug
             )
 
     def delete(self, container):
         name = self._get_name(container)
         try:
-            return self._cli.remove_container(name, v=True)
-        except errors.NotFound as e:
+            self._cli.remove_container(name, v=True)
+        except (errors.NotFound, errors.APIError) as e:
             self._log.error(e)
+            raise e
 
     def exec_cmd(self, container, cmd):
         name = self._get_name(container)
@@ -124,11 +126,11 @@ class Docker_engine:
             # TODO: verificare attendibilita' di questo check!
             return 'rpc error:' != status[:10].decode("utf-8")
         except errors.APIError as e:
-            self._log.info(e)
+            self._log.error(e)
             return False
         except requests.exceptions.ConnectionError as e:
             # TODO: questo errore arriva dopo un timeout di 10 secodi
-            self._log.info(e)
+            self._log.error(e)
             return False
 
     def create_volume(self, volume):
@@ -182,15 +184,14 @@ class Docker_engine:
                                      ipam={'subnet': subnet},
                                      check_duplicate=True)
         except errors.APIError:
-            self._log.info('network already exists!')
+            self._log.debug('network already exists!')
 
     def delete_network(self, name):
         assert isinstance(name, str)
         try:
             self._cli.remove_network(name)
         except errors.APIError:
-            self._log.info('network not exists!')
-            pass
+            self._log.debug('network not exists!')
 
     def delete_image(self, name):
         assert isinstance(name, str)
@@ -207,14 +208,22 @@ class Docker_engine:
         old_cmd = stat['Config']['Cmd'] or ''
         old_entry = stat['Config']['Entrypoint'] or ''
 
+        if self.inspect(node):
+            self.stop(node)
+            self.delete(node)
         self.create(node, cmd=cmd, entrypoint='', saved_image=saved_image)
+
         self.start(node.id, wait=True)
         self.stop(node.id)
 
         name = '{}/{}'.format(self._net_name, node.name)
 
         self._cli.commit(node.id, name)
-        self.create(node, cmd=old_cmd, entrypoint=old_entry, saved_image=True,)
+
+        self.stop(node)
+        self.delete(node)
+        self.create(node, cmd=old_cmd, entrypoint=old_entry, saved_image=True)
+
         self._cli.commit(node.id, name)
 
     def is_running(self, container):

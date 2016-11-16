@@ -33,7 +33,7 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
 
         'Environment :: Console',
 
@@ -54,13 +54,12 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     # packages=find_packages(exclude=['test']),
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    include_package_data=True,
     install_requires=['docker-py', 'tosca-parser'],
 
     # List additional groups of dependencies here (e.g. development
@@ -72,14 +71,15 @@ setup(
         'test': ['coverage'],
     },
 
-    test_suite="tests",
+    test_suite="tosker.tests",
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
-    package_data={
-        'types': ['tosker-types.yaml'],
-    },
+    include_package_data=True,
+    # package_data={
+    #     'tosker': ['*.yaml'],
+    # },
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:

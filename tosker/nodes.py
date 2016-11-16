@@ -42,6 +42,9 @@ class Base(object):
             return None
 
     def __str__(self):
+        return o.name
+
+    def get_str_obj(self):
         _str_obj(self)
 
 
@@ -92,8 +95,11 @@ class Container(Base):
                 return attr[item]
         return None
 
-    def __str__(self):
+    def get_str_obj(self):
         return '{}, {}'.format(super(self.__class__, self).__str__(), _str_obj(self))
+
+    def __str__(self):
+        return '{} ({})'.format(self.name, 'container')
 
 
 class Volume(Base):
@@ -117,8 +123,11 @@ class Volume(Base):
     def add_driver_opt(self, name, value):
         self.driver_opt = _add_to_map(self.driver_opt, name, value)
 
-    def __str__(self):
+    def get_str_obj(self):
         return '{}, {}'.format(super(self.__class__, self), _str_obj(self))
+
+    def __str__(self):
+        return '{} ({})'.format(self.name, 'volume')
 
 
 class Software(Base):
@@ -136,44 +145,8 @@ class Software(Base):
     # def add_input(self, name, value):
     #     self.inputs = _add_to_map(self.inputs, name, value)
 
-    def __str__(self):
+    def get_str_obj(self):
         return '{}, {}'.format(super(self.__class__, self), _str_obj(self))
 
-# class Interfaces:
-#     def __init__(self):
-#         self._create = None
-#         self._configure = None
-#         self._start = None
-#         self._delete = None
-#
-#     def add_start(self, cmd, inputs=None):
-#         self._start = {'cmd': cmd, 'inputs': inputs}
-#
-#     def add_configure(self, cmd, inputs=None):
-#         self._configure = {'cmd': cmd, 'inputs': inputs}
-#
-#     def add_create(self, cmd, inputs=None):
-#         self._create = {'cmd': cmd, 'inputs': inputs}
-#
-#     def add_delete(self, cmd, inputs=None):
-#         self._delete = {'cmd': cmd, 'inputs': inputs}
-#
-#     def _cmd(a):
-#         args = ' '.join(['--{} {}'.format(i[0], i[1]) for i in a['inputs'].items()])
-#         return 'sh {} {}'.format(a['cmd'], args)
-#
-#     @property
-#     def configure_cmd(self):
-#         return _cmd(self._configure)
-#
-#     @property
-#     def delete_cmd(self):
-#         return _cmd(self._delete)
-#
-#     @property
-#     def create_cmd(self):
-#         return _cmd(self._create)
-#
-#     @property
-#     def start_cmd(self):
-#         return _cmd(self._start)
+    def __str__(self):
+        return '{} ({})'.format(self.name, 'software')

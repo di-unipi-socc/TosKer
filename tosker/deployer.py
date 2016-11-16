@@ -3,8 +3,9 @@ import logging
 import os
 import shutil
 from os import path
-from time import sleep  # DEBUG
+# from time import sleep  # DEBUG
 
+from termcolor import colored
 from docker import Client, errors
 from six import print_
 
@@ -19,37 +20,58 @@ from .utility import Logger
 
 class Deployer:
 
-    def __init__(self, file_path, inputs={}, tmp_dir='/tmp/docker_tosca/'):
+    def __init__(self, file_path,
+                 inputs={},
+                 log_handler=logging.NullHandler(),
+                 quiet=True,
+                 tmp_dir='/tmp/tosker/'):
+        Logger.set(log_handler, quiet)
         self._log = Logger.get(__name__)
-        self._tmp_dir = '/tmp/tosker/'
-        self._inputs = {} if inputs is None else inputs
+
         self._tpl = parse_TOSCA(file_path, inputs)
-        print_('Deploy order: ' + str(self._tpl))
         self._tmp_dir = path.join(tmp_dir, self._tpl.name)
         try:
             os.makedirs(self._tmp_dir)
         except os.error:
             pass
+
         self._docker = Docker_engine(self._tpl.name, self._tmp_dir)
-        self._software = Software_engine(self._docker, self._tpl, self._tmp_dir)
-        # print('\nDeploy order:\n  - ' + '\n  - '.join([i.name for i in self._tpl.deploy_order]))
+        self._software = Software_engine(
+            self._docker, self._tpl, self._tmp_dir
+        )
+
+        Logger.println('Deploy order: \n  ' + '\n  '.join(
+            ['{}. {}'.format(i + 1, n)
+             for i, n in enumerate(self._tpl.deploy_order)]
+        ))
 
     def create(self):
         self._docker.create_network(self._tpl.name)
+        Logger.println('\nCREATE')
         for node in self._tpl.deploy_order:
-            if type(node) is Container:
-                self._docker.create(node)
-            elif type(node) is Volume:
-                self._docker.create_volume(node)
-            elif type(node) is Software:
-                self._software.create(node)
-                self._software.configure(node)
+            Logger.print_('  {}'.format(node))
+            try:
+                if type(node) is Container:
+                    self._docker.create(node)
+                elif type(node) is Volume:
+                    self._docker.create_volume(node)
+                elif type(node) is Software:
+                    self._software.create(node)
+                    self._software.configure(node)
+            except Exception as e:
+                self._print_cross()
+                Logger.println(e)
+                exit(-1)
 
-        self._print_outputs()
+            self._print_tick()
+
+        # self._print_outputs()
 
     def start(self):
-        # self.create()
+        Logger.println('\nSTART')
         for node in self._tpl.deploy_order:
+            Logger.print_('  {}'.format(node))
+
             if type(node) is Container:
                 stat = self._docker.inspect(node.name)
                 if stat is not None:
@@ -58,31 +80,46 @@ class Deployer:
                     # sleep(1)
                 else:
                     self._log.error(
-                        'Container "{}" not exists!'.format(node.name))
+                        'ERROR: Container "{}" not exists!'.format(node.name))
 
             elif type(node) is Software:
                 self._software.start(node)
 
-        self._print_outputs()
+            self._print_tick()
 
     def stop(self):
+        Logger.println('\nSTOP')
         for node in reversed(self._tpl.deploy_order):
+            Logger.print_('  {}'.format(node))
+
             if isinstance(node, Container):
-                self._docker.stop(node.name)
+                self._docker.stop(node)
+                self._docker.delete(node)
                 self._docker.create(node, saved_image=True)
             elif isinstance(node, Software):
                 self._software.stop(node)
 
+            self._print_tick()
+
     def delete(self):
-        # self.stop()
+        Logger.println('\nDELETE')
+
         for node in reversed(self._tpl.deploy_order):
-            if isinstance(node, Container):
-                self._docker.delete(node.name)
-                self._docker.delete_image(
-                    '{}/{}'.format(self._tpl.name, node.name)
-                )
-            elif isinstance(node, Software):
-                self._software.delete(node)
+            Logger.print_('  {}'.format(node))
+            try:
+                if isinstance(node, Container):
+                    self._docker.delete(node.name)
+                    self._docker.delete_image(
+                        '{}/{}'.format(self._tpl.name, node.name)
+                    )
+                elif isinstance(node, Software):
+                    self._software.delete(node)
+            except Exception as e:
+                self._print_cross()
+                Logger.println(e)
+                exit(-1)
+
+            self._print_tick()
 
         self._docker.delete_network(self._tpl.name)
         shutil.rmtree(self._tmp_dir)
@@ -91,13 +128,19 @@ class Deployer:
 #     self.create()
 #     self.start()
 
-    def _print_outputs(self):
+    def print_outputs(self):
         if len(self._tpl.outputs) != 0:
-            print_('\nOutputs:')
+            Logger.println('\nOUTPUTS:')
         for out in self._tpl.outputs:
             self._log.debug('args: {}'.format(out.value.args))
             self._log.debug('hello_container.id: {}'.format(
                 self._tpl['hello_container']))
 
-            print_('  - ' + out.name + ":",
-                   utility.get_attributes(out.value.args, self._tpl))
+            Logger.println('  - ' + out.name + ":",
+                           utility.get_attributes(out.value.args, self._tpl))
+
+    def _print_tick(self):
+        Logger.println(' ' + colored(u"\u2714", 'green'))
+
+    def _print_cross(self):
+        Logger.println(' ' + colored(u"\u274C", 'red'))

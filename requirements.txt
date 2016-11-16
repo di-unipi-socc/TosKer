@@ -2,7 +2,9 @@ Babel==2.3.4
 backports.ssl-match-hostname==3.5.0.1
 cliff==2.2.0
 cmd2==0.6.9
+coverage==4.2
 docker-py==1.9.0
+docker-pycreds==0.2.1
 ipaddress==1.0.17
 pbr==1.10.0
 prettytable==0.7.2
@@ -13,6 +15,8 @@ PyYAML==3.12
 requests==2.12.0
 six==1.10.0
 stevedore==1.18.0
+termcolor==1.1.0
 tosca-parser==0.5.0
+tosKer==0.0.1
 unicodecsv==0.14.1
 websocket-client==0.37.0

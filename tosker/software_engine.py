@@ -49,6 +49,7 @@ class Software_engine:
         status = self._docker.exec_cmd(node.host_container, cmd)
         if not status:
             self._log.debug('is not running!')
+            self._docker.delete(node.host_container)
             self._docker.create(node.host_container,
                                 cmd=cmd,
                                 entrypoint='',

@@ -5,33 +5,32 @@ from six import print_
 
 
 class Logger:
-    main_level = logging.DEBUG
-    _ch = None
+    ch = logging.NullHandler()
+    quiet = False
 
     @staticmethod
-    def _get_console_hadler():
-        if Logger._ch is None:
-            Logger._ch = logging.StreamHandler()
-            Logger._ch.setLevel(Logger.main_level)
-
-            # create formatter and add it to the handlers
-            LOG_FORMAT = ('%(levelname) -3s %(asctime)s %(name)'
-                          '-3s %(funcName)'
-                          '-1s %(lineno) -0s: %(message)s')
-            formatter = logging.Formatter(LOG_FORMAT)
-            # fh.setFormatter(formatter)
-
-            Logger._ch.setFormatter(formatter)
-        return Logger._ch
+    def set(ch, quiet):
+        Logger.ch = ch
+        Logger.quiet = quiet
 
     @staticmethod
     def get(name_class, level=logging.DEBUG):
-        # print ('class:', name_class, '- level:', Logger.main_level)
+        # print_('get logger - class:', name_class)
         logger = logging.getLogger(name_class)
         logger.setLevel(level)
-        logger.addHandler(Logger._get_console_hadler())
+        logger.addHandler(Logger.ch)
         assert isinstance(logger, logging.Logger)
         return logger
+
+    @staticmethod
+    def print_(*args):
+        if not Logger.quiet:
+            print_(*args, end='', flush=True)
+
+    @staticmethod
+    def println(*args):
+        if not Logger.quiet:
+            print_(*args)
 
 
 def get_attributes(args, nodes):
@@ -77,13 +76,11 @@ def print_TOSCA(tosca, indent=2):
     return res
 
 
-def print_json(stream):
+def print_json(stream, fprint):
     for line in stream:
-        print_('\t' + json.dumps(json.loads(line.decode("utf-8")), indent=2), end='')
-    # print()
+        fprint('\t' + json.dumps(json.loads(line.decode("utf-8")), indent=2))
 
 
-def print_byte(stream):
+def print_byte(stream, fprint):
     for line in stream:
-        print_('\t' + line.decode("utf-8"), end='')
-    # print()
+        fprint('\t' + line.decode("utf-8").strip())
