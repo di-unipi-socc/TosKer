@@ -11,7 +11,7 @@ class Test_Node_Mongo_Single_Server(Test_Deployer):
     def setUp(self):
         super(self.__class__, self).setUp()
         self.deployer = \
-            Deployer('tests/TOSCA/node-mongo/node-mongo-single-server.yaml')
+            Deployer('tosker/tests/TOSCA/node-mongo/node-mongo-single-server.yaml')
 
     def test(self):
         self.create()

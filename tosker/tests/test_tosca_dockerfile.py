@@ -9,7 +9,7 @@ class Test_Dockerfile(Test_Deployer):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.deployer = Deployer('tests/TOSCA/dockerfile/hello-dockerfile.yaml')
+        self.deployer = Deployer('tosker/tests/TOSCA/dockerfile/hello-dockerfile.yaml')
 
     def test(self):
         self.create()

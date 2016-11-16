@@ -9,7 +9,7 @@ class Test_Wordpress_Theme(Test_Deployer):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.deployer = Deployer('tests/TOSCA/wordpress-theme/wordpress.yaml')
+        self.deployer = Deployer('tosker/tests/TOSCA/wordpress-theme/wordpress.yaml')
 
     def test(self):
         self.create()

@@ -9,7 +9,7 @@ class Test_Hello(Test_Deployer):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.deployer = Deployer('tests/TOSCA/hello.yaml')
+        self.deployer = Deployer('tosker/tests/TOSCA/hello.yaml')
 
     def test(self):
         self.create()

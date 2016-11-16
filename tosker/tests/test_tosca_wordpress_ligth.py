@@ -9,7 +9,7 @@ class Test_Wordpress_ligth(Test_Deployer):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.deployer = Deployer('tests/TOSCA/wordpress-ligth.yaml')
+        self.deployer = Deployer('tosker/tests/TOSCA/wordpress-ligth.yaml')
 
     def test(self):
         self.create()

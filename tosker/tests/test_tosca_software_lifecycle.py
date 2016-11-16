@@ -11,7 +11,7 @@ class Test_Software_Linkcycle(Test_Deployer):
     def setUp(self):
         super(self.__class__, self).setUp()
         self.deployer = \
-            Deployer('tests/TOSCA/software-lifecycle/lifecycle.yaml')
+            Deployer('tosker/tests/TOSCA/software-lifecycle/lifecycle.yaml')
 
     def test(self):
         self.create()

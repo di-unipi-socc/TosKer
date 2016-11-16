@@ -8,7 +8,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../../../tosker/tosker-types.yaml
+  - docker_def: ../../../tosker-types.yaml
 
 topology_template:
   node_templates:

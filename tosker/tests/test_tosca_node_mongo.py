@@ -10,7 +10,7 @@ class Test_Node_Mongo(Test_Deployer):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.deployer = Deployer('tests/TOSCA/node-mongo/node-mongo.yaml')
+        self.deployer = Deployer('tosker/tests/TOSCA/node-mongo/node-mongo.yaml')
 
     def test(self):
         self.create()
