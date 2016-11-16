@@ -1,4 +1,4 @@
-from .nodes import Container, Volume, Software
+from .nodes import Container, Software, Volume
 
 
 class Template:

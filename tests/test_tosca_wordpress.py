@@ -8,8 +8,8 @@ from .test_tosca_base import Test_Deployer
 class Test_Wordpress(Test_Deployer):
 
     def setUp(self):
-        super().setUp()
-        self.deployer = Deployer('test/TOSCA/wordpress.yaml')
+        super(self.__class__, self).setUp()
+        self.deployer = Deployer('tests/TOSCA/wordpress.yaml')
 
     def test(self):
         self.create()

@@ -1,11 +1,14 @@
 import json
 import logging
 
+from six import print_
+
 
 class Logger:
     main_level = logging.DEBUG
     _ch = None
 
+    @staticmethod
     def _get_console_hadler():
         if Logger._ch is None:
             Logger._ch = logging.StreamHandler()
@@ -21,6 +24,7 @@ class Logger:
             Logger._ch.setFormatter(formatter)
         return Logger._ch
 
+    @staticmethod
     def get(name_class, level=logging.DEBUG):
         # print ('class:', name_class, '- level:', Logger.main_level)
         logger = logging.getLogger(name_class)
@@ -75,11 +79,11 @@ def print_TOSCA(tosca, indent=2):
 
 def print_json(stream):
     for line in stream:
-        print('\t' + json.dumps(json.loads(line.decode("utf-8")), indent=2), end='')
+        print_('\t' + json.dumps(json.loads(line.decode("utf-8")), indent=2), end='')
     # print()
 
 
 def print_byte(stream):
     for line in stream:
-        print('\t' + line.decode("utf-8"), end='')
+        print_('\t' + line.decode("utf-8"), end='')
     # print()

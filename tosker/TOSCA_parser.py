@@ -1,9 +1,10 @@
-from os import path
-import re
 import json
-from collections import defaultdict
+import re
+from os import path
+
 import toscaparser
 from toscaparser.tosca_template import ToscaTemplate
+
 from . import utility
 from .nodes import Container, Software, Volume
 from .template import Template
@@ -269,7 +270,7 @@ def _post_computation(tpl):
                     log.debug('link: {}'.format((container_name, link)))
                     node.link[i] = (container_name, link)
 
-    # TODO: si può togliere, visto che per ora non viene utilizzato!
+    # TODO: si puo togliere, visto che per ora non viene utilizzato!
     # for node in tpl.software_order:
     #     node.host_container.software_layer.append(node)
 

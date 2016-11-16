@@ -8,8 +8,8 @@ from .test_tosca_base import Test_Deployer
 class Test_Hello(Test_Deployer):
 
     def setUp(self):
-        super().setUp()
-        self.deployer = Deployer('test/TOSCA/hello.yaml')
+        super(self.__class__, self).setUp()
+        self.deployer = Deployer('tests/TOSCA/hello.yaml')
 
     def test(self):
         self.create()

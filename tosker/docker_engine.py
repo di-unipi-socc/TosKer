@@ -1,11 +1,13 @@
 import os
-from docker import Client, errors
-import requests.exceptions
-from io import BytesIO
-from . import utility
-from .utility import Logger
 from os import path
+
+import requests.exceptions
+import six
+from docker import Client, errors
+
+from . import utility
 from .nodes import Container, Volume
+from .utility import Logger
 
 
 class Docker_engine:
@@ -17,12 +19,14 @@ class Docker_engine:
         self._cli = Client(base_url=os.environ.get('DOCKER_HOST') or socket)
         self._tmp_dir = tmp_dir
 
-    # TODO: aggiungere un parametro per eliminare i container se esistono già!
+    # TODO: aggiungere un parametro per eliminare i container se esistono gia'!
     def create(self, con, cmd=None, entrypoint=None, saved_image=False):
         def create_container():
             tmp_dir = path.join(self._tmp_dir, con.name)
-            os.makedirs(tmp_dir, exist_ok=True)
-
+            try:
+                os.makedirs(tmp_dir)
+            except:
+                pass
             saved_img_name = '{}/{}'.format(self._net_name, con.name)
             img_name = con.image
             if saved_image and self.inspect(saved_img_name):
@@ -98,9 +102,9 @@ class Docker_engine:
         if wait:
             self._log.debug('wait container..')
             self._cli.wait(name)
-            # utility.print_byte(
-            self._cli.logs(name, stream=True)
-            # )
+            utility.print_byte(
+                self._cli.logs(name, stream=True)
+            )
 
     def delete(self, container):
         name = self._get_name(container)
@@ -117,7 +121,7 @@ class Docker_engine:
             exec_id = self._cli.exec_create(name, cmd)
             status = self._cli.exec_start(exec_id)
 
-            # TODO: verificare attendibilità di questo check!
+            # TODO: verificare attendibilita' di questo check!
             return 'rpc error:' != status[:10].decode("utf-8")
         except errors.APIError as e:
             self._log.info(e)
@@ -220,7 +224,7 @@ class Docker_engine:
         return stat is not None and stat['State']['Running'] is True
 
     def _get_name(self, name):
-        if type(name) is str:
+        if isinstance(name, six.string_types):
             return name
         else:
             assert isinstance(name, (Container, Volume))

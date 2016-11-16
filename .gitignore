@@ -1,5 +1,5 @@
 # python
-venv/
+venv*/
 __pycache__/
 *.pyc
 
@@ -17,3 +17,7 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+
+# Test and Coverage
+.coverage
+htmlcov/

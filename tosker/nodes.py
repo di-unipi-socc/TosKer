@@ -16,7 +16,8 @@ def _str_obj(o):
     return ', '.join(["{}: {}".format(k, v) for k, v in vars(o).items()])
 
 
-class Base:
+class Base(object):
+
     def __init__(self, name):
         self.name = name
         self.link = None
@@ -47,7 +48,8 @@ class Base:
 class Container(Base):
 
     def __init__(self, name):
-        super().__init__(name)
+        # super().__init__(name)
+        super(self.__class__, self).__init__(name)
         self.id = None
         self.image_name = None
         self.tag_name = None
@@ -81,7 +83,7 @@ class Container(Base):
             self.tag_name = 'latest'
 
     def __getitem__(self, item):
-        attr = super().__getitem__(item)
+        attr = super(self.__class__, self).__getitem__(item)
         if attr:
             return attr
         else:
@@ -91,14 +93,18 @@ class Container(Base):
         return None
 
     def __str__(self):
-        return '{}, {}'.format(super().__str__(), _str_obj(self))
+        return '{}, {}'.format(super(self.__class__, self).__str__(), _str_obj(self))
 
 
 class Volume(Base):
-    driver = 'local'
-    device = None
-    type = None
-    driver_opt = None
+
+    def __init__(self, name):
+        # super().__init__(name)
+        super(self.__class__, self).__init__(name)
+        self.driver = 'local'
+        self.device = None
+        self.type = None
+        self.driver_opt = None
 
     def get_all_opt(self):
         ris = self.driver_opt.copy() if self.driver_opt else {}
@@ -112,13 +118,14 @@ class Volume(Base):
         self.driver_opt = _add_to_map(self.driver_opt, name, value)
 
     def __str__(self):
-        return '{}, {}'.format(super().__str__(), _str_obj(self))
+        return '{}, {}'.format(super(self.__class__, self), _str_obj(self))
 
 
 class Software(Base):
 
     def __init__(self, name):
-        super().__init__(name)
+        # super().__init__(name)
+        super(self.__class__, self).__init__(name)
         self.artifacts = None
         self.interfaces = {}
         self.host_container = None
@@ -130,7 +137,7 @@ class Software(Base):
     #     self.inputs = _add_to_map(self.inputs, name, value)
 
     def __str__(self):
-        return '{}, {}'.format(super().__str__(), _str_obj(self))
+        return '{}, {}'.format(super(self.__class__, self), _str_obj(self))
 
 # class Interfaces:
 #     def __init__(self):

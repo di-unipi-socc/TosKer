@@ -45,15 +45,8 @@ setup(
 
         'Operating System :: POSIX :: Linux',
 
-        'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.0',
-        'Programming Language :: Python :: 3.1',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3'
     ],
 
     keywords='docker TOSCA deployment management development',
@@ -67,16 +60,19 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
+    include_package_data=True,
     install_requires=['docker-py', 'tosca-parser'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    # extras_require={
-    #     'dev': ['check-manifest'],
-    #     'test': ['coverage'],
-    # },
+    extras_require={
+        'dev': ['check-manifest', 'isort'],
+        'test': ['coverage'],
+    },
+
+    test_suite="tests",
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
@@ -96,7 +92,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'tosker=tosker:main',
+            'tosker=tosker.shell:run',
         ],
     },
 )

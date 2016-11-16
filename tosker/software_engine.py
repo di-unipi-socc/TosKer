@@ -1,8 +1,9 @@
-from .utility import Logger
-from .nodes import Container
-from shutil import copy
 import os
 from os import path
+from shutil import copy
+
+from .nodes import Container
+from .utility import Logger
 
 
 class Software_engine:
@@ -80,7 +81,10 @@ class Software_engine:
 
     def _copy_files(self, node):
         tmp = path.join(self._tmp_dir, node.host_container.name, node.name)
-        os.makedirs(tmp, exist_ok=True)
+        try:
+            os.makedirs(tmp)
+        except os.error:
+            pass
 
         for key, value in node.interfaces.items():
             copy(value['cmd']['file_path'], tmp)

@@ -1,17 +1,20 @@
-import os
 import json
 import logging
+import os
 import shutil
 from os import path
+from time import sleep  # DEBUG
+
 from docker import Client, errors
+from six import print_
+
 from tosker import utility
-from .TOSCA_parser import parse_TOSCA
+
 from .docker_engine import Docker_engine
+from .nodes import Container, Software, Volume
 from .software_engine import Software_engine
-from .nodes import Software, Volume, Container
+from .TOSCA_parser import parse_TOSCA
 from .utility import Logger
-# DEBUG
-from time import sleep
 
 
 class Deployer:
@@ -21,9 +24,12 @@ class Deployer:
         self._tmp_dir = '/tmp/tosker/'
         self._inputs = {} if inputs is None else inputs
         self._tpl = parse_TOSCA(file_path, inputs)
-        print ('Deploy order: ' + str(self._tpl))
+        print_('Deploy order: ' + str(self._tpl))
         self._tmp_dir = path.join(tmp_dir, self._tpl.name)
-        os.makedirs(self._tmp_dir, exist_ok=True)
+        try:
+            os.makedirs(self._tmp_dir)
+        except os.error:
+            pass
         self._docker = Docker_engine(self._tpl.name, self._tmp_dir)
         self._software = Software_engine(self._docker, self._tpl, self._tmp_dir)
         # print('\nDeploy order:\n  - ' + '\n  - '.join([i.name for i in self._tpl.deploy_order]))
@@ -87,11 +93,11 @@ class Deployer:
 
     def _print_outputs(self):
         if len(self._tpl.outputs) != 0:
-            print ('\nOutputs:')
+            print_('\nOutputs:')
         for out in self._tpl.outputs:
             self._log.debug('args: {}'.format(out.value.args))
             self._log.debug('hello_container.id: {}'.format(
                 self._tpl['hello_container']))
 
-            print ('  - ' + out.name + ":",
+            print_('  - ' + out.name + ":",
                    utility.get_attributes(out.value.args, self._tpl))

@@ -9,8 +9,8 @@ import logging
 class Test_Node_Mongo(Test_Deployer):
 
     def setUp(self):
-        super().setUp()
-        self.deployer = Deployer('test/TOSCA/node-mongo/node-mongo.yaml')
+        super(self.__class__, self).setUp()
+        self.deployer = Deployer('tests/TOSCA/node-mongo/node-mongo.yaml')
 
     def test(self):
         self.create()
