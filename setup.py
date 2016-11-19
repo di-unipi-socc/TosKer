@@ -22,7 +22,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/lucarin91/tosKer',
+    url='https://github.com/di-unipi-socc/tosKer',
 
     # Author details
     author='lucarin91',
