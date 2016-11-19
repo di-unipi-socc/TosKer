@@ -4,12 +4,15 @@ from os import path
 
 import toscaparser
 from toscaparser.tosca_template import ToscaTemplate
+from toscaparser.prereq.csar import CSAR
+from toscaparser.common.exception import ValidationError
 
 from . import utility
 from .nodes import Container, Software, Volume
 from .template import Template
 
-log = utility.Logger.get(__name__)
+
+_log = None
 
 
 def _check_requirements(node, running):
@@ -19,30 +22,6 @@ def _check_requirements(node, running):
             if value not in running:
                 return False
     return True
-
-#
-# def _parse_function(value):
-#     if type(value) is dict:
-#         key, args = list(value.items())[0]
-#
-#         if key == 'get_property':
-#             def f(tpl, node):
-#                 if args[0] == 'SELF':
-#                     return utility.get_attributes(args[1:], node)
-#                 else:
-#                     return utility.get_attributes(args[1:], tpl[args[0]])
-#             return f
-#         elif key == 'get_artifact':
-#             def f(tpl, node):
-#                 if args[0] == 'SELF':
-#                     return node.artifacts[args[1]]
-#                 else:
-#                     return tpl[args[0]].artifacts[args[1]]
-#             return f
-#         elif key == 'get_input':
-#             return tpl.inputs[args[0]]
-#     else:
-#         return value
 
 
 def _parse_path(base_path, value):
@@ -55,10 +34,8 @@ def _parse_path(base_path, value):
             'file_path': abs_path}
 
 
-def _parse_conf(node, inputs, repos, file_path):
+def _parse_conf(node, inputs, repos, base_path):
     conf = None
-
-    base_path = '/'.join(file_path.split('/')[:-1]) + '/'
 
     # TODO: accept also derived type
     if node.type == 'tosker.docker.container':
@@ -132,9 +109,9 @@ def _parse_conf(node, inputs, repos, file_path):
         if 'artifacts' in node.entity_tpl:
             artifacts = node.entity_tpl['artifacts']
             for key, value in artifacts.items():
-                log.debug('artifacts: {}'.format(value))
+                _log.debug('artifacts: {}'.format(value))
                 conf.add_artifact(key, _parse_path(base_path, value))
-                log.debug('artifacts: {}'.format(conf.artifacts))
+                _log.debug('artifacts: {}'.format(conf.artifacts))
 
         # get interfaces
         # try:
@@ -155,7 +132,7 @@ def _parse_conf(node, inputs, repos, file_path):
                         'path': '/'.join(path_split[:-1]),
                         'file_path': abs_path
                     }
-                    log.debug('path: {} file: {}'.format(intf[key]['cmd']['path'],
+                    _log.debug('path: {} file: {}'.format(intf[key]['cmd']['path'],
                                                          intf[key]['cmd']['file']))
                 if 'inputs' in value:
                     intf[key]['inputs'] = value['inputs']
@@ -166,7 +143,7 @@ def _parse_conf(node, inputs, repos, file_path):
         # except:
         #     print ('error:')
     else:
-        log.error('node type "{}" not supported!'.format(node.type))
+        _log.error('node type "{}" not supported!'.format(node.type))
         # TODO: collect error like a real parser..
 
     def add_to_list(l, value):
@@ -184,7 +161,7 @@ def _parse_conf(node, inputs, repos, file_path):
             # if 'connectTo' in value:
             #     conf.add_link(value['connectTo'])
             if 'host' in value:
-                # log.debug('here ' + str(value))
+                # _log.debug('here ' + str(value))
                 conf.host = value['host']
             if 'volume' in value:
                 volume = value['volume']
@@ -194,10 +171,27 @@ def _parse_conf(node, inputs, repos, file_path):
     return conf
 
 
-def parse_TOSCA(file_path, inputs):
-    tosca = ToscaTemplate(file_path, inputs, True)
-    base_path = '/'.join(file_path.split('/')[:-1]) + '/'
+def get_tosca_template(file_path, inputs):
+    global _log
+    _log = utility.Logger.get(__name__)
 
+    # Work around bug validation csar of toscaparser
+    if file_path.endswith(('.zip', '.csar')):
+        csar = CSAR(file_path)
+        try:
+            csar.validate()
+        except ValueError as e:
+            if not str(e).startswith("The resource") or \
+               not str(e).endswith("does not exist."):
+                raise e
+
+        csar.decompress()
+        file_path = path.join(csar.temp_dir, csar.get_main_template())
+
+    tosca = ToscaTemplate(file_path, inputs)
+
+    base_path = '/'.join(tosca.path.split('/')[:-1]) + '/'
+    _log.debug('base_path: {}'.format(base_path))
     _parse_functions(tosca, inputs, base_path)
     # print(utility.print_TOSCA(tosca))
 
@@ -223,7 +217,7 @@ def parse_TOSCA(file_path, inputs):
                     continue
 
                 tpl_node = _parse_conf(node, inputs, tosca.tpl.get(
-                    'repositories', None), file_path)
+                    'repositories', None), base_path)
                 tpl.push(tpl_node)
                 running_container.add(node.name)
 
@@ -247,7 +241,8 @@ def _post_computation(tpl):
         elif type(node.host) is Software:
             node.host_container = node.host.host_container
 
-    # manage the case when a software node is connected to a software node or a container
+    # manage the case when a software node is connected
+    # to a software node or a container
     for node in tpl.software_order:
         if node.link is not None:
             for link in node.link:
@@ -256,23 +251,19 @@ def _post_computation(tpl):
                     container_name = tpl[link].name
                 else:
                     container_name = tpl[link].host_container.name
-                log.debug('link: {}'.format((container_name, link)))
+                _log.debug('link: {}'.format((container_name, link)))
                 node.host_container.add_link((container_name, link))
 
     # manage the case when the container is connected to a softeware node
     for node in tpl.container_order:
-        log.debug(node)
+        _log.debug(node)
         if node.link is not None:
             for i, link in enumerate(node.link):
                 link = link[0]
                 if type(tpl[link]) is Software:
                     container_name = tpl[link].host_container.name
-                    log.debug('link: {}'.format((container_name, link)))
+                    _log.debug('link: {}'.format((container_name, link)))
                     node.link[i] = (container_name, link)
-
-    # TODO: si puo togliere, visto che per ora non viene utilizzato!
-    # for node in tpl.software_order:
-    #     node.host_container.software_layer.append(node)
 
 
 def _parse_functions(tosca, inputs, base_path):
@@ -282,12 +273,6 @@ def _parse_functions(tosca, inputs, base_path):
 
     if 'outputs' in tosca.topology_template.tpl:
         pass
-        # for k, v in tosca.topology_template.tpl['outputs'].items():
-            # print(type(v['value']))
-            # print(dir(v['value']))
-            # print(dir(v['value'].result().result()))
-
-            # print(v.result())
 
     def _parse_node(name, node):
         for k, v in node.items():
