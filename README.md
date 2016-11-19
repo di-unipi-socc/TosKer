@@ -1,5 +1,5 @@
 # tosKer
-[Slides](http://slideck.io/gist.github.com/lucarin91/d2e834106a4d0f72b4f369d4d5e46bfa/tosker-slide.md)
+[Slides](http://slideck.io/github.com/di-unipi-socc/tosKer/doc/slide.md)
 
 ## Intallation
 **Requirements**
