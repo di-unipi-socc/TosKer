@@ -125,7 +125,9 @@ class Docker_interface:
             status = self._cli.exec_start(exec_id)
 
             # TODO: verificare attendibilita' di questo check!
-            return 'rpc error:' != status[:10].decode("utf-8")
+            check = 'rpc error:' != status[:10].decode("utf-8")
+            self._log.debug('check: {}'.format(check))
+            return check
         except errors.APIError as e:
             self._log.error(e)
             return False
@@ -233,8 +235,9 @@ class Docker_interface:
     def is_running(self, container):
         name = self._get_name(container)
         stat = self.inspect(name)
-        self._log.debug('State: {}'.format(stat['State']))
-        return stat is not None and stat['State']['Running'] is True
+        stat = stat is not None and stat['State']['Running'] is True
+        self._log.debug('State: {}'.format(stat))
+        return stat
 
     def _get_name(self, name):
         if isinstance(name, six.string_types):

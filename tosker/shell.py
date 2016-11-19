@@ -27,17 +27,6 @@ example:
     '''
 
 
-def _get_debug_handler():
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter((
-        '%(levelname) -3s %(asctime)s %(name)'
-        '-3s %(funcName)'
-        '-1s %(lineno) -0s: %(message)s'
-    ))
-    ch.setFormatter(formatter)
-    return ch
-
 _FLAG = {
     '--debug': 'debug',
     '-q': 'quiet',
@@ -84,13 +73,14 @@ def run():
             if argv[1].endswith(('.yaml', '.csar', '.zip')):
                 file_name = argv[1]
     if not file_name:
-        print_('error: first argument must be a TOSCA yaml file or a directory with a TOSCA yaml file', _usage())
+        print_('error: first argument must be a TOSCA yaml file or a directory \
+                with a TOSCA yaml file', _usage())
         exit(-1)
 
     cmds, flags, inputs = _parse_unix_input(argv[2:])
     if flags.get('debug', False):
         deployer = Deployer(file_name, inputs,
-                            log_handler=_get_debug_handler(),
+                            log_handler=utility.get_consol_handler(),
                             quiet=False)
     else:
         deployer = Deployer(file_name, inputs, quiet=flags.get('quiet', False))

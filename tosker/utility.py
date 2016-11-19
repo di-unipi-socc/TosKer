@@ -33,6 +33,18 @@ class Logger:
             print_(*args)
 
 
+def get_consol_handler():
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter((
+        '%(levelname) -3s %(asctime)s %(name)'
+        '-3s %(funcName)'
+        '-1s %(lineno) -0s: %(message)s'
+    ))
+    ch.setFormatter(formatter)
+    return ch
+
+
 def get_attributes(args, nodes):
     get = nodes
     for a in args:
@@ -46,7 +58,8 @@ def print_TOSCA(tosca, indent=2):
     def _rec_print(item, tab, res):
         if type(item) is dict:
             for key, value in item.items():
-                if type(value) is str or (type(value) is dict and 'get_input' in value):
+                if type(value) is str or \
+                   (type(value) is dict and 'get_input' in value):
                     return res + tab + str(key) + ': ' + str(value)
                 else:
                     res += tab + str(key) + ':\n'
