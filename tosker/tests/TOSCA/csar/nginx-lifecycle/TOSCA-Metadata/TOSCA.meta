@@ -1,0 +1,5 @@
+TOSCA-Meta-File-Version: 1.0
+CSAR-Version: 1.1
+Created-By: lucarin91
+Entry-Definitions: lifecycle.yaml
+Content-Type: application/vnd.oasis.tosca.definitions.yaml

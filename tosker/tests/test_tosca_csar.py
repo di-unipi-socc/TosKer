@@ -1,15 +1,14 @@
 import unittest
 from tosker.deployer import Deployer
-from tosker.docker_engine import Docker_engine
-from tosker.utility import Logger
 from .test_tosca_base import Test_Deployer
 
 
-class Test_Wordpress_ligth(Test_Deployer):
+class Test_Csar(Test_Deployer):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.deployer = Deployer('tosker/tests/TOSCA/wordpress-ligth.yaml')
+        self.deployer = \
+            Deployer('tosker/tests/TOSCA/csar/node-mongo.csar')
 
     def test(self):
         self.create()

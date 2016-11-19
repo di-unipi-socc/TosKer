@@ -1,0 +1,42 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: >
+  TOSCA simple profile with wordpress, web server and mysql on the same server.
+
+repositories:
+  docker_hub: https://registry.hub.docker.com/
+
+imports:
+  - docker_def: /usr/lib/tosker/tosker-types.yaml
+
+topology_template:
+  node_templates:
+    nginx:
+      type: tosker.software
+      requirements:
+        - host: server1
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/create.sh
+          configure:
+            implementation: scripts/configure.sh
+            inputs:
+              port: 80
+          start:
+            implementation: scripts/start.sh
+          stop:
+            implementation: scripts/stop.sh
+          delete:
+            implementation: scripts/delete.sh
+
+    server1:
+      type: tosker.docker.container
+      properties:
+        ports:
+          80: 8080
+      artifacts:
+        my_image:
+          file: ubuntu:latest
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          repository: docker_hub

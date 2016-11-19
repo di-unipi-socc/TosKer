@@ -81,7 +81,7 @@ def run():
             if len(files) != 0:
                 file_name = files[0]
         else:
-            if argv[1].split('.')[-1] == 'yaml':
+            if argv[1].endswith(('.yaml', '.csar', '.zip')):
                 file_name = argv[1]
     if not file_name:
         print_('error: first argument must be a TOSCA yaml file or a directory with a TOSCA yaml file', _usage())
@@ -90,7 +90,8 @@ def run():
     cmds, flags, inputs = _parse_unix_input(argv[2:])
     if flags.get('debug', False):
         deployer = Deployer(file_name, inputs,
-                            log_handler=_get_debug_handler())
+                            log_handler=_get_debug_handler(),
+                            quiet=False)
     else:
         deployer = Deployer(file_name, inputs, quiet=flags.get('quiet', False))
 

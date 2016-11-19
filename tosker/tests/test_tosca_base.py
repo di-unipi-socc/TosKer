@@ -1,13 +1,11 @@
 import unittest
-import logging
-from tosker.docker_engine import Docker_engine
-from tosker.utility import Logger
+from tosker.docker_interface import Docker_interface
 
 
 class Test_Deployer(unittest.TestCase):
 
     def setUp(self):
-        self.docker = Docker_engine()
+        self.docker = Docker_interface()
         self.docker.remove_all_containers()
         self.docker.remove_all_volumes()
 

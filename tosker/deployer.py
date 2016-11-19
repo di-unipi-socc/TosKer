@@ -11,10 +11,10 @@ from six import print_
 
 from tosker import utility
 
-from .docker_engine import Docker_engine
+from .docker_interface import Docker_interface
 from .nodes import Container, Software, Volume
 from .software_engine import Software_engine
-from .TOSCA_parser import parse_TOSCA
+from .tosca_utility import get_tosca_template
 from .utility import Logger
 
 
@@ -28,14 +28,14 @@ class Deployer:
         Logger.set(log_handler, quiet)
         self._log = Logger.get(__name__)
 
-        self._tpl = parse_TOSCA(file_path, inputs)
+        self._tpl = get_tosca_template(file_path, inputs)
         self._tmp_dir = path.join(tmp_dir, self._tpl.name)
         try:
             os.makedirs(self._tmp_dir)
         except os.error:
             pass
 
-        self._docker = Docker_engine(self._tpl.name, self._tmp_dir)
+        self._docker = Docker_interface(self._tpl.name, self._tmp_dir)
         self._software = Software_engine(
             self._docker, self._tpl, self._tmp_dir
         )

@@ -42,7 +42,7 @@ class Base(object):
             return None
 
     def __str__(self):
-        return o.name
+        return self.name
 
     def get_str_obj(self):
         _str_obj(self)

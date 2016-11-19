@@ -10,7 +10,7 @@ from .nodes import Container, Volume
 from .utility import Logger
 
 
-class Docker_engine:
+class Docker_interface:
 
     def __init__(self, net_name='tosker_net', tmp_dir='/tmp',
                  socket='unix://var/run/docker.sock'):
@@ -32,7 +32,7 @@ class Docker_engine:
             if saved_image and self.inspect(saved_img_name):
                 img_name = saved_img_name
 
-            self._log.debug('image name: {}'.format(img_name))
+            self._log.debug('container: {}'.format(con.get_str_obj()))
 
             con.id = self._cli.create_container(
                 name=con.name,
@@ -76,7 +76,7 @@ class Docker_engine:
             self._log.debug('stop building..')
         elif not saved_image:
             # TODO: da evitare se si deve utilizzare un'immagine custom
-            self._log.debug('start pulling..')
+            self._log.debug('start pulling.. {}'.format(con.image))
             utility.print_json(
                 self._cli.pull(con.image, stream=True), self._log.debug)
             self._log.debug('end pulling..')
@@ -84,6 +84,7 @@ class Docker_engine:
         try:
             create_container()
         except errors.APIError as e:
+            self._log.debug(e)
             # self.stop(con)
             self.delete(con)
             create_container()
@@ -205,8 +206,8 @@ class Docker_engine:
         assert isinstance(node, Container)
         # self._log.debug('container_conf: {}'.format(node.host_container))
         stat = self.inspect(node.image)
-        old_cmd = stat['Config']['Cmd'] or ''
-        old_entry = stat['Config']['Entrypoint'] or ''
+        old_cmd = stat['Config']['Cmd'] or None
+        old_entry = stat['Config']['Entrypoint'] or None
 
         if self.inspect(node):
             self.stop(node)
@@ -222,14 +223,17 @@ class Docker_engine:
 
         self.stop(node)
         self.delete(node)
-        self.create(node, cmd=old_cmd, entrypoint=old_entry, saved_image=True)
+        self.create(node,
+                    cmd=node.cmd or old_cmd,
+                    entrypoint=node.entrypoint or old_entry,
+                    saved_image=True)
 
         self._cli.commit(node.id, name)
 
     def is_running(self, container):
         name = self._get_name(container)
         stat = self.inspect(name)
-        # self._log.debug('State.Running: {}'.format(stat['State']['Running']))
+        self._log.debug('State: {}'.format(stat['State']))
         return stat is not None and stat['State']['Running'] is True
 
     def _get_name(self, name):

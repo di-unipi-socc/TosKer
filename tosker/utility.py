@@ -15,7 +15,7 @@ class Logger:
 
     @staticmethod
     def get(name_class, level=logging.DEBUG):
-        # print_('get logger - class:', name_class)
+        # print_('get logger - class:', name_class, Logger.ch)
         logger = logging.getLogger(name_class)
         logger.setLevel(level)
         logger.addHandler(Logger.ch)

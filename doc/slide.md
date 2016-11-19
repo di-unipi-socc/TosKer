@@ -22,7 +22,7 @@
 ### Custom Types
 Esistono tre tipi custom type supportati:
 
-- `tosker.docker.container` rappresenta un container di docker con tutte le proprietà adatte per la sua creazione, il suo lifecicle è quello implicito in docker
+- `tosker.docker.container` rappresenta un container di docker con tutte le proprietà adatte per la sua creazione, il suo lifecycle è quello implicito in docker
 - `tosker.docker.volume` rappresentano un volume di dokcer con le varie proprietà
 - `tocker.software` rappresenta un nodo generico software gestito con lo Standard lifecycle di TOSCA
 
@@ -107,7 +107,7 @@ Sono attualmente disponibili 12 test:
 - wordpress
 - wordpress_theme
 - wordpress_volume
-- wordpress_ligth     
+- wordpress_light      
 - software_link       
 
 ___

@@ -1,0 +1,97 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: >
+  TOSCA simple profile with wordpress, web server and mysql on the same server.
+
+# Repositories to retrieve code artifacts from
+repositories:
+  docker_hub: https://registry.hub.docker.com/
+
+imports:
+  - docker_def: /usr/lib/tosker/tosker-types.yaml
+
+topology_template:
+  node_templates:
+    api:
+      type: tosker.software
+      requirements:
+        - host: maven_container
+        - link: db_container
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/api/install.sh
+            inputs:
+              repo: https://github.com/jacopogiallo/thoughts-api
+              branch: master
+          configure:
+            implementation: scripts/api/configure.sh
+            inputs:
+              dbURL: db_container
+              dbPort: 27017
+              dbName: thoughtsSharing
+              collectionName: thoughts
+          start:
+            implementation: scripts/api/start.sh
+          stop:
+            implementation: scripts/api/stop.sh
+          delete:
+            implementation: scripts/api/uninstall.sh
+
+    gui:
+      type: tosker.software
+      requirements:
+        - host: node_container
+        # - link: api
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/gui/install.sh
+            inputs:
+              repo: https://github.com/jacopogiallo/thoughts-gui
+              branch: master
+          configure:
+            implementation: scripts/gui/configure.sh
+            inputs:
+              # apiUrl: api
+              # apiPort: 8080
+              apiUrl: localhost
+              apiPort: 8000
+              apiResource: thoughts
+          start:
+            implementation: scripts/gui/start.sh
+          stop:
+            implementation: scripts/gui/stop.sh
+          delete:
+            implementation: scripts/gui/uninstall.sh
+
+    maven_container:
+      type: tosker.docker.container
+      properties:
+        ports:
+          8080: 8000
+        cmd: 'true'
+      artifacts:
+        my_image:
+          file: maven:3.3-jdk-8
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          repository: docker_hub
+
+    node_container:
+      type: tosker.docker.container
+      properties:
+        ports:
+          3000: 8080
+      artifacts:
+        my_image:
+          file: node:6
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          repository: docker_hub
+
+    db_container:
+      type: tosker.docker.container
+      artifacts:
+        my_image:
+          file: mongo:3.4
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          repository: docker_hub
