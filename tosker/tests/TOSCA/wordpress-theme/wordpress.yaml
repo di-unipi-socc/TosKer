@@ -9,7 +9,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: ../../../tosker-types.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.4/tosker.yaml
 
 topology_template:
   inputs:

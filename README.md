@@ -19,23 +19,19 @@ tosker tosker/test/TOSCA/wordpress.yaml create start
 tosker tosker/test/TOSCA/wordpress.yaml stop delete
 ```
 
-### Install by source
+### Install from source
 ```
-git clone https://github.com/lucarin91/tosKer
-
-virtualenv venv -p python3
-
-. ./venv/bin/activate
-
-pip install -r requirements.txt
+git clone https://github.com/di-unipi-socc/tosKer/tree/master
+cd tosca-parser
+sudo python setup.py install
 ```
 
 use command:
 ```
-./tosKer tosker/test/TOSCA/wordpress.yaml create start
+tosker tosker/test/TOSCA/wordpress.yaml create start
 ```
 
 run the tests:
 ```
-python -m unittest discover
+python setup.py test
 ```

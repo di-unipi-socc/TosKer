@@ -8,15 +8,15 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - docker_def: /usr/lib/tosker/tosker-types.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.4/tosker.yaml
 
 topology_template:
   node_templates:
     app:
       type: tosker.software
       artifacts:
-        code: scripts/app/main.js
-        package: scripts/app/package.json
+        code: code/app/main.js
+        package: code/app/package.json
       requirements:
         - host: node
         - link: db

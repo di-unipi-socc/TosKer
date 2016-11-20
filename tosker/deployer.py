@@ -32,8 +32,8 @@ class Deployer:
         self._tmp_dir = path.join(tmp_dir, self._tpl.name)
         try:
             os.makedirs(self._tmp_dir)
-        except os.error:
-            pass
+        except os.error as e:
+            self._log.info(e)
 
         self._docker = Docker_interface(self._tpl.name, self._tmp_dir)
         self._software = Software_engine(
@@ -64,8 +64,6 @@ class Deployer:
                 exit(-1)
 
             self._print_tick()
-
-        # self._print_outputs()
 
     def start(self):
         Logger.println('\nSTART')

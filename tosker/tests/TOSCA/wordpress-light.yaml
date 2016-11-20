@@ -4,7 +4,7 @@ description: >
   TOSCA simple profile with wordpress, web server and mysql on the same server.
 
 imports:
-  - docker_def: ../../tosker-types.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.4/tosker.yaml
 
 topology_template:
   inputs:
