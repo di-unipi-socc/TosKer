@@ -70,8 +70,10 @@ def _parse_unix_input(args):
                 flag[_FLAG[args[i]]] = True
         elif args[i] in _CMD:
             cmds.append(args[i])
-        else:
+        elif i == 0:
             file = args[i]
+        else:
+            _error('ERROR: known parameter.')
         i += 1
     return file, cmds, flag, inputs
 
@@ -83,7 +85,7 @@ def _error(str):
 
 def run():
     if len(argv) < 2:
-        _error('ERROR: few arguments')
+        _error('ERROR: few arguments.')
 
     file, cmds, flags, inputs = _parse_unix_input(argv[1:])
     if flags.get('help', False):
@@ -104,7 +106,7 @@ def run():
                 file_name = file
     if not file_name:
         _error('ERROR: first argument must be a TOSCA yaml file or a '
-               'directory with in a CSAR file')
+               'directory with in a CSAR file.')
 
     if flags.get('debug', False):
         deployer = Deployer(file_name, inputs,
@@ -119,6 +121,6 @@ def run():
             'start': deployer.start,
             'stop': deployer.stop,
             'delete': deployer.delete,
-        }.get(c, lambda: _error('ERROR: command not found'))()
+        }.get(c, lambda: _error('ERROR: command not found.'))()
 
     deployer.print_outputs()
