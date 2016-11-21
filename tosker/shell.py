@@ -61,7 +61,9 @@ def _parse_unix_input(args):
         if p1.match(args[i]):
             if _FLAG.get(args[i], False):
                 flags[_FLAG[args[i]]] = True
-            elif i + 1 < len(args) and not p1.match(args[i + 1]) and not p2.match(args[i + 1]):
+            elif (i + 1 < len(args) and
+                  not p1.match(args[i + 1]) and
+                  not p2.match(args[i + 1])):
                 inputs[args[i][2:]] = args[i + 1]
                 i += 2
                 continue
