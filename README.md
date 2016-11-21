@@ -7,7 +7,7 @@
 - pip
 
 ```
-pip install tosker
+sudo pip install tosker
 ```
 ```
 tosker <TOSCA-file> <operations> <inputs>
