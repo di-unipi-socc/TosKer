@@ -52,7 +52,7 @@ _CMD = {'create', 'start', 'stop', 'delete'}
 def _parse_unix_input(args):
     inputs = {}
     cmds = []
-    flag = {}
+    flags = {}
     file = ''
     p1 = re.compile('--.*')
     p2 = re.compile('-.?')
@@ -60,32 +60,37 @@ def _parse_unix_input(args):
     while i < len(args):
         if p1.match(args[i]):
             if _FLAG.get(args[i], False):
-                flag[_FLAG[args[i]]] = True
-            elif not p.match(args[i + 1]):
+                flags[_FLAG[args[i]]] = True
+            elif i + 1 < len(args) and not p1.match(args[i + 1]) and not p2.match(args[i + 1]):
                 inputs[args[i][2:]] = args[i + 1]
                 i += 2
                 continue
+            else:
+                _error('missing input value for', args[i])
         elif p2.match(args[i]):
             if _FLAG.get(args[i], False):
-                flag[_FLAG[args[i]]] = True
-        elif args[i] in _CMD:
+                flags[_FLAG[args[i]]] = True
+            else:
+                _error('known parameter.')
+        elif args[i] and file:
             cmds.append(args[i])
         elif i == 0:
             file = args[i]
         else:
-            _error('ERROR: known parameter.')
+            _error('first argument must be a TOSCA yaml file or a '
+                   'directory with in a CSAR file.')
         i += 1
-    return file, cmds, flag, inputs
+    return file, cmds, flags, inputs
 
 
-def _error(str):
-    print_(str)
+def _error(*str):
+    print_('ERROR:', *str)
     exit(-1)
 
 
 def run():
     if len(argv) < 2:
-        _error('ERROR: few arguments.')
+        _error('few arguments.')
 
     file, cmds, flags, inputs = _parse_unix_input(argv[1:])
     if flags.get('help', False):
@@ -105,7 +110,7 @@ def run():
             if file.endswith(('.yaml', '.csar', '.zip')):
                 file_name = file
     if not file_name:
-        _error('ERROR: first argument must be a TOSCA yaml file or a '
+        _error('first argument must be a TOSCA yaml file or a '
                'directory with in a CSAR file.')
 
     if flags.get('debug', False):
@@ -121,6 +126,6 @@ def run():
             'start': deployer.start,
             'stop': deployer.stop,
             'delete': deployer.delete,
-        }.get(c, lambda: _error('ERROR: command not found.'))()
+        }.get(c, lambda: _error('command not found.'))()
 
     deployer.print_outputs()
