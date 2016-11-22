@@ -11,6 +11,13 @@ imports:
   - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.4/tosker.yaml
 
 topology_template:
+  # TODO: add inputs!
+  # inputs:
+  #   your_name:
+  #     type: string
+  #     default: Luca
+  #     description: your name
+  
   node_templates:
     api:
       type: tosker.software

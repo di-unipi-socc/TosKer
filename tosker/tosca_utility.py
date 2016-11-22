@@ -181,6 +181,7 @@ def get_tosca_template(file_path, inputs):
         try:
             csar.validate()
         except ValueError as e:
+            _log.debug(e)
             if not str(e).startswith("The resource") or \
                not str(e).endswith("does not exist."):
                 raise e
