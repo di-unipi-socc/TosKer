@@ -204,6 +204,8 @@ class Docker_interface:
             pass
 
     # TODO: splittare questo metodo in due, semantica non chiara!
+    # TODO: questo metodo può esserre semplificato se il software deve essere
+    # installato su un volatile container
     def update_container(self, node, cmd, saved_image=True):
         assert isinstance(node, Container)
         # self._log.debug('container_conf: {}'.format(node.host_container))
@@ -211,6 +213,7 @@ class Docker_interface:
         old_cmd = stat['Config']['Cmd'] or None
         old_entry = stat['Config']['Entrypoint'] or None
 
+        # TODO: da sistemare questo inspect vuole cercare solo container
         if self.inspect(node):
             self.stop(node)
             self.delete(node)

@@ -8,7 +8,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.4/tosker.yaml
+  - tosker: ../../../tosker-types.yaml
 
 topology_template:
   node_templates:
@@ -57,8 +57,8 @@ topology_template:
         package: package.json
       requirements:
         - host: nodejs3
-        - link: server1
-        - link: server2
+        - connectsTo: server1
+        - connectsTo: server2
       interfaces:
         Standard:
           create:
@@ -72,7 +72,7 @@ topology_template:
               port: 80
 
     nodejs1:
-      type: tosker.docker.container
+      type: tosker.docker.container.volatile
       properties:
         ports:
           80: 8081
@@ -83,7 +83,7 @@ topology_template:
           repository: docker_hub
 
     nodejs2:
-      type: tosker.docker.container
+      type: tosker.docker.container.volatile
       properties:
         ports:
           80: 8082
@@ -94,13 +94,10 @@ topology_template:
           repository: docker_hub
 
     nodejs3:
-      type: tosker.docker.container
+      type: tosker.docker.container.volatile
       properties:
         ports:
           80: 8083
-        env_variable:
-          SERVER_NAME1: server1
-          SERVER_NAME2: server2
       artifacts:
         my_image:
           file: node:6

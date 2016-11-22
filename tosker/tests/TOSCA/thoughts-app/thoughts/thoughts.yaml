@@ -8,7 +8,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.4/tosker.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
 
 topology_template:
   # TODO: add inputs!
@@ -17,13 +17,13 @@ topology_template:
   #     type: string
   #     default: Luca
   #     description: your name
-  
+
   node_templates:
     api:
       type: tosker.software
       requirements:
         - host: maven_container
-        - link: db_container
+        - connectsTo: db_container
       interfaces:
         Standard:
           create:
@@ -49,7 +49,7 @@ topology_template:
       type: tosker.software
       requirements:
         - host: node_container
-        # - link: api
+        - dependsOn: api
       interfaces:
         Standard:
           create:
@@ -73,11 +73,11 @@ topology_template:
             implementation: scripts/gui/uninstall.sh
 
     maven_container:
-      type: tosker.docker.container
+      type: tosker.docker.container.volatile
       properties:
         ports:
           8080: 8000
-        cmd: 'true'
+        # cmd: 'true'
       artifacts:
         my_image:
           file: maven:3.3-jdk-8
@@ -85,7 +85,7 @@ topology_template:
           repository: docker_hub
 
     node_container:
-      type: tosker.docker.container
+      type: tosker.docker.container.volatile
       properties:
         ports:
           3000: 8080
@@ -96,7 +96,7 @@ topology_template:
           repository: docker_hub
 
     db_container:
-      type: tosker.docker.container
+      type: tosker.docker.container.persistent
       artifacts:
         my_image:
           file: mongo:3.4

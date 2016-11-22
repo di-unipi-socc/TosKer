@@ -51,7 +51,7 @@ class Deployer:
         for node in self._tpl.deploy_order:
             Logger.print_('  {}'.format(node))
             try:
-                if type(node) is Container:
+                if type(node) is Container and node.persistent:
                     self._docker.create(node)
                 elif type(node) is Volume:
                     self._docker.create_volume(node)
@@ -70,7 +70,7 @@ class Deployer:
         for node in self._tpl.deploy_order:
             Logger.print_('  {}'.format(node))
 
-            if type(node) is Container:
+            if isinstance(node, Container) and node.persistent:
                 stat = self._docker.inspect(node.name)
                 if stat is not None:
                     node.id = stat['Id']
@@ -80,7 +80,7 @@ class Deployer:
                     self._log.error(
                         'ERROR: Container "{}" not exists!'.format(node.name))
 
-            elif type(node) is Software:
+            elif isinstance(node, Software):
                 self._software.start(node)
 
             self._print_tick()

@@ -21,18 +21,14 @@ class Base(object):
     def __init__(self, name):
         self.name = name
         self.link = None
-        self.host = None
-        self.volume = None
+        self.depends = None
         self._fuctions = {}
 
     def add_link(self, item):
         self.link = _add_to_list(self.link, item)
 
-    # def add_host(self, item):
-    #     self.host = _add_to_list(self.host, item)
-
-    def add_volume(self, key, value):
-        self.volume = _add_to_map(self.volume, key, value)
+    def add_depends(self, item):
+        self.depends = _add_to_list(self.depends, item)
 
     def __getitem__(self, item):
         attr = vars(self)
@@ -61,11 +57,17 @@ class Container(Base):
         self.cmd = None
         self.entrypoint = None
         self.ports = None
-        self.software_layer = []
+        self.persistent = False
+        self.volume = None
+
+        self.software_layer = []  # This is not used now
 
     @property
     def to_build(self):
         return self.dockerfile is not None
+
+    def add_volume(self, key, value):
+        self.volume = _add_to_map(self.volume, key, value)
 
     def add_env(self, name, value):
         self.env = _add_to_map(self.env, name, value)
@@ -135,6 +137,7 @@ class Software(Base):
     def __init__(self, name):
         # super().__init__(name)
         super(self.__class__, self).__init__(name)
+        self.host = None
         self.artifacts = None
         self.interfaces = {}
         self.host_container = None

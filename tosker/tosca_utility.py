@@ -14,6 +14,17 @@ from .template import Template
 
 _log = None
 
+# CUSTOM TYPE
+PERSISTENT_CONTAINER = 'tosker.docker.container.persistent'
+VOLATILE_CONTAINER = 'tosker.docker.container.volatile'
+VOLUME = 'tosker.docker.volume'
+SOFTWARE = 'tosker.software'
+
+# REQUIREMENTS
+CONNECT = 'connectsTo'
+DEPENDS = 'dependsOn'
+HOST = 'host'
+
 
 def _check_requirements(node, running):
     for req in node.requirements:
@@ -37,9 +48,9 @@ def _parse_path(base_path, value):
 def _parse_conf(node, inputs, repos, base_path):
     conf = None
 
-    # TODO: accept also derived type
-    if node.type == 'tosker.docker.container':
+    if node.type == PERSISTENT_CONTAINER or node.type == VOLATILE_CONTAINER:
         conf = Container(node.name)
+        conf.persistent = node.type == PERSISTENT_CONTAINER
 
         def parse_dockerfile(image, dockerfile):
             conf.image = image
@@ -58,8 +69,9 @@ def _parse_conf(node, inputs, repos, base_path):
         artifacts = node.entity_tpl['artifacts']
         for key, value in artifacts.items():
             if type(value) is dict:
-                if value['type'] == \
-                   'tosca.artifacts.Deployment.Image.Container.Docker':
+                if (value['type'] ==
+                    # TODO: is this type correct?
+                    'tosca.artifacts.Deployment.Image.Container.Docker'):
                     parse_pull_image(
                         value['file'], value.get('repository', None))
                 else:
@@ -96,7 +108,7 @@ def _parse_conf(node, inputs, repos, base_path):
                 values = node.entity_tpl['properties']['ports']
                 conf.ports = _parse_map(values)
 
-    elif node.type == 'tosker.docker.volume':
+    elif node.type == VOLUME:
         conf = Volume(node.name)
         if 'properties' in node.entity_tpl:
             properties = node.entity_tpl['properties']
@@ -104,7 +116,8 @@ def _parse_conf(node, inputs, repos, base_path):
             conf.type = properties.get('type', None)
             conf.device = properties.get('device', None)
             conf.driver_opt = properties.get('driver_opt', None)
-    elif node.type == 'tosker.software':
+
+    elif node.type == SOFTWARE:
         conf = Software(node.name)
         if 'artifacts' in node.entity_tpl:
             artifacts = node.entity_tpl['artifacts']
@@ -114,7 +127,6 @@ def _parse_conf(node, inputs, repos, base_path):
                 _log.debug('artifacts: {}'.format(conf.artifacts))
 
         # get interfaces
-        # try:
         if 'interfaces' in node.entity_tpl and \
                 'Standard' in node.entity_tpl['interfaces']:
             # TODO: implimement all the standard cycle
@@ -140,11 +152,9 @@ def _parse_conf(node, inputs, repos, base_path):
 
             conf.interfaces = intf
 
-        # except:
-        #     print ('error:')
     else:
         _log.error('node type "{}" not supported!'.format(node.type))
-        # TODO: collect error like a real parser..
+        # TODO: collect error like as real parser..
 
     def add_to_list(l, value):
         if l is None:
@@ -156,15 +166,14 @@ def _parse_conf(node, inputs, repos, base_path):
     if 'requirements' in node.entity_tpl:
         requirements = node.entity_tpl['requirements']
         for value in requirements:
-            if 'link' in value:
-                conf.add_link((value['link'], value['link']))
-            # if 'connectTo' in value:
-            #     conf.add_link(value['connectTo'])
-            if 'host' in value:
-                # _log.debug('here ' + str(value))
-                conf.host = value['host']
-            if 'volume' in value:
-                volume = value['volume']
+            if CONNECT in value:
+                conf.add_link((value[CONNECT], value[CONNECT]))
+            if DEPENDS in value:
+                conf.add_depends(value[DEPENDS])
+            if HOST in value:
+                conf.host = value[HOST]
+            if VOLUME in value:
+                volume = value[VOLUME]
                 if type(volume) is dict:
                     conf.add_volume(volume['relationship']['properties'][
                                     'location'], volume['node'])
@@ -255,7 +264,7 @@ def _post_computation(tpl):
                 _log.debug('link: {}'.format((container_name, link)))
                 node.host_container.add_link((container_name, link))
 
-    # manage the case when the container is connected to a softeware node
+    # manage the case when the container is connected to a software node
     for node in tpl.container_order:
         _log.debug(node)
         if node.link is not None:
