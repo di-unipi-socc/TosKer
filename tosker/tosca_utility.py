@@ -23,6 +23,7 @@ SOFTWARE = 'tosker.software'
 # REQUIREMENTS
 CONNECT = 'connectsTo'
 DEPENDS = 'dependsOn'
+ATTACH = 'attachesTo'
 HOST = 'host'
 
 
@@ -172,8 +173,8 @@ def _parse_conf(node, inputs, repos, base_path):
                 conf.add_depends(value[DEPENDS])
             if HOST in value:
                 conf.host = value[HOST]
-            if VOLUME in value:
-                volume = value[VOLUME]
+            if ATTACH in value:
+                volume = value[ATTACH]
                 if type(volume) is dict:
                     conf.add_volume(volume['relationship']['properties'][
                                     'location'], volume['node'])

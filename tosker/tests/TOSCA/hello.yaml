@@ -3,12 +3,11 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 description: >
   TOSCA simple hello world
 
-# Repositories to retrieve code artifacts from
 repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.4/tosker.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
 
 topology_template:
   inputs:
@@ -20,7 +19,7 @@ topology_template:
   node_templates:
     # The ubuntu container that print enviroment variable
     hello_container:
-      type: tosker.docker.container
+      type: tosker.docker.container.persistent
       artifacts:
         my_image:
           file: ubuntu

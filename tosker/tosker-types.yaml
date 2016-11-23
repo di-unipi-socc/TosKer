@@ -40,7 +40,7 @@ node_types:
         required: false
 
     capabilities:
-      volume:
+      attachesTo:
         type: tosca.capabilities.Attachment
         valid_source_types: [tosker.docker.container.persistent, tosker.docker.container.volatile]
 
@@ -94,7 +94,7 @@ node_types:
           node: tosker.docker.container.persistent
           relationship: tosca.relationships.DependsOn
           # END
-      - volume:
+      - attachesTo:
           capability: tosca.capabilities.Attachment
           occurrences: [0, UNBOUNDED]
           # BEGIN add because toscaparser doesn't consider this optional
@@ -137,7 +137,7 @@ node_types:
         required: false
 
     requirements:
-      - volume:
+      - attachesTo:
           capability: tosca.capabilities.Attachment
           occurrences: [0, UNBOUNDED]
           # BEGIN add because toscaparser doesn't consider this optional

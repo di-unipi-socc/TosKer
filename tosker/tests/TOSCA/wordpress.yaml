@@ -3,13 +3,11 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 description: >
   TOSCA simple profile with wordpress, web server and mysql on the same server.
 
-
-# Repositories to retrieve code artifacts from
 repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.4/tosker.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
 
 topology_template:
   inputs:
@@ -45,7 +43,7 @@ topology_template:
         ports:
           80: { get_input: wp_host_port }
       requirements:
-        - link: mysql_container
+        - connectsTo: mysql_container
       artifacts:
         my_image:
           file: wordpress

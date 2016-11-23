@@ -3,12 +3,11 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 description: >
   TOSCA simple profile with wordpress, web server and mysql on the same server.
 
-# Repositories to retrieve code artifacts from
 repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.4/tosker.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
 
 topology_template:
   node_templates:
@@ -19,7 +18,7 @@ topology_template:
         package: code/app/package.json
       requirements:
         - host: node
-        - link: db
+        - connectsTo: db
       interfaces:
         Standard:
           create:
@@ -53,7 +52,7 @@ topology_template:
             implementation: scripts/install_node.sh
 
     server1:
-      type: tosker.docker.container
+      type: tosker.docker.container.volatile
       properties:
         ports:
           80: 8080
@@ -64,7 +63,7 @@ topology_template:
           repository: docker_hub
 
     server2:
-      type: tosker.docker.container
+      type: tosker.docker.container.volatile
       artifacts:
         my_image:
           file: ubuntu:latest
