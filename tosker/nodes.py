@@ -112,6 +112,7 @@ class Volume(Base):
         self.driver = 'local'
         self.device = None
         self.type = None
+        self.size = None
         self.driver_opt = None
 
     def get_all_opt(self):
@@ -120,6 +121,8 @@ class Volume(Base):
             ris['device'] = self.device
         if self.type:
             ris['type'] = self.type
+        if self.size:
+            ris['size'] = self.size
         return ris
 
     def add_driver_opt(self, name, value):

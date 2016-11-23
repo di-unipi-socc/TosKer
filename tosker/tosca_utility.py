@@ -70,9 +70,9 @@ def _parse_conf(node, inputs, repos, base_path):
         artifacts = node.entity_tpl['artifacts']
         for key, value in artifacts.items():
             if type(value) is dict:
+                # TODO: is this type correct?
                 if (value['type'] ==
-                    # TODO: is this type correct?
-                    'tosca.artifacts.Deployment.Image.Container.Docker'):
+                   'tosca.artifacts.Deployment.Image.Container.Docker'):
                     parse_pull_image(
                         value['file'], value.get('repository', None))
                 else:
@@ -116,6 +116,7 @@ def _parse_conf(node, inputs, repos, base_path):
             conf.driver = properties.get('driver', None)
             conf.type = properties.get('type', None)
             conf.device = properties.get('device', None)
+            conf.size = properties.get('size', None)
             conf.driver_opt = properties.get('driver_opt', None)
 
     elif node.type == SOFTWARE:
@@ -145,8 +146,9 @@ def _parse_conf(node, inputs, repos, base_path):
                         'path': '/'.join(path_split[:-1]),
                         'file_path': abs_path
                     }
-                    _log.debug('path: {} file: {}'.format(intf[key]['cmd']['path'],
-                                                         intf[key]['cmd']['file']))
+                    _log.debug('path: {} file: {}'
+                               .format(intf[key]['cmd']['path'],
+                                       intf[key]['cmd']['file']))
                 if 'inputs' in value:
                     intf[key]['inputs'] = value['inputs']
                     # intf[key]['inputs'] = _parse_map(value['inputs'])
