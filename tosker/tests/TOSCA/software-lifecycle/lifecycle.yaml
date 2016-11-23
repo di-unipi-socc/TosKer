@@ -31,7 +31,7 @@ topology_template:
             implementation: delete.sh
 
     server1:
-      type: tosker.docker.container.volatile
+      type: tosker.docker.container
       properties:
         ports:
           80: 8080

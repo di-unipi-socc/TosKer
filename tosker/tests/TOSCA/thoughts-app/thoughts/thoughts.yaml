@@ -22,7 +22,7 @@ topology_template:
       type: tosker.software
       requirements:
         - host: maven_container
-        - connectsTo: db_container
+        - connect: db_container
       interfaces:
         Standard:
           create:
@@ -48,7 +48,7 @@ topology_template:
       type: tosker.software
       requirements:
         - host: node_container
-        - dependsOn: api
+        - depend: api
       interfaces:
         Standard:
           create:
@@ -72,11 +72,11 @@ topology_template:
             implementation: scripts/gui/uninstall.sh
 
     maven_container:
-      type: tosker.docker.container.volatile
+      type: tosker.docker.container
       properties:
         ports:
           8080: 8000
-        # cmd: 'true'
+        # command: 'true'
       artifacts:
         my_image:
           file: maven:3.3-jdk-8
@@ -84,7 +84,7 @@ topology_template:
           repository: docker_hub
 
     node_container:
-      type: tosker.docker.container.volatile
+      type: tosker.docker.container
       properties:
         ports:
           3000: 8080

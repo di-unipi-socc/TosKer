@@ -27,4 +27,4 @@ topology_template:
       properties:
         env_variable:
           NAME: { get_input: your_name }
-        cmd: printenv
+        command: printenv

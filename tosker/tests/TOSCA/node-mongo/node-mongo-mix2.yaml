@@ -28,14 +28,14 @@ topology_template:
         ports:
           80: 8080
       requirements:
-        - connectsTo: db
+        - connect: db
       artifacts:
         node_mogo_image:
           file: app/Dockerfile
           type: tosca.artifacts.File
 
     server2:
-      type: tosker.docker.container.volatile
+      type: tosker.docker.container
       artifacts:
         ubuntu_image:
           file: ubuntu

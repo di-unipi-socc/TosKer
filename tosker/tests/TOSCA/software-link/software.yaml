@@ -56,8 +56,8 @@ topology_template:
         package: package.json
       requirements:
         - host: nodejs3
-        - connectsTo: server1
-        - connectsTo: server2
+        - connect: server1
+        - connect: server2
       interfaces:
         Standard:
           create:
@@ -71,7 +71,7 @@ topology_template:
               port: 80
 
     nodejs1:
-      type: tosker.docker.container.volatile
+      type: tosker.docker.container
       properties:
         ports:
           80: 8081
@@ -82,7 +82,7 @@ topology_template:
           repository: docker_hub
 
     nodejs2:
-      type: tosker.docker.container.volatile
+      type: tosker.docker.container
       properties:
         ports:
           80: 8082
@@ -93,7 +93,7 @@ topology_template:
           repository: docker_hub
 
     nodejs3:
-      type: tosker.docker.container.volatile
+      type: tosker.docker.container
       properties:
         ports:
           80: 8083

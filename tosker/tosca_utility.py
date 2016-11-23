@@ -16,14 +16,14 @@ _log = None
 
 # CUSTOM TYPE
 PERSISTENT_CONTAINER = 'tosker.docker.container.persistent'
-VOLATILE_CONTAINER = 'tosker.docker.container.volatile'
+VOLATILE_CONTAINER = 'tosker.docker.container'
 VOLUME = 'tosker.docker.volume'
 SOFTWARE = 'tosker.software'
 
 # REQUIREMENTS
-CONNECT = 'connectsTo'
-DEPENDS = 'dependsOn'
-ATTACH = 'attachesTo'
+CONNECT = 'connect'
+DEPENDS = 'depend'
+ATTACH = 'attach'
 HOST = 'host'
 
 
@@ -102,8 +102,8 @@ def _parse_conf(node, inputs, repos, base_path):
                 values = node.entity_tpl['properties']['env_variable']
                 conf.env = _parse_map(values)
 
-            if 'cmd' in node.entity_tpl['properties']:
-                conf.cmd = node.entity_tpl['properties']['cmd']
+            if 'command' in node.entity_tpl['properties']:
+                conf.cmd = node.entity_tpl['properties']['command']
 
             if 'ports' in node.entity_tpl['properties']:
                 values = node.entity_tpl['properties']['ports']

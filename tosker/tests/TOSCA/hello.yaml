@@ -8,6 +8,7 @@ repositories:
 
 imports:
   - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
+  # - tosker: ../../tosker-types.yaml
 
 topology_template:
   inputs:
@@ -28,7 +29,7 @@ topology_template:
       properties:
         env_variable:
           NAME: { get_input: your_name }
-        cmd: bash -c "echo 'Hello World!'; printenv"
+        command: bash -c "echo 'Hello World!'; printenv"
 
   outputs:
     container_id:
