@@ -19,7 +19,6 @@ class Docker_interface:
         self._cli = Client(base_url=os.environ.get('DOCKER_HOST') or socket)
         self._tmp_dir = tmp_dir
 
-    # TODO: aggiungere un parametro per eliminare i container se esistono gia'!
     def create(self, con, cmd=None, entrypoint=None, saved_image=False):
         def create_container():
             tmp_dir = path.join(self._tmp_dir, con.name)
@@ -75,10 +74,10 @@ class Docker_interface:
             # )
             self._log.debug('stop building..')
         elif not saved_image:
-            # TODO: da evitare se si deve utilizzare un'immagine custom
             self._log.debug('start pulling.. {}'.format(con.image))
-            utility.print_json(
-                self._cli.pull(con.image, stream=True), self._log.debug)
+            # utility.print_json(
+            self._cli.pull(con.image)
+            # , self._log.debug)
             self._log.debug('end pulling..')
 
         try:
@@ -124,7 +123,6 @@ class Docker_interface:
             exec_id = self._cli.exec_create(name, cmd)
             status = self._cli.exec_start(exec_id)
 
-            # TODO: verificare attendibilita' di questo check!
             check = 'rpc error:' != status[:10].decode("utf-8")
             self._log.debug('check: {}'.format(check))
             return check
@@ -132,7 +130,6 @@ class Docker_interface:
             self._log.error(e)
             return False
         except requests.exceptions.ConnectionError as e:
-            # TODO: questo errore arriva dopo un timeout di 10 secodi
             self._log.error(e)
             return False
 
@@ -155,15 +152,26 @@ class Docker_interface:
         return volumes['Volumes'] or []
 
     def inspect(self, item):
+        return (self.inspect_image(item) or
+                self.inspect_container(item) or
+                self.inspect_volume(item))
+
+    def inspect_image(self, item):
+        name = self._get_name(item)
+        try:
+            return self._cli.inspect_image(name)
+        except errors.NotFound:
+            return None
+
+    def inspect_container(self, item):
         name = self._get_name(item)
         try:
             return self._cli.inspect_container(name)
         except errors.NotFound:
-            pass
-        try:
-            return self._cli.inspect_image(name)
-        except errors.NotFound:
-            pass
+            return None
+
+    def inspect_volume(self, item):
+        name = self._get_name(item)
         try:
             return self._cli.inspect_volume(name)
         except errors.NotFound:
@@ -213,8 +221,7 @@ class Docker_interface:
         old_cmd = stat['Config']['Cmd'] or None
         old_entry = stat['Config']['Entrypoint'] or None
 
-        # TODO: da sistemare questo inspect vuole cercare solo container
-        if self.inspect(node):
+        if self.inspect_container(node):
             self.stop(node)
             self.delete(node)
         self.create(node, cmd=cmd, entrypoint='', saved_image=saved_image)

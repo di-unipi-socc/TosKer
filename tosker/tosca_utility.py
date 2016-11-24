@@ -19,6 +19,8 @@ PERSISTENT_CONTAINER = 'tosker.docker.container.persistent'
 VOLATILE_CONTAINER = 'tosker.docker.container'
 VOLUME = 'tosker.docker.volume'
 SOFTWARE = 'tosker.software'
+IMAGE1 = 'tosker.docker.image'
+IMAGE2 = 'tosca.artifacts.Deployment.Image.Container.Docker'
 
 # REQUIREMENTS
 CONNECT = 'connect'
@@ -70,9 +72,7 @@ def _parse_conf(node, inputs, repos, base_path):
         artifacts = node.entity_tpl['artifacts']
         for key, value in artifacts.items():
             if type(value) is dict:
-                # TODO: is this type correct?
-                if (value['type'] ==
-                   'tosca.artifacts.Deployment.Image.Container.Docker'):
+                if value['type'] == IMAGE1 or value['type'] == IMAGE2:
                     parse_pull_image(
                         value['file'], value.get('repository', None))
                 else:
@@ -131,7 +131,6 @@ def _parse_conf(node, inputs, repos, base_path):
         # get interfaces
         if 'interfaces' in node.entity_tpl and \
                 'Standard' in node.entity_tpl['interfaces']:
-            # TODO: implimement all the standard cycle
             interfaces = node.entity_tpl['interfaces']['Standard']
             intf = {}
             for key, value in interfaces.items():
@@ -302,7 +301,9 @@ def _parse_functions(tosca, inputs, base_path):
                         node[k] = tosca_inputs[v['get_input']]['default']
                 else:
                     _parse_node(name, v)
-            elif type(v) is toscaparser.functions.GetProperty:
+            elif isinstance(v, toscaparser.functions.GetProperty):
+                node[k] = v.result()
+            elif isinstance(v, toscaparser.functions.GetInput):
                 node[k] = v.result()
 
     def _get(name, value, args):

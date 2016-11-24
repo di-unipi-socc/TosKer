@@ -33,7 +33,7 @@ topology_template:
           type: tosca.artifacts.Deployment.Image.Container.Docker
           repository: docker_hub
       requirements:
-        - attachesTo:
+        - attach:
             node: mysql_volume
             relationship:
               type: tosca.relationships.AttachesTo

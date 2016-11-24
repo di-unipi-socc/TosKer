@@ -29,19 +29,19 @@ node_types:
       # END
 
     properties:
-      driver:
+      driver: # by default it is local
         type: string
         required: false
-      device:
+      device: # the device to mount. for example: /dev/sdb1
         type: string
         required: false
-      type:
+      type: # the file system type. for example: tmpfs, btrfs, nfs..
         type: string
         required: false
-      size:
+      size: # restrict to a given size. for example: 100m
         type: string
         required: false
-      driver_opt:
+      driver_opt: # other options similar to the one of the unix mount command
         type: map
         required: false
 
@@ -178,3 +178,8 @@ node_types:
         type: tosca.capabilities.Node
         valid_source_types: [tosker.software, tosker.docker.container.persistent]
         occurrences: [0, UNBOUNDED]
+
+artifact_types:
+    tosker.docker.image:
+      derived_from: tosca.artifacts.Deployment.Image.Container.Docker
+      description: a Docker image
