@@ -204,7 +204,7 @@ class Docker_interface:
             pass
 
     # TODO: splittare questo metodo in due, semantica non chiara!
-    # TODO: questo metodo può esserre semplificato se il software deve essere
+    # TODO: questo metodo puo esserre semplificato se il software deve essere
     # installato su un volatile container
     def update_container(self, node, cmd, saved_image=True):
         assert isinstance(node, Container)
