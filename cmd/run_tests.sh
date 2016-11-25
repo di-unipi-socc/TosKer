@@ -11,7 +11,7 @@ if [ ! -d "venv3" ]; then
 fi
 
 # test on python2
-echo '\nTEST PYTHON2' >> $TEST_LOG
+echo 'TEST PYTHON2' >> $TEST_LOG
 . ./venv2/bin/activate
 pip install -r requirements.txt
 python -m unittest discover -v >> $TEST_LOG
