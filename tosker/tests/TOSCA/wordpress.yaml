@@ -30,7 +30,7 @@ topology_template:
       artifacts:
         my_image:
           file: mysql
-          type: tosca.artifacts.Deployment.Image.Container.Docker
+          type: tosker.docker.image
           repository: docker_hub
 
     # The WordPress container based on official WordPress image in Docker hub
@@ -47,5 +47,5 @@ topology_template:
       artifacts:
         my_image:
           file: wordpress
-          type: tosca.artifacts.Deployment.Image.Container.Docker
+          type: tosker.docker.image
           repository: docker_hub

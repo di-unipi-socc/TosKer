@@ -78,7 +78,7 @@ topology_template:
       artifacts:
         my_image:
           file: node:6
-          type: tosca.artifacts.Deployment.Image.Container.Docker
+          type: tosker.docker.image
           repository: docker_hub
 
     nodejs2:
@@ -89,7 +89,7 @@ topology_template:
       artifacts:
         my_image:
           file: node:6
-          type: tosca.artifacts.Deployment.Image.Container.Docker
+          type: tosker.docker.image
           repository: docker_hub
 
     nodejs3:
@@ -100,5 +100,5 @@ topology_template:
       artifacts:
         my_image:
           file: node:6
-          type: tosca.artifacts.Deployment.Image.Container.Docker
+          type: tosker.docker.image
           repository: docker_hub

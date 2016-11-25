@@ -120,8 +120,11 @@ class Docker_interface:
         if not self.is_running(name):
             return False
         try:
-            exec_id = self._cli.exec_create(name, cmd)
+            exec_id = self._cli.exec_create(name, cmd,
+                                            stdout=False,
+                                            stderr=False)
             status = self._cli.exec_start(exec_id)
+            self._log.debug(status)
 
             check = 'rpc error:' != status[:10].decode("utf-8")
             self._log.debug('check: {}'.format(check))

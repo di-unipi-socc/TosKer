@@ -32,12 +32,12 @@ topology_template:
       artifacts:
         node_mogo_image:
           file: app/Dockerfile
-          type: tosca.artifacts.File
+          type: tosker.docker.dockerfile
 
     server2:
       type: tosker.docker.container
       artifacts:
         ubuntu_image:
           file: ubuntu
-          type: tosca.artifacts.Deployment.Image.Container.Docker
+          type: tosker.docker.image
           repository: docker_hub

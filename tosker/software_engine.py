@@ -18,20 +18,14 @@ class Software_engine:
         self._copy_files(node)
 
         cmd = self._get_cmd_args(node, 'create')
-        self._log.debug('cmd: {}'.format(cmd))
 
         if cmd is None:
             return
 
-        # The first software node above the container have to be installed on
-        # the original image
-        saved_image = not isinstance(node.host, Container)
-        self._docker.update_container(node.host_container, cmd,
-                                      saved_image=saved_image)
+        self._docker.update_container(node.host_container, cmd)
 
     def configure(self, node):
         cmd = self._get_cmd_args(node, 'configure')
-        self._log.debug('cmd: {}'.format(cmd))
 
         if cmd is None:
             return
@@ -43,8 +37,6 @@ class Software_engine:
 
         if cmd is None:
             return
-
-        self._log.debug('start cmd: {}'.format(cmd))
 
         status = self._docker.exec_cmd(node.host_container, cmd)
         if not status:
@@ -62,8 +54,6 @@ class Software_engine:
         if cmd is None:
             return
 
-        self._log.debug('stop cmd: {}'.format(cmd))
-
         if self._docker.is_running(node.host_container):
             self._log.debug('exec stop command!')
             self._docker.exec_cmd(node.host_container, cmd)
@@ -73,8 +63,6 @@ class Software_engine:
 
         if cmd is None:
             return
-
-        self._log.debug('delete cmd: {}'.format(cmd))
 
         if self._docker.is_running(node.host_container):
             self._log.debug('exec delete command!')
@@ -104,6 +92,7 @@ class Software_engine:
         self._log.debug('interface: {}'.format(node.interfaces[interface]))
         args = []
         args_env = []
+        res = None
         if 'inputs' in node.interfaces[interface]:
             for key, value in node.interfaces[interface]['inputs'].items():
                 if type(value) is dict:
@@ -112,11 +101,16 @@ class Software_engine:
                 args_env.append(
                     'export INPUT_{}={}'.format(key.upper(), value))
 
-            return 'sh -c \'{};sh {} {}\''.format(
+            res = 'sh -c \'{};sh {} {}\''.format(
                 ';'.join(args_env),
                 _get_inside_path(node.interfaces[interface]['cmd']),
                 ' '.join(args)
             )
-        return 'sh {}'.format(
-            _get_inside_path(node.interfaces[interface]['cmd']),
-        )
+        else:
+            res = 'sh {}'.format(
+                _get_inside_path(node.interfaces[interface]['cmd']),
+            )
+
+        self._log.debug('{} command ({}) on container {}'
+                        .format(interface, res, node.host_container))
+        return res

@@ -12,11 +12,11 @@ imports:
 topology_template:
   inputs:
     app_port:
-      type: string
+      type: integer
       default: 8080
       description: the application port
     api_port:
-      type: string
+      type: integer
       default: 8000
       description: the API port
     app_repo:

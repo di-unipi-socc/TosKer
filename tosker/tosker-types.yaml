@@ -183,3 +183,7 @@ artifact_types:
     tosker.docker.image:
       derived_from: tosca.artifacts.Deployment.Image.Container.Docker
       description: a Docker image
+
+    tosker.docker.dockerfile:
+      derived_from: tosca.artifacts.File
+      description: a Dockerfile

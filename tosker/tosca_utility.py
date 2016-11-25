@@ -21,6 +21,8 @@ VOLUME = 'tosker.docker.volume'
 SOFTWARE = 'tosker.software'
 IMAGE1 = 'tosker.docker.image'
 IMAGE2 = 'tosca.artifacts.Deployment.Image.Container.Docker'
+DOCKERFILE1 = 'tosker.docker.dockerfile'
+DOCKERFILE2 = 'tosca.artifacts.File'
 
 # REQUIREMENTS
 CONNECT = 'connect'

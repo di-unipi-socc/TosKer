@@ -24,7 +24,7 @@ topology_template:
       artifacts:
         my_image:
           file: ubuntu
-          type: tosca.artifacts.Deployment.Image.Container.Docker
+          type: tosker.docker.image
           repository: docker_hub
       properties:
         env_variable:

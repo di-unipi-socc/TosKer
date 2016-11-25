@@ -36,7 +36,7 @@ topology_template:
       artifacts:
         image:
           file: mongo
-          type: tosca.artifacts.Deployment.Image.Container.Docker
+          type: tosker.docker.image
           repository: docker_hub
 
     node:
@@ -56,5 +56,5 @@ topology_template:
       artifacts:
         my_image:
           file: ubuntu:latest
-          type: tosca.artifacts.Deployment.Image.Container.Docker
+          type: tosker.docker.image
           repository: docker_hub

@@ -1,2 +1,2 @@
 #!/bin/sh
-mongod --dbpath .
+mongod --dbpath /db > /db/DEBUG_LOG

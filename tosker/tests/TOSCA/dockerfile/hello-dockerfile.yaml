@@ -23,7 +23,7 @@ topology_template:
       artifacts:
         hello_image:
           file: ./Dockerfile
-          type: tosca.artifacts.File
+          type: tosker.docker.dockerfile
       properties:
         env_variable:
           NAME: { get_input: your_name }
