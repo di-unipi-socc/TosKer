@@ -1,5 +1,5 @@
 #!/bin/sh
-TEST_LOG=/tmp/tosker_test.log
+TEST_LOG="/tmp/tosker_$(date +'%F_%T').test"
 echo '' > $TEST_LOG
 
 if [ ! -d "venv2" ]; then
@@ -26,6 +26,8 @@ deactivate
 
 # coverage
 echo '\nCOVERAGE' >> $TEST_LOG
+. ./venv3/bin/activate
 coverage run --source tosker -m unittest discover 2> /dev/null
 coverage report -m >> $TEST_LOG
 coverage html
+deactivate
