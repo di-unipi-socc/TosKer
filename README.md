@@ -9,29 +9,43 @@
 ```
 sudo pip install tosker
 ```
+
+Usage:
 ```
-tosker <TOSCA-file> <operations> <inputs>
+    tosker <file> (create|start|stop|delete)... [<inputs>...]
+    tosker <file> (create|start|stop|delete)... -q|--quiet [<inputs>...]
+    tosker <file> (create|start|stop|delete)... --debug [<inputs>...]
+    tosker -h|--help
 ```
 
-example:
+Options:
 ```
-tosker tosker/test/TOSCA/wordpress.yaml create start
-tosker tosker/test/TOSCA/wordpress.yaml stop delete
+    -h --help     Show this help.
+    -q --quiet    Active quiet mode.
+    --debug       Active debugging mode.
 ```
+
+Examples:
+```
+    tosker tosker/test/TOSCA/wordpress.yaml create --name mario
+    tosker tosker/test/TOSCA/wordpress.yaml start -q
+    tosker tosker/test/TOSCA/wordpress.yaml stop --debuug
+    tosker tosker/test/TOSCA/wordpress.yaml delete
+
+    tosker tosker/test/TOSCA/wordpress.yaml create start --name mario
+    tosker tosker/test/TOSCA/wordpress.yaml stop delete -q
+
+```
+
 
 ### Install from source
 ```
 git clone https://github.com/di-unipi-socc/tosKer/tree/master
-cd tosca-parser
+cd tosKer
 sudo python setup.py install
 ```
 
-use command:
-```
-tosker tosker/test/TOSCA/wordpress.yaml create start
-```
-
-run the tests:
+Run the tests:
 ```
 python setup.py test
 ```

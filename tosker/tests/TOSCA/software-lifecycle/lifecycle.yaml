@@ -37,6 +37,6 @@ topology_template:
           80: 8080
       artifacts:
         my_image:
-          file: ubuntu:latest
+          file: ubuntu:16.04
           type: tosker.docker.image
           repository: docker_hub
