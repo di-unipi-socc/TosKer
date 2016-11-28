@@ -30,15 +30,28 @@ new PeopleSchema({
     name: 'Mario',
     surname: 'Verdi'
 }).save();
+new PeopleSchema({
+    name: 'John',
+    surname: 'Foo'
+}).save();
+new PeopleSchema({
+    name: 'John',
+    surname: 'Bar'
+}).save();
+new PeopleSchema({
+    name: 'Mario',
+    surname: 'FooBar'
+}).save();
 
 var app = express();
-app.get('/hello', function(req, res) {
-    res.send('hello-world');
-});
 
 app.get('/', function(req, res) {
     PeopleSchema.find(function(err, people) {
-        res.send(people);
+        var html = '<h3>People:</h3>';
+        html += '<ul>';
+        people.forEach(p => html += '<li>' + p.name + ' ' + p.surname + '</li>');
+        html += '</ul>';
+        res.send(html);
     });
 });
 

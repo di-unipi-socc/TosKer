@@ -68,6 +68,8 @@ Two different approach to resolve the same problem.
 ## TOSCA + Docker
 Why not combine them instead of choose?
 
+---
+
 ## TosKer
 It is a project that aim to combine **TOSCA** and **Docker** to improve the deployment of the web application on the Cloud.
 
@@ -85,13 +87,13 @@ It is a project that aim to combine **TOSCA** and **Docker** to improve the depl
 ---
 
 ## How it works
-The application is described using the TOSCA yaml language.
+1. The application is described using the TOSCA yaml language.
 
-The TOSCA file validated and parsed
+2. The TOSCA file validated and parsed
 
-Is computed the deployment order of the components
+3. Is computed the deployment order of the components
 
-The deployments is done by using the Docker
+4. The deployments is done by using the Docker
 
 ---
 
@@ -107,7 +109,7 @@ TosKer support only a set of TOSCA types:
 ---
 
 ## Type of relationship
-Each components can express a set of relationship:
+![container_type](img/Tosker_types_legend.png)
 
 - host `tosca.relationships.AttachesTo`
 
@@ -171,12 +173,76 @@ my_software:
 ---
 
 ## An example
+![example](img/Tosker_types_example.png)
+___
+
+### TOSCA specification
+```yaml
+node_templates:
+  web_app:
+    type: tosker.software
+    artifacts:
+      ...
+    requirements:
+      - host: node_container
+      - connect: db
+    interfaces:
+      Standard:
+        create:
+          implementation: app/install.sh
+        start:
+          implementation: app/start.sh
+
+  db:
+    type: tosker.software
+    requirements:
+      - host: ubuntu_container
+    interfaces:
+      Standard:
+        create:
+          implementation: mongo/install.sh
+        start:
+          implementation: mongo/start.sh
+
+  node_container:
+    type: tosker.docker.container
+    properties:
+      ports:
+        80: 8080
+    artifacts:
+      my_image:
+        file: node:6
+        type: tosker.docker.image
+        repository: docker_hub
+
+  ubuntu_container:
+    type: tosker.docker.container
+    artifacts:
+      my_image:
+        file: ubuntu16.04
+        type: tosker.docker.image
+        repository: docker_hub
+```
 
 ---
 
-
 ## How use it
+```
+tosker <file> (create|start|stop|delete)... [<inputs>...]
+```
 
+Options:
+```
+-h --help     Show this help.
+-q --quiet    Active quiet mode.
+--debug       Active debugging mode.
+```
+
+Examples:
+```
+tosker app.yaml create start
+tosker app.yaml stop delete
+```
 
 ---
 
