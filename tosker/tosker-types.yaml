@@ -128,7 +128,7 @@ node_types:
           # END
 
     capabilities:
-      conect:
+      connect:
         type: tosca.capabilities.Endpoint
         valid_source_types: [tosker.software, tosker.docker.container.persistent]
         occurrences: [0, UNBOUNDED]
@@ -170,8 +170,8 @@ node_types:
         type: tosca.capabilities.Container
         valid_source_types: [tosker.software]
         occurrences: [0, UNBOUNDED]
-      conect:
-        type: tosca.capabilities.Attachment
+      connect:
+        type: tosca.capabilities.Endpoint
         valid_source_types: [tosker.software, tosker.docker.container.persistent]
         occurrences: [0, UNBOUNDED]
       depend:
