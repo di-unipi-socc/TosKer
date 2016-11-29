@@ -3,17 +3,12 @@
 var express = require('express');
 var mongoose = require('mongoose');
 
-function connect_to_mongo() {
-    // console.log('try to connect...');
+(function connect_to_mongo() {
     mongoose.connect('mongodb://db/data1', function(err) {
-        if (err) {
-            // console.log('error: ' + err.message);
-            connect_to_mongo();
-        } else
-            console.log('connection successful');
+        if (err) connect_to_mongo();
+        else console.log('connection successful');
     });
-}
-connect_to_mongo();
+})();
 
 var Schema = mongoose.Schema;
 var PeopleSchema = mongoose.model('People',
@@ -55,6 +50,7 @@ app.get('/', function(req, res) {
     });
 });
 
-app.listen(process.env.PORT || 80, function() {
-    console.log('server listen on port ' + (process.env.PORT || 80));
+var port = process.env.PORT || 80;
+app.listen(port, function() {
+    console.log('server listen on port ' + port);
 });
