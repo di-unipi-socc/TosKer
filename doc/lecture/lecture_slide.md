@@ -5,84 +5,84 @@
 ---
 
 ## Software deployment
-It is the execution of all the activities that make a software system available to use. <!-- .element: class="fragment" -->
+The execution of all the activities that make a software system available to use. <!-- .element: class="fragment" -->
 
-It is now a days strictly related to the cloud infrastructure. <!-- .element: class="fragment" -->
+Nowadays strictly related to the cloud infrastructure. <!-- .element: class="fragment" -->
 
-<div>Need a way to express all the **requirements** and **capability** that the application needs to run. </div><!-- .element: class="fragment" -->
+<div>Need of a way to express all the **requirements** and **capability** that the application needs to run. </div><!-- .element: class="fragment" -->
 
 Note:
 OS, database connection, library to install, programming language, and so on..
 
 ---
 
-**How is possible to describe an application?**
+**How to describe an application?**
 
 ---
 
 ## Docker
 Docker containers wrap up the software and all their requirements: code, runtime, system tools, system libraries. <!-- .element: class="fragment" -->
 
-This guarantees that it will always run in all environment that have Docker. <!-- .element: class="fragment" -->
+This guarantees that they will always run in all environment that support Docker. <!-- .element: class="fragment" -->
 
-**Install all the requirements inside a container!** <!-- .element: class="fragment" -->
+**Embed all the requirements inside a container!** <!-- .element: class="fragment" -->
 
 ---
 
 ## TOSCA
-It is an OASIS standard language to describe a topology of an application, with their components and relationships. <!-- .element: class="fragment" -->
+OASIS standard language to describe the topology of an application, with its components and relationships. <!-- .element: class="fragment" -->
 
-This guarantees that by following the description is possible to replicate the configuration of the application. <!-- .element: class="fragment" -->
+Following the description it is possible to replicate the configuration of the application. <!-- .element: class="fragment" -->
 
-**Describe every parts of your application!** <!-- .element: class="fragment" -->
+**Describe every part of your application!** <!-- .element: class="fragment" -->
 
 ---
 
-## TOSCA vs Docker
+## TOSCA vs. Docker
 Two different approach to resolve the same problem.
 
 **installation** vs **description**
 
 ---
 
-## Limitation of Docker
+## Pros and Cons of Docker
 - &#8679; It works out of the box <!-- .element: class="fragment" -->
 
 - &#8679; There are a lot of images ready to be used <!-- .element: class="fragment" -->
 
-- &#8681; Can not deploy complex applications <!-- .element: class="fragment" -->
+- &#8681; Cannot deploy complex applications <!-- .element: class="fragment" -->
 
-- &#8681; All have to be a container <!-- .element: class="fragment" -->
+- &#8681; Everything must be a container <!-- .element: class="fragment" -->
 
 ---
 
-## Limitation of TOSCA
+## Pro and Cons of TOSCA
 - &#8679; Well documented standard <!-- .element: class="fragment" -->
 
 - &#8679; Adaptable to every deployment infrastructure <!-- .element: class="fragment" -->
 
 - &#8681; Lack of implementations <!-- .element: class="fragment" -->
 
-- &#8681; To verbose, everything have to be describe <!-- .element: class="fragment" -->
+- &#8681; Too verbose, everything must be described <!-- .element: class="fragment" -->
 
 ---
 
 ## TOSCA + Docker
-Why not combine them instead of choose?
+Why not combining them instead of choosing?
 
 ---
 
 ## TosKer
-It is a project that aim to combine **TOSCA** and **Docker** to improve the deployment of the web application on the Cloud.
+Project that aims to combine **TOSCA** and **Docker** to improve the deployment of applications on the Cloud.
 
 ---
 
-## Feature of TosKer
+## Features of TosKer
 - Can deploy Docker container and generic software components <!-- .element: class="fragment" -->
 
-- Can deploy complex application <!-- .element: class="fragment" -->
+- Can deploy complex applications <!-- .element: class="fragment" -->
 
-- Use the requirements/capability system of TOSCA <!-- .element: class="fragment" -->
+- Uses the requirements/capability system of TOSCA <!-- .element: class="fragment" -->
 
 - Can manage networking between components <!-- .element: class="fragment" -->
 
@@ -95,7 +95,7 @@ It is a project that aim to combine **TOSCA** and **Docker** to improve the depl
 
 3. The deployment order is computed <!-- .element: class="fragment" -->
 
-4. The deployments is executed by using Docker <!-- .element: class="fragment" -->
+4. The deployment is executed using Docker <!-- .element: class="fragment" -->
 
 ---
 
@@ -112,7 +112,7 @@ TosKer support only a set of TOSCA types:
 
 ---
 
-## Type of relationship
+## Types of relationship
 ![container_type](img/Tosker_types_legend.png) <!-- .element: style="border: 0;background: 0; box-shadow:0 0;" -->
 
 - host `tosca.relationships.AttachesTo`
@@ -230,7 +230,7 @@ node_templates:
 
 ---
 
-## How use it
+## How to use it
 ```
 tosker <file> (create|start|stop|delete)... [<inputs>...]
 ```

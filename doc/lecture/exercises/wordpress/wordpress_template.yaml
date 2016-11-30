@@ -1,0 +1,64 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: The TOSCA description of ad wordpress site
+
+repositories:
+  docker_hub: https://registry.hub.docker.com/
+
+imports:
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
+
+topology_template:
+  inputs:
+    # TODO: we can use inputs to improuve configurability
+
+  node_templates:
+    wordpress:
+      type: tosker.software
+      requirements:
+        - host: # TODO: require apache, php and mysql library
+        - connect: # TODO: require a mysql database
+      interfaces:
+        Standard:
+          create:
+            implementation: wordpress/create.sh
+          configure:
+            implementation: wordpress/configure.sh
+          delete:
+            implementation: wordpress/delete.sh
+
+    mysql_library:
+      type: tosker.software
+      requirements:
+        - host: # TODO: require an host with apache and php
+      interfaces:
+        Standard:
+          create:
+            implementation: mysql_library/create.sh
+          delete:
+            implementation: mysql_library/delete.sh
+
+
+    apache_container:
+      type: tosker.docker.container.persistent
+      properties:
+        ports:
+          # TODO: the port binding of the docker container
+      artifacts:
+        my_image:
+          file: # TODO: add a Docker image with apache and php
+          type: tosker.docker.image
+          repository: docker_hub
+
+    mysql_container:
+      type: tosker.docker.container.persistent
+      properties:
+        # configuration of mysql
+        env_variable:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: wordpress_db
+      artifacts:
+        my_image:
+          file: # TODO: add a Docker image that have mysql database
+          type: tosker.docker.image
+          repository: docker_hub

@@ -3,7 +3,6 @@ import logging
 import os
 import shutil
 from os import path
-# from time import sleep  # DEBUG
 
 from termcolor import colored
 from docker import Client, errors
@@ -51,8 +50,11 @@ class Deployer:
         for node in self._tpl.deploy_order:
             Logger.print_('  {}'.format(node))
             try:
-                if type(node) is Container and node.persistent:
-                    self._docker.create(node)
+                if type(node) is Container:
+                    if node.persistent:
+                        self._docker.create(node)
+                    else:
+                        self._docker.pull(node.image)
                 elif type(node) is Volume:
                     self._docker.create_volume(node)
                 elif type(node) is Software:
@@ -61,6 +63,7 @@ class Deployer:
             except Exception as e:
                 self._print_cross()
                 Logger.println(e)
+                self._log.exception(e)
                 exit(-1)
 
             self._print_tick()

@@ -1,0 +1,99 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: The TOSCA description of Throughts application.
+
+repositories:
+  docker_hub: https://registry.hub.docker.com/
+
+imports:
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
+
+topology_template:
+  inputs:
+    # TODO: we can use inputs to improuve configurability
+
+  node_templates:
+    api:
+      type: tosker.software
+      requirements:
+        - host: # TODO: add the required componets name
+        - connect: # TODO: add the required componets name
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/api/install.sh
+          configure:
+            implementation: scripts/api/configure.sh
+            inputs:
+              dbURL: # TODO: add database url
+              dbPort: 27017
+          start:
+            implementation: scripts/api/start.sh
+          stop:
+            implementation: scripts/api/stop.sh
+          delete:
+            implementation: scripts/api/uninstall.sh
+
+    gui:
+      type: tosker.software
+      requirements:
+        - host: # TODO: add componets name
+        - depend: # TODO: add componets name
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/gui/install.sh
+            inputs:
+              repo: https://github.com/jacopogiallo/thoughts-gui
+              branch: master
+          configure:
+            implementation: scripts/gui/configure.sh
+            inputs:
+              apiUrl: localhost
+              apiPort: # TODO: add the port where the api is listening
+          start:
+            implementation: scripts/gui/start.sh
+          stop:
+            implementation: scripts/gui/stop.sh
+          delete:
+            implementation: scripts/gui/uninstall.sh
+
+    maven_container:
+      type: tosker.docker.container
+      properties:
+        ports:
+          8080: # TODO: add the port where the service will listen
+      artifacts:
+        my_image:
+          file: # TODO: add maven Docker image
+          type: tosker.docker.image
+          repository: docker_hub
+
+    node_container:
+      type: tosker.docker.container
+      properties:
+        ports:
+          3000: # TODO: add the port where the service will listen
+      artifacts:
+        my_image:
+          file: # TODO: add nodejs Docker image
+          type: tosker.docker.image
+          repository: docker_hub
+
+    db_container:
+      type: tosker.docker.container.persistent
+      artifacts:
+        my_image:
+          file: # TODO: add mongodb Docker image
+          type: tosker.docker.image
+          repository: docker_hub
+      requirements:
+        - attach:
+            node: # TODO: add volume name
+            relationship:
+              type: tosca.relationships.AttachesTo
+              properties:
+                location: # TODO: add mount location
+
+    db_volume:
+      type: tosker.docker.volume

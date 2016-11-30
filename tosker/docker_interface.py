@@ -89,6 +89,10 @@ class Docker_interface:
             create_container()
             # raise e
 
+    def pull(self, image):
+        assert isinstance(image, six.string_types)
+        self._cli.pull(image)
+
     def stop(self, container):
         name = self._get_name(container)
         try:
