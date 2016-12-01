@@ -100,37 +100,65 @@ Project that aims to combine **TOSCA** and **Docker** to improve the deployment 
 ---
 
 ## Custom Types
-TosKer support only a set of TOSCA types:
+TosKer support only those custom types:
 
-- Docker persistent container `tosker.docker.container.persistent`
+- Docker persistent container *tosker.docker.container.persistent*<!--.element: style="font-size:20pt;"-->
 
-- Docker container `tosker.docker.container`
+- Docker container *tosker.docker.container*<!--.element: style="font-size:20pt;"-->
 
-- Docker volume `tosker.docker.volume`
+- Docker volume *tosker.docker.volume* <!--.element: style="font-size:20pt;"-->
 
-- Software `tosker.software`
+- Software *tosker.software*<!--.element: style="font-size:20pt;"-->
 
 ---
 
 ## Types of relationship
-![container_type](img/Tosker_types_legend.png) <!-- .element: style="border: 0;background: 0; box-shadow:0 0;" -->
+![container_type](img/Tosker_legend.png) <!-- .element: style="border: 0;background: 0; box-shadow:0 0;" -->
 
-- host `tosca.relationships.AttachesTo`
+Tosker support all the normative relationship:
 
-- connect `tosca.relationships.ConnectsTo`
+- host *tosca.relationships.AttachesTo* <!--.element: style="font-size:20pt;"-->
 
-- depend `tosca.relationships.DependsOn`
+- connect *tosca.relationships.ConnectsTo* <!--.element: style="font-size:20pt;"-->
 
-- attach `tosca.relationships.AttachesTo`
+- depend *tosca.relationships.DependsOn* <!--.element: style="font-size:20pt;"-->
+
+- attach *tosca.relationships.AttachesTo*<!--.element: style="font-size:20pt;"-->
 
 ---
 
-### Docker container
+## Docker container
 ![container_type](img/Tosker_types_container.png) <!-- .element: style="border: 0;background: 0; box-shadow:0 0;" -->
 
+___
+
+### Definition
+
+```yaml
+tosker.docker.container:
+  derived_from: tosca.nodes.Container.Runtime
+  properties:
+    ports:
+      type: map
+      required: false
+  requirements:
+    - attach:
+        capability: tosca.capabilities.Attachment
+        occurrences: [0, UNBOUNDED]
+  capabilities:
+    host:
+      type: tosca.capabilities.Container
+      valid_source_types: [tosker.software]
+      occurrences: [0, UNBOUNDED]
+```
+___
+
+### Example
 ```yaml
 my_container:
   type: tosker.docker.container
+  requirements:
+    - attach: my_volume
   properties:
     ports:
       80: 8000
@@ -142,8 +170,86 @@ my_container:
 ```
 ---
 
-### Docker volume
+## Docker Persistent Container
+![container_type](img/Tosker_types_persistent_container.png) <!-- .element: style="border: 0;background: 0; box-shadow:0 0;" -->
+
+___
+
+### Definition
+
+```yaml
+tosker.docker.container.persistent:
+  derived_from: tosker.docker.container
+  properties:
+    env_variable:
+      type: map
+      required: false
+    ...
+  requirements:
+    - connect:
+        capability: tosca.capabilities.Endpoint
+        occurrences: [0, UNBOUNDED]
+    - depend:
+        capability: tosca.capabilities.Node
+        occurrences: [0, UNBOUNDED]
+  capabilities:
+    connect:
+      type: tosca.capabilities.Endpoint
+      valid_source_types: [tosker.software, tosker.docker.container.persistent]
+      occurrences: [0, UNBOUNDED]
+    depend:
+      type: tosca.capabilities.Node
+      valid_source_types: [tosker.software, tosker.docker.container.persistent]
+      occurrences: [0, UNBOUNDED]
+```
+___
+
+### Example
+
+```yaml
+my_container:
+  type: tosker.docker.container.persistent
+  requirements:
+    - connect: my_other_container
+    - depend: my_other_software
+    - attach: my_volume
+  properties:
+    ports:
+      80: 8000
+  artifacts:
+    my_image:
+      file: ubuntu:16.04
+      type: tosker.docker.image
+      repository: docker_hub
+```
+---
+
+## Docker volume
 ![container_type](img/Tosker_types_volume.png) <!-- .element: style="border: 0;background: 0; box-shadow:0 0;" -->
+
+___
+
+### Definition
+```yaml
+tosker.docker.volume:
+  derived_from: tosca.nodes.BlockStorage
+  properties:
+    driver: # by default it is local
+      type: string
+      required: false
+    size: # restrict to a given size. for example: 100m
+      type: string
+      required: false
+    ...
+  capabilities:
+    attach:
+      type: tosca.capabilities.Attachment
+      valid_source_types: [tosker.docker.container.persistent, tosker.docker.container]
+      occurrences: [0, UNBOUNDED]
+```
+___
+
+### Example
 
 ```yaml
 my_volume:
@@ -155,12 +261,52 @@ my_volume:
 
 ---
 
-### Software type
+## Software type
 ![container_type](img/Tosker_types_software.png) <!-- .element: style="border: 0;background: 0; box-shadow:0 0;" -->
+
+___
+
+### Definition
+
+```yaml
+tosker.software:
+  derived_from: tosca.nodes.SoftwareComponent
+  requirements:
+    - connect:
+        capability: tosca.capabilities.Endpoint
+        occurrences: [0, UNBOUNDED]
+    - depend:
+        capability: tosca.capabilities.Node
+        occurrences: [0, UNBOUNDED]
+    - host:
+        capability: tosca.capabilities.Container
+        occurrences: 1
+  capabilities:
+    host:
+      type: tosca.capabilities.Container
+      valid_source_types: [tosker.software]
+      occurrences: [0, UNBOUNDED]
+    connect:
+      type: tosca.capabilities.Endpoint
+      valid_source_types: [tosker.software, tosker.docker.container.persistent]
+      occurrences: [0, UNBOUNDED]
+    depend:
+      type: tosca.capabilities.Node
+      valid_source_types: [tosker.software, tosker.docker.container.persistent]
+      occurrences: [0, UNBOUNDED]
+
+```
+___
+
+### Example
 
 ```yaml
 my_software:
   type: tosker.software
+  requirements:
+    - connect: my_other_software
+    - depend: my_other_software
+    - host: my_container
   interfaces:
     Standard:
       create:
@@ -176,61 +322,115 @@ my_software:
 ```
 ---
 
-## An example
-![example](img/Tosker_types_example.png) <!-- .element: style="border: 0;background: 0; box-shadow:0 0;" -->
+## An example: Thoughts
+![example](img/Tosker_example.png) <!-- .element: style="border: 0;background: 0; box-shadow:0 0;" -->
+
 ___
 
 ### TOSCA specification
 ```yaml
-node_templates:
-  web_app:
-    type: tosker.software
-    artifacts:
-      ...
-    requirements:
-      - host: node_container
-      - connect: db
-    interfaces:
-      Standard:
-        create:
-          implementation: app/install.sh
-        start:
-          implementation: app/start.sh
+tosca_definitions_version: tosca_simple_yaml_1_0
 
-  db:
-    type: tosker.software
-    requirements:
-      - host: ubuntu_container
-    interfaces:
-      Standard:
-        create:
-          implementation: mongo/install.sh
-        start:
-          implementation: mongo/start.sh
+description: TOSCA description of the Thoughts application.
 
-  node_container:
-    type: tosker.docker.container
-    properties:
-      ports:
-        80: 8080
-    artifacts:
-      my_image:
-        file: node:6
-        type: tosker.docker.image
-        repository: docker_hub
+repositories:
+  docker_hub: https://registry.hub.docker.com/
 
-  ubuntu_container:
-    type: tosker.docker.container
-    artifacts:
-      my_image:
-        file: ubuntu16.04
-        type: tosker.docker.image
-        repository: docker_hub
+imports:
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
+
+topology_template:
+  inputs:
+    app_port:
+      type: integer
+      default: 8080
+      description: the application port
+    api_port:
+      type: integer
+      default: 8000
+      description: the API port
+
+  node_templates:
+    api:
+      type: tosker.software
+      requirements:
+        - host: maven_container
+        - connect: db_container
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/api/install.sh
+          configure:
+            implementation: scripts/api/configure.sh
+          start:
+            implementation: scripts/api/start.sh
+          stop:
+            implementation: scripts/api/stop.sh
+          delete:
+            implementation: scripts/api/uninstall.sh
+
+    gui:
+      type: tosker.software
+      requirements:
+        - host: node_container
+        - depend: api
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/gui/install.sh
+          configure:
+            implementation: scripts/gui/configure.sh
+          start:
+            implementation: scripts/gui/start.sh
+          stop:
+            implementation: scripts/gui/stop.sh
+          delete:
+            implementation: scripts/gui/uninstall.sh
+
+    maven_container:
+      type: tosker.docker.container
+      properties:
+        ports:
+          8080: { get_input: api_port }
+      artifacts:
+        my_image:
+          file: maven:3.3-jdk-8
+          type: tosker.docker.image
+          repository: docker_hub
+
+    node_container:
+      type: tosker.docker.container
+      properties:
+        ports:
+          3000: { get_input: app_port }
+      artifacts:
+        my_image:
+          file: node:6
+          type: tosker.docker.image
+          repository: docker_hub
+
+    db_container:
+      type: tosker.docker.container.persistent
+      artifacts:
+        my_image:
+          file: mongo:3.4
+          type: tosker.docker.image
+          repository: docker_hub
+      requirements:
+        - attach:
+            node: db_volume
+            relationship:
+              type: tosca.relationships.AttachesTo
+              properties:
+                location: /data/db
+
+    db_volume:
+      type: tosker.docker.volume
 ```
 
 ---
 
-## How to use it
+## How to use TosKer
 ```
 tosker <file> (create|start|stop|delete)... [<inputs>...]
 ```
