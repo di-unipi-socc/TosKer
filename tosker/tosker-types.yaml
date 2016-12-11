@@ -1,58 +1,8 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
-description: >
-  Definitoon of the custom types of tosKer.
+description: Definitoon of the custom types of TosKer.
 
 node_types:
-  tosker.docker.volume:
-    derived_from: tosca.nodes.BlockStorage
-
-    attributes:
-      id:
-        type: string
-      # BEGIN work around for the get_attribute bug in toscaparser
-      driver:
-        type: string
-        required: false
-      device:
-        type: string
-        required: false
-      type:
-        type: string
-        required: false
-      size:
-        type: string
-        required: false
-      driver_opt:
-        type: map
-        required: false
-      # END
-
-    properties:
-      driver: # by default it is local
-        type: string
-        required: false
-      device: # the device to mount. for example: /dev/sdb1
-        type: string
-        required: false
-      type: # the file system type. for example: tmpfs, btrfs, nfs..
-        type: string
-        required: false
-      size: # restrict to a given size. for example: 100m
-        type: string
-        required: false
-      driver_opt: # other options similar to the one of the unix mount command
-        type: map
-        required: false
-
-    capabilities:
-      attach:
-        type: tosca.capabilities.Attachment
-        valid_source_types: [tosker.docker.container.persistent, tosker.docker.container]
-        occurrences: [0, UNBOUNDED]
-
-
-
   tosker.docker.container:
     derived_from: tosca.nodes.Container.Runtime
 
@@ -138,6 +88,53 @@ node_types:
         occurrences: [0, UNBOUNDED]
 
 
+  tosker.docker.volume:
+    derived_from: tosca.nodes.BlockStorage
+
+    attributes:
+      id:
+        type: string
+      # BEGIN work around for the get_attribute bug in toscaparser
+      driver:
+        type: string
+        required: false
+      device:
+        type: string
+        required: false
+      type:
+        type: string
+        required: false
+      size:
+        type: string
+        required: false
+      driver_opt:
+        type: map
+        required: false
+      # END
+
+    properties:
+      driver: # by default it is local
+        type: string
+        required: false
+      device: # the device to mount. for example: /dev/sdb1
+        type: string
+        required: false
+      type: # the file system type. for example: tmpfs, btrfs, nfs..
+        type: string
+        required: false
+      size: # restrict to a given size. for example: 100m
+        type: string
+        required: false
+      driver_opt: # other options similar to the one of the unix mount command
+        type: map
+        required: false
+
+    capabilities:
+      attach:
+        type: tosca.capabilities.Attachment
+        valid_source_types: [tosker.docker.container.persistent,tosker.docker.container]
+        occurrences: [0, UNBOUNDED]
+
 
   tosker.software:
     derived_from: tosca.nodes.SoftwareComponent
@@ -180,10 +177,10 @@ node_types:
         occurrences: [0, UNBOUNDED]
 
 artifact_types:
-    tosker.docker.image:
-      derived_from: tosca.artifacts.Deployment.Image.Container.Docker
-      description: a Docker image
+  tosker.docker.image:
+    derived_from: tosca.artifacts.Deployment.Image.Container.Docker
+    description: a Docker image
 
-    tosker.docker.dockerfile:
-      derived_from: tosca.artifacts.File
-      description: a Dockerfile
+  tosker.docker.dockerfile:
+    derived_from: tosca.artifacts.File
+    description: a Dockerfile
