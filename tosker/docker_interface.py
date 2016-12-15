@@ -24,7 +24,7 @@ def _get_name(func):
 
 class Docker_interface:
 
-    def __init__(self, tpl, tmp_dir, socket='unix://var/run/docker.sock'):
+    def __init__(self, tpl=None, tmp_dir=None, socket='unix://var/run/docker.sock'):
         self._log = Logger.get(__name__)
         self._tpl = tpl
         self._tmp_dir = tmp_dir
