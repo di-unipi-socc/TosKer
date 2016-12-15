@@ -76,7 +76,7 @@ class Orchestrator:
             Logger.print_('  {}'.format(node))
 
             if isinstance(node, Container) and node.persistent:
-                self._container_manager.create(node)
+                self._container_manager.start(node)
             elif isinstance(node, Software):
                 self._software_manager.start(node)
 
