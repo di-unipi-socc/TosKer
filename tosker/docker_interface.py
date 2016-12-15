@@ -11,7 +11,7 @@ from .nodes import Container, Volume
 from .utility import Logger
 
 
-def _get_name_decorator(func):
+def _get_name(func):
     @wraps(func)
     def func_wrapper(self, *args, **kwds):
         if isinstance(args[0], six.string_types):
@@ -31,7 +31,11 @@ class Docker_interface:
         self._cli = Client(base_url=os.environ.get('DOCKER_HOST') or socket)
         self._tmp_dir = tmp_dir
 
-    def create_container(self, con, cmd=None, entrypoint=None, saved_image=False):
+    def create_container(self,
+                         con,
+                         cmd=None,
+                         entrypoint=None,
+                         saved_image=False):
         def create():
             tmp_dir = path.join(self._tmp_dir, con.name)
             try:
@@ -105,14 +109,14 @@ class Docker_interface:
         assert isinstance(image, six.string_types)
         self._cli.pull(image)
 
-    @_get_name_decorator
+    @_get_name
     def stop_container(self, name):
         try:
             return self._cli.stop(name)
         except errors.NotFound as e:
             self._log.error(e)
 
-    @_get_name_decorator
+    @_get_name
     def start_container(self, name, wait=False):
         self._cli.start(name)
         if wait:
@@ -123,7 +127,7 @@ class Docker_interface:
                 self._log.debug
             )
 
-    @_get_name_decorator
+    @_get_name
     def delete_container(self, name):
         try:
             self._cli.remove_container(name, v=True)
@@ -131,7 +135,7 @@ class Docker_interface:
             self._log.error(e)
             raise e
 
-    @_get_name_decorator
+    @_get_name
     def exec_cmd(self, name, cmd):
         if not self.is_running(name):
             return False
@@ -159,7 +163,7 @@ class Docker_interface:
             volume.name, volume.driver, volume.get_all_opt()
         )
 
-    @_get_name_decorator
+    @_get_name
     def delete_volume(self, name):
         return self._cli.remove_volume(name)
 
@@ -175,21 +179,21 @@ class Docker_interface:
                 self.inspect_container(item) or
                 self.inspect_volume(item))
 
-    @_get_name_decorator
+    @_get_name
     def inspect_image(self, name):
         try:
             return self._cli.inspect_image(name)
         except errors.NotFound:
             return None
 
-    @_get_name_decorator
+    @_get_name
     def inspect_container(self, name):
         try:
             return self._cli.inspect_container(name)
         except errors.NotFound:
             return None
 
-    @_get_name_decorator
+    @_get_name
     def inspect_volume(self, name):
         try:
             return self._cli.inspect_volume(name)
@@ -267,10 +271,3 @@ class Docker_interface:
         stat = stat is not None and stat['State']['Running'] is True
         self._log.debug('State: {}'.format(stat))
         return stat
-
-    # def _get_name(self, name):
-    #     if isinstance(name, six.string_types):
-    #         return name
-    #     else:
-    #         assert isinstance(name, (Container, Volume))
-    #         return name.name

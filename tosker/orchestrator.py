@@ -12,9 +12,9 @@ from tosker import utility
 
 from .docker_interface import Docker_interface
 from .nodes import Container, Software, Volume
-from .software_manager import Software_manager
-from .container_manager import Container_manager
-from .volume_manager import Volume_manager
+from .managers.software_manager import Software_manager
+from .managers.container_manager import Container_manager
+from .managers.volume_manager import Volume_manager
 from .tosca_utility import get_tosca_template
 from .utility import Logger
 

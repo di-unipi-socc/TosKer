@@ -3,8 +3,8 @@ from os import path
 from shutil import copy
 from functools import wraps
 
-from .nodes import Container
-from .utility import Logger
+from ..nodes import Container
+from ..utility import Logger
 
 
 def _get_cmd(interface):
