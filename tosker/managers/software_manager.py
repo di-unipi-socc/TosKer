@@ -19,10 +19,9 @@ def _get_cmd(interface):
 
 class Software_manager:
 
-    def __init__(self, docker, tpl, tmp_dir):
+    def __init__(self, docker, tmp_dir):
         self._log = Logger.get(__name__)
         self._docker = docker
-        self._tpl = tpl
         self._tmp_dir = tmp_dir
 
     @_get_cmd('create')
@@ -43,7 +42,7 @@ class Software_manager:
             self._docker.create_container(node.host_container,
                                           cmd=cmd,
                                           entrypoint='',
-                                          saved_image=True)
+                                          from_saved=True)
             self._docker.start_container(node.host_container)
 
     @_get_cmd('stop')

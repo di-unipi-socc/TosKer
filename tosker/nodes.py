@@ -59,6 +59,7 @@ class Container(Base):
         self.ports = None
         self.persistent = False
         self.volume = None
+        self.saved_image = None
 
         self.software_layer = []  # This is not used now
 

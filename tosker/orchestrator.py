@@ -36,12 +36,10 @@ class Orchestrator:
         except os.error as e:
             self._log.info(e)
 
-        self._docker = Docker_interface(self._tpl.name, self._tmp_dir)
-        self._container_manager = Container_manager(self._docker, self._tpl)
+        self._docker = Docker_interface(self._tpl, self._tmp_dir)
+        self._container_manager = Container_manager(self._docker)
         self._volume_manager = Volume_manager(self._docker)
-        self._software_manager = Software_manager(
-            self._docker, self._tpl, self._tmp_dir
-        )
+        self._software_manager = Software_manager(self._docker, self._tmp_dir)
 
         Logger.println('Deploy order: \n  ' + '\n  '.join(
             ['{}. {}'.format(i + 1, n)
@@ -49,7 +47,7 @@ class Orchestrator:
         ))
 
     def create(self):
-        self._docker.create_network(self._tpl.name)  # TODO: da rimuovere
+        self._docker.create_network(self._tpl.net_name)  # TODO: da rimuovere
         Logger.println('\nCREATE')
         for node in self._tpl.deploy_order:
             Logger.print_('  {}'.format(node))

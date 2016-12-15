@@ -6,6 +6,7 @@ class Template:
     def __init__(self, name):
         self._nodes = {}
         self.name = name
+        self.net_name = 'tosker-net_{}'.format(name)
         self.deploy_order = []
         self.outputs = []
 

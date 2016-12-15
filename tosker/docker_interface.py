@@ -24,28 +24,28 @@ def _get_name(func):
 
 class Docker_interface:
 
-    def __init__(self, net_name='tosker_net', tmp_dir='/tmp',
-                 socket='unix://var/run/docker.sock'):
+    def __init__(self, tpl, tmp_dir, socket='unix://var/run/docker.sock'):
         self._log = Logger.get(__name__)
-        self._net_name = net_name
-        self._cli = Client(base_url=os.environ.get('DOCKER_HOST') or socket)
+        self._tpl = tpl
         self._tmp_dir = tmp_dir
+        self._cli = Client(base_url=os.environ.get('DOCKER_HOST') or socket)
 
     def create_container(self,
                          con,
                          cmd=None,
                          entrypoint=None,
-                         saved_image=False):
+                         from_saved=False):
         def create():
             tmp_dir = path.join(self._tmp_dir, con.name)
             try:
                 os.makedirs(tmp_dir)
             except:
                 pass
-            saved_img_name = '{}/{}'.format(self._net_name, con.name)
             img_name = con.image
-            if saved_image and self.inspect_image(saved_img_name):
-                img_name = saved_img_name
+            if from_saved:
+                saved_image = self.get_saved_image(con)
+                if self.inspect_image(saved_image):
+                    img_name = saved_image
 
             self._log.debug('container: {}'.format(con.get_str_obj()))
 
@@ -62,7 +62,7 @@ class Docker_interface:
                 volumes=['/tmp/dt'] + ([k for k, v in con.volume.items()]
                                        if con.volume else []),
                 networking_config=self._cli.create_networking_config({
-                    self._net_name: self._cli.create_endpoint_config(
+                    self._tpl.net_name: self._cli.create_endpoint_config(
                         links=con.link
                         # ,aliases=['db']
                     )}),
@@ -89,7 +89,7 @@ class Docker_interface:
             )
             # )
             self._log.debug('stop building..')
-        elif not saved_image:
+        elif not from_saved:
             self._log.debug('start pulling.. {}'.format(con.image))
             # utility.print_json(
             self._cli.pull(con.image)
@@ -237,7 +237,7 @@ class Docker_interface:
     # TODO: splittare questo metodo in due, semantica non chiara!
     # TODO: questo metodo puo esserre semplificato se il software deve essere
     # installato su un volatile container
-    def update_container(self, node, cmd, saved_image=True):
+    def update_container(self, node, cmd, from_saved=True):
         assert isinstance(node, Container)
         # self._log.debug('container_conf: {}'.format(node.host_container))
         stat = self.inspect_image(node.image)
@@ -247,27 +247,30 @@ class Docker_interface:
         if self.inspect_container(node):
             self.stop_container(node)
             self.delete_container(node)
+
         self.create_container(node, cmd=cmd, entrypoint='',
-                              saved_image=saved_image)
+                              from_saved=from_saved)
 
         self.start_container(node.id, wait=True)
         self.stop_container(node.id)
 
-        name = '{}/{}'.format(self._net_name, node.name)
-
-        self._cli.commit(node.id, name)
+        self._cli.commit(node.id, self.get_saved_image(node))
 
         self.stop_container(node)
         self.delete_container(node)
         self.create_container(node,
                               cmd=node.cmd or old_cmd,
                               entrypoint=node.entrypoint or old_entry,
-                              saved_image=True)
+                              from_saved=True)
 
-        self._cli.commit(node.id, name)
+        self._cli.commit(node.id, self.get_saved_image(node))
 
     def is_running(self, container):
         stat = self.inspect_container(container)
         stat = stat is not None and stat['State']['Running'] is True
         self._log.debug('State: {}'.format(stat))
         return stat
+
+    @_get_name
+    def get_saved_image(self, name):
+        return '{}/{}'.format(self._tpl.name, name)

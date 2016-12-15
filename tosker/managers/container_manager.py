@@ -3,10 +3,9 @@ from ..utility import Logger
 
 class Container_manager:
 
-    def __init__(self, docker, tpl):
+    def __init__(self, docker):
         self._log = Logger.get(__name__)
         self._docker = docker
-        self._tpl = tpl
 
     def create(self, node):
         if node.persistent:
@@ -27,10 +26,8 @@ class Container_manager:
     def stop(self, node):
         self._docker.stop_container(node)
         self._docker.delete_container(node)
-        self._docker.create_container(node, saved_image=True)
+        self._docker.create_container(node, from_saved=True)
 
     def delete(self, node):
         self._docker.delete_container(node)
-        self._docker.delete_image(
-            '{}/{}'.format(self._tpl.name, node.name)
-        )
+        self._docker.delete_image(self.get_saved_image(node))
