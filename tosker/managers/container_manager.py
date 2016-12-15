@@ -30,4 +30,4 @@ class Container_manager:
 
     def delete(self, node):
         self._docker.delete_container(node)
-        self._docker.delete_image(self.get_saved_image(node))
+        self._docker.delete_image(self._docker.get_saved_image(node))
