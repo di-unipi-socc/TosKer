@@ -3,11 +3,23 @@ from os import path
 
 import requests.exceptions
 import six
+from functools import wraps
 from docker import Client, errors
 
 from . import utility
 from .nodes import Container, Volume
 from .utility import Logger
+
+
+def _get_name_decorator(func):
+    @wraps(func)
+    def func_wrapper(self, *args, **kwds):
+        if isinstance(args[0], six.string_types):
+            return func(self, *args, **kwds)
+        else:
+            assert isinstance(args[0], (Container, Volume))
+            return func(self, args[0].name, *args[1:], **kwds)
+    return func_wrapper
 
 
 class Docker_interface:
@@ -19,8 +31,8 @@ class Docker_interface:
         self._cli = Client(base_url=os.environ.get('DOCKER_HOST') or socket)
         self._tmp_dir = tmp_dir
 
-    def create(self, con, cmd=None, entrypoint=None, saved_image=False):
-        def create_container():
+    def create_container(self, con, cmd=None, entrypoint=None, saved_image=False):
+        def create():
             tmp_dir = path.join(self._tmp_dir, con.name)
             try:
                 os.makedirs(tmp_dir)
@@ -28,7 +40,7 @@ class Docker_interface:
                 pass
             saved_img_name = '{}/{}'.format(self._net_name, con.name)
             img_name = con.image
-            if saved_image and self.inspect(saved_img_name):
+            if saved_image and self.inspect_image(saved_img_name):
                 img_name = saved_img_name
 
             self._log.debug('container: {}'.format(con.get_str_obj()))
@@ -81,27 +93,27 @@ class Docker_interface:
             self._log.debug('end pulling..')
 
         try:
-            create_container()
+            create()
         except errors.APIError as e:
             self._log.debug(e)
             # self.stop(con)
-            self.delete(con)
-            create_container()
+            self.delete_container(con)
+            create()
             # raise e
 
-    def pull(self, image):
+    def pull_image(self, image):
         assert isinstance(image, six.string_types)
         self._cli.pull(image)
 
-    def stop(self, container):
-        name = self._get_name(container)
+    @_get_name_decorator
+    def stop_container(self, name):
         try:
             return self._cli.stop(name)
         except errors.NotFound as e:
             self._log.error(e)
 
-    def start(self, container, wait=False):
-        name = self._get_name(container)
+    @_get_name_decorator
+    def start_container(self, name, wait=False):
         self._cli.start(name)
         if wait:
             self._log.debug('wait container..')
@@ -111,16 +123,16 @@ class Docker_interface:
                 self._log.debug
             )
 
-    def delete(self, container):
-        name = self._get_name(container)
+    @_get_name_decorator
+    def delete_container(self, name):
         try:
             self._cli.remove_container(name, v=True)
         except (errors.NotFound, errors.APIError) as e:
             self._log.error(e)
             raise e
 
-    def exec_cmd(self, container, cmd):
-        name = self._get_name(container)
+    @_get_name_decorator
+    def exec_cmd(self, name, cmd):
         if not self.is_running(name):
             return False
         try:
@@ -147,8 +159,8 @@ class Docker_interface:
             volume.name, volume.driver, volume.get_all_opt()
         )
 
-    def delete_volume(self, volume):
-        name = self._get_name(volume)
+    @_get_name_decorator
+    def delete_volume(self, name):
         return self._cli.remove_volume(name)
 
     def get_containers(self, all=False):
@@ -163,22 +175,22 @@ class Docker_interface:
                 self.inspect_container(item) or
                 self.inspect_volume(item))
 
-    def inspect_image(self, item):
-        name = self._get_name(item)
+    @_get_name_decorator
+    def inspect_image(self, name):
         try:
             return self._cli.inspect_image(name)
         except errors.NotFound:
             return None
 
-    def inspect_container(self, item):
-        name = self._get_name(item)
+    @_get_name_decorator
+    def inspect_container(self, name):
         try:
             return self._cli.inspect_container(name)
         except errors.NotFound:
             return None
 
-    def inspect_volume(self, item):
-        name = self._get_name(item)
+    @_get_name_decorator
+    def inspect_volume(self, name):
         try:
             return self._cli.inspect_volume(name)
         except errors.NotFound:
@@ -186,8 +198,8 @@ class Docker_interface:
 
     def remove_all_containers(self):
         for c in self.get_containers(all=True):
-            self.stop(c['Id'])
-            self.delete(c['Id'])
+            self.stop_container(c['Id'])
+            self.delete_container(c['Id'])
 
     def remove_all_volumes(self):
         for v in self.get_volumes():
@@ -205,14 +217,14 @@ class Docker_interface:
             self._log.debug('network already exists!')
 
     def delete_network(self, name):
-        assert isinstance(name, str)
+        assert isinstance(name, six.string_types)
         try:
             self._cli.remove_network(name)
         except errors.APIError:
             self._log.debug('network not exists!')
 
     def delete_image(self, name):
-        assert isinstance(name, str)
+        assert isinstance(name, six.string_types)
         try:
             self._cli.remove_image(name)
         except errors.NotFound:
@@ -224,41 +236,41 @@ class Docker_interface:
     def update_container(self, node, cmd, saved_image=True):
         assert isinstance(node, Container)
         # self._log.debug('container_conf: {}'.format(node.host_container))
-        stat = self.inspect(node.image)
+        stat = self.inspect_image(node.image)
         old_cmd = stat['Config']['Cmd'] or None
         old_entry = stat['Config']['Entrypoint'] or None
 
         if self.inspect_container(node):
-            self.stop(node)
-            self.delete(node)
-        self.create(node, cmd=cmd, entrypoint='', saved_image=saved_image)
+            self.stop_container(node)
+            self.delete_container(node)
+        self.create_container(node, cmd=cmd, entrypoint='',
+                              saved_image=saved_image)
 
-        self.start(node.id, wait=True)
-        self.stop(node.id)
+        self.start_container(node.id, wait=True)
+        self.stop_container(node.id)
 
         name = '{}/{}'.format(self._net_name, node.name)
 
         self._cli.commit(node.id, name)
 
-        self.stop(node)
-        self.delete(node)
-        self.create(node,
-                    cmd=node.cmd or old_cmd,
-                    entrypoint=node.entrypoint or old_entry,
-                    saved_image=True)
+        self.stop_container(node)
+        self.delete_container(node)
+        self.create_container(node,
+                              cmd=node.cmd or old_cmd,
+                              entrypoint=node.entrypoint or old_entry,
+                              saved_image=True)
 
         self._cli.commit(node.id, name)
 
     def is_running(self, container):
-        name = self._get_name(container)
-        stat = self.inspect(name)
+        stat = self.inspect_container(container)
         stat = stat is not None and stat['State']['Running'] is True
         self._log.debug('State: {}'.format(stat))
         return stat
 
-    def _get_name(self, name):
-        if isinstance(name, six.string_types):
-            return name
-        else:
-            assert isinstance(name, (Container, Volume))
-            return name.name
+    # def _get_name(self, name):
+    #     if isinstance(name, six.string_types):
+    #         return name
+    #     else:
+    #         assert isinstance(name, (Container, Volume))
+    #         return name.name

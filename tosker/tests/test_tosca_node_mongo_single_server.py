@@ -1,14 +1,14 @@
 import unittest
-from tosker.deployer import Deployer
-from .test_tosca_base import Test_Deployer
+from tosker.orchestrator import Orchestrator
+from .test_tosca_base import Test_Orchestrator
 
 
-class Test_Node_Mongo_Single_Server(Test_Deployer):
+class Test_Node_Mongo_Single_Server(Test_Orchestrator):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.deployer = \
-            Deployer('tosker/tests/TOSCA/node-mongo/node-mongo-single-server.yaml')
+        self.orchestrator = \
+            Orchestrator('tosker/tests/TOSCA/node-mongo/node-mongo-single-server.yaml')
 
     def test(self):
         self.create()

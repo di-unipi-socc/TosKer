@@ -1,15 +1,15 @@
 import unittest
-from tosker.deployer import Deployer
-from .test_tosca_base import Test_Deployer
+from tosker.orchestrator import Orchestrator
+from .test_tosca_base import Test_Orchestrator
 from tosker import utility
 
 
-class Test_Thoughts(Test_Deployer):
+class Test_Thoughts(Test_Orchestrator):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.deployer = \
-            Deployer('tosker/tests/TOSCA/thoughts-app/thoughts.csar'
+        self.orchestrator = \
+            Orchestrator('tosker/tests/TOSCA/thoughts-app/thoughts.csar'
                      # , log_handler=utility.get_consol_handler()
                      )
 

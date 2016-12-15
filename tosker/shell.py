@@ -7,7 +7,7 @@ from sys import argv
 
 from six import print_
 
-from tosker.deployer import Deployer
+from tosker.orchestrator import Orchestrator
 from tosker.utility import Logger
 from tosker import utility
 from tosker import __version__
@@ -116,18 +116,20 @@ def run():
                'directory with in a CSAR file.')
 
     if flags.get('debug', False):
-        deployer = Deployer(file_name, inputs,
-                            log_handler=utility.get_consol_handler(),
-                            quiet=False)
+        orchestrator = Orchestrator(file_name, inputs,
+                                    log_handler=utility.get_consol_handler(),
+                                    quiet=False)
     else:
-        deployer = Deployer(file_name, inputs, quiet=flags.get('quiet', False))
+        orchestrator = Orchestrator(file_name,
+                                    inputs,
+                                    quiet=flags.get('quiet', False))
 
     for c in cmds:
         {
-            'create': deployer.create,
-            'start': deployer.start,
-            'stop': deployer.stop,
-            'delete': deployer.delete,
+            'create': orchestrator.create,
+            'start': orchestrator.start,
+            'stop': orchestrator.stop,
+            'delete': orchestrator.delete,
         }.get(c, lambda: _error('command not found.'))()
 
-    deployer.print_outputs()
+    orchestrator.print_outputs()

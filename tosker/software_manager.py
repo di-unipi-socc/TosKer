@@ -1,12 +1,23 @@
 import os
 from os import path
 from shutil import copy
+from functools import wraps
 
 from .nodes import Container
 from .utility import Logger
 
 
-class Software_engine:
+def _get_cmd(interface):
+    def _get_cmd_decorator(func):
+        @wraps(func)
+        def func_wrapper(self, *args):
+            cmd = self._get_cmd_args(args[0], interface)
+            return func(self, cmd, *args) if cmd else None
+        return func_wrapper
+    return _get_cmd_decorator
+
+
+class Software_manager:
 
     def __init__(self, docker, tpl, tmp_dir):
         self._log = Logger.get(__name__)
@@ -14,56 +25,35 @@ class Software_engine:
         self._tpl = tpl
         self._tmp_dir = tmp_dir
 
-    def create(self, node):
+    @_get_cmd('create')
+    def create(self, cmd, node):
         self._copy_files(node)
-
-        cmd = self._get_cmd_args(node, 'create')
-
-        if cmd is None:
-            return
-
         self._docker.update_container(node.host_container, cmd)
 
-    def configure(self, node):
-        cmd = self._get_cmd_args(node, 'configure')
-
-        if cmd is None:
-            return
-
+    @_get_cmd('configure')
+    def configure(self, cmd, node):
         self._docker.update_container(node.host_container, cmd)
 
-    def start(self, node):
-        cmd = self._get_cmd_args(node, 'start')
-
-        if cmd is None:
-            return
-
+    @_get_cmd('start')
+    def start(self, cmd, node):
         status = self._docker.exec_cmd(node.host_container, cmd)
         if not status:
             self._log.debug('is not running!')
-            self._docker.delete(node.host_container)
-            self._docker.create(node.host_container,
-                                cmd=cmd,
-                                entrypoint='',
-                                saved_image=True)
-            self._docker.start(node.host_container)
+            self._docker.delete_container(node.host_container)
+            self._docker.create_container(node.host_container,
+                                          cmd=cmd,
+                                          entrypoint='',
+                                          saved_image=True)
+            self._docker.start_container(node.host_container)
 
-    def stop(self, node):
-        cmd = self._get_cmd_args(node, 'stop')
-
-        if cmd is None:
-            return
-
+    @_get_cmd('stop')
+    def stop(self, cmd, node):
         if self._docker.is_running(node.host_container):
             self._log.debug('exec stop command!')
             self._docker.exec_cmd(node.host_container, cmd)
 
-    def delete(self, node):
-        cmd = self._get_cmd_args(node, 'delete')
-
-        if cmd is None:
-            return
-
+    @_get_cmd('delete')
+    def delete(self, cmd, node):
         if self._docker.is_running(node.host_container):
             self._log.debug('exec delete command!')
             self._docker.exec_cmd(node.host_container, cmd)
