@@ -7,12 +7,12 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
 
 topology_template:
   node_templates:
     nginx:
-      type: tosker.software
+      type: tosker.nodes.Software
       requirements:
         - host: server1
       interfaces:
@@ -31,12 +31,12 @@ topology_template:
             implementation: delete.sh
 
     server1:
-      type: tosker.docker.container
+      type: tosker.nodes.Container
       properties:
         ports:
           80: 8080
       artifacts:
         my_image:
           file: ubuntu:16.04
-          type: tosker.docker.image
+          type: tosker.artifacts.Image
           repository: docker_hub

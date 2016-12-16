@@ -15,13 +15,13 @@ from .template import Template
 _log = None
 
 # CUSTOM TYPE
-PERSISTENT_CONTAINER = 'tosker.docker.container.persistent'
-VOLATILE_CONTAINER = 'tosker.docker.container'
-VOLUME = 'tosker.docker.volume'
-SOFTWARE = 'tosker.software'
-IMAGE1 = 'tosker.docker.image'
+PERSISTENT_CONTAINER = 'tosker.nodes.Container.Executable'
+VOLATILE_CONTAINER = 'tosker.nodes.Container'
+VOLUME = 'tosker.nodes.Volume'
+SOFTWARE = 'tosker.nodes.Software'
+IMAGE1 = 'tosker.artifacts.Image'
 IMAGE2 = 'tosca.artifacts.Deployment.Image.Container.Docker'
-DOCKERFILE1 = 'tosker.docker.dockerfile'
+DOCKERFILE1 = 'tosker.artifacts.Dockerfile'
 DOCKERFILE2 = 'tosca.artifacts.File'
 
 # REQUIREMENTS

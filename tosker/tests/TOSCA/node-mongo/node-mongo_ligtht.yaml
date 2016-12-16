@@ -7,12 +7,12 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
 
 topology_template:
   node_templates:
     web_app:
-      type: tosker.software
+      type: tosker.nodes.Software
       artifacts:
         code: app/main.js
         package: app/package.json
@@ -32,7 +32,7 @@ topology_template:
               port: 80
 
     db:
-      type: tosker.software
+      type: tosker.nodes.Software
       requirements:
         - host: ubuntu_container
       interfaces:
@@ -43,20 +43,20 @@ topology_template:
             implementation: mongo/start.sh
 
     node_container:
-      type: tosker.docker.container
+      type: tosker.nodes.Container
       properties:
         ports:
           80: 8080
       artifacts:
         my_image:
           file: node:6
-          type: tosker.docker.image
+          type: tosker.artifacts.Image
           repository: docker_hub
 
     ubuntu_container:
-      type: tosker.docker.container
+      type: tosker.nodes.Container
       artifacts:
         my_image:
           file: ubuntu
-          type: tosker.docker.image
+          type: tosker.artifacts.Image
           repository: docker_hub

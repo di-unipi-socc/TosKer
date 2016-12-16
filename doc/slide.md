@@ -22,8 +22,8 @@
 ### Custom Types
 Esistono tre tipi custom type supportati:
 
-- `tosker.docker.container` rappresenta un container di docker con tutte le proprietà adatte per la sua creazione, il suo lifecycle è quello implicito in docker
-- `tosker.docker.volume` rappresentano un volume di dokcer con le varie proprietà
+- `tosker.nodes.Container` rappresenta un container di docker con tutte le proprietà adatte per la sua creazione, il suo lifecycle è quello implicito in docker
+- `tosker.nodes.Volume` rappresentano un volume di dokcer con le varie proprietà
 - `tocker.software` rappresenta un nodo generico software gestito con lo Standard lifecycle di TOSCA
 
 ---

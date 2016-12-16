@@ -3,8 +3,11 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 description: Definitoon of the custom types of TosKer.
 
 node_types:
-  tosker.docker.container:
-    derived_from: tosca.nodes.Container.Runtime
+  tosker.nodes.Root:
+    derived_from: tosca.nodes.Root
+
+  tosker.nodes.Container:
+    derived_from: tosker.nodes.Root
 
     attributes:
       id:
@@ -28,20 +31,18 @@ node_types:
       - attach:
           capability: tosca.capabilities.Attachment
           occurrences: [0, UNBOUNDED]
-          # BEGIN add because toscaparser doesn't consider this optional
-          node: tosker.docker.volume
+          node: tosker.nodes.Volume
           relationship: tosca.relationships.AttachesTo
-          # END
 
     capabilities:
       host:
         type: tosca.capabilities.Container
-        valid_source_types: [tosker.software]
+        valid_source_types: [tosker.nodes.Software]
         occurrences: [0, UNBOUNDED]
 
 
-  tosker.docker.container.persistent:
-    derived_from: tosker.docker.container
+  tosker.nodes.Container.Executable:
+    derived_from: tosker.nodes.Container
 
     attributes:
       # BEGIN work around for the get_attribute bug in toscaparser
@@ -65,31 +66,27 @@ node_types:
       - connect:
           capability: tosca.capabilities.Endpoint
           occurrences: [0, UNBOUNDED]
-          # BEGIN because toscaparser doesn't consider this optional
-          node: tosker.docker.container
+          node: tosker.nodes.Root
           relationship: tosca.relationships.ConnectsTo
-          # END
       - depend:
           capability: tosca.capabilities.Node
           occurrences: [0, UNBOUNDED]
-          # BEGIN add because toscaparser doesn't consider this optional
-          node: tosker.docker.container
+          node: tosker.nodes.Root
           relationship: tosca.relationships.DependsOn
-          # END
 
     capabilities:
       connect:
         type: tosca.capabilities.Endpoint
-        valid_source_types: [tosker.software, tosker.docker.container.persistent]
+        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
         occurrences: [0, UNBOUNDED]
       depend:
         type: tosca.capabilities.Node
-        valid_source_types: [tosker.software, tosker.docker.container.persistent]
+        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
         occurrences: [0, UNBOUNDED]
 
 
-  tosker.docker.volume:
-    derived_from: tosca.nodes.BlockStorage
+  tosker.nodes.Volume:
+    derived_from: tosker.nodes.Root
 
     attributes:
       id:
@@ -132,55 +129,52 @@ node_types:
     capabilities:
       attach:
         type: tosca.capabilities.Attachment
-        valid_source_types: [tosker.docker.container.persistent,tosker.docker.container]
+        valid_source_types: [tosker.nodes.Container, tosker.nodes.Container.Executable]
         occurrences: [0, UNBOUNDED]
 
 
-  tosker.software:
-    derived_from: tosca.nodes.SoftwareComponent
+  tosker.nodes.Software:
+    derived_from: tosker.nodes.Root
 
     requirements:
       - connect:
           capability: tosca.capabilities.Endpoint
           occurrences: [0, UNBOUNDED]
-          # BEGIN because toscaparser doesn't consider this optional
-          node: tosker.docker.container
+          node: tosker.nodes.Root
           relationship: tosca.relationships.ConnectsTo
-          # END
       - depend:
           capability: tosca.capabilities.Node
           occurrences: [0, UNBOUNDED]
-          # BEGIN add because toscaparser doesn't consider this optional
-          node: tosker.docker.container
+          node: tosker.nodes.Root
           relationship: tosca.relationships.DependsOn
-          # END
       - host:
           capability: tosca.capabilities.Container
           occurrences: 1
-          # BEGIN add because toscaparser doesn't consider this optional
-          node: tosker.docker.container
+          node: tosker.nodes.Container
           relationship: tosca.relationships.HostedOn
-          # END
 
     capabilities:
       host:
         type: tosca.capabilities.Container
-        valid_source_types: [tosker.software]
+        valid_source_types: [tosker.nodes.Software]
         occurrences: [0, UNBOUNDED]
       connect:
         type: tosca.capabilities.Endpoint
-        valid_source_types: [tosker.software, tosker.docker.container.persistent]
+        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
         occurrences: [0, UNBOUNDED]
       depend:
         type: tosca.capabilities.Node
-        valid_source_types: [tosker.software, tosker.docker.container.persistent]
+        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
         occurrences: [0, UNBOUNDED]
 
 artifact_types:
-  tosker.docker.image:
-    derived_from: tosca.artifacts.Deployment.Image.Container.Docker
+  tosker.artifacts.Root:
+    derived_from: tosca.artifacts.Root
+
+  tosker.artifacts.Image:
+    derived_from: tosker.artifacts.Root
     description: a Docker image
 
-  tosker.docker.dockerfile:
-    derived_from: tosca.artifacts.File
+  tosker.artifacts.Dockerfile:
+    derived_from: tosker.artifacts.Root
     description: a Dockerfile

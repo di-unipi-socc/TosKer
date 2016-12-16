@@ -7,7 +7,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.5/tosker.yaml
+  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
   # - tosker: ../../tosker-types.yaml
 
 topology_template:
@@ -20,11 +20,11 @@ topology_template:
   node_templates:
     # The ubuntu container that print enviroment variable
     hello_container:
-      type: tosker.docker.container.persistent
+      type: tosker.nodes.Container.Executable
       artifacts:
         my_image:
           file: ubuntu
-          type: tosker.docker.image
+          type: tosker.artifacts.Image
           repository: docker_hub
       properties:
         env_variable:
