@@ -36,9 +36,11 @@ class Orchestrator:
         except os.error as e:
             self._log.info(e)
 
-        self._docker = Docker_interface(self._tpl.name,
-                                        self._tpl.net_name,
-                                        self._tmp_dir)
+        self._docker = Docker_interface(
+            'tosker-repo_{}'.format(self._tpl.name),
+            'tosker-net_{}'.format(self._tpl.name),
+            self._tmp_dir
+        )
         self._container_manager = Container_manager(self._docker)
         self._volume_manager = Volume_manager(self._docker)
         self._software_manager = Software_manager(self._docker)
