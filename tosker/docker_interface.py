@@ -24,9 +24,14 @@ def _get_name(func):
 
 class Docker_interface:
 
-    def __init__(self, tpl=None, tmp_dir=None, socket='unix://var/run/docker.sock'):
+    def __init__(self,
+                 repo=None,
+                 net_name=None,
+                 tmp_dir=None,
+                 socket='unix://var/run/docker.sock'):
         self._log = Logger.get(__name__)
-        self._tpl = tpl
+        self._repo = repo
+        self._net_name = net_name
         self._tmp_dir = tmp_dir
         self._cli = Client(base_url=os.environ.get('DOCKER_HOST') or socket)
 
@@ -62,7 +67,7 @@ class Docker_interface:
                 volumes=['/tmp/dt'] + ([k for k, v in con.volume.items()]
                                        if con.volume else []),
                 networking_config=self._cli.create_networking_config({
-                    self._tpl.net_name: self._cli.create_endpoint_config(
+                    self._net_name: self._cli.create_endpoint_config(
                         links=con.link
                         # ,aliases=['db']
                     )}),
@@ -201,21 +206,21 @@ class Docker_interface:
         for v in self.get_volumes():
             self.delete_volume(v['Name'])
 
-    def create_network(self, name, subnet='172.25.0.0/16'):
+    def create_network(self, name='', subnet='172.25.0.0/16'):
         # docker network create -d bridge --subnet 172.25.0.0/16 isolated_nw
         # self.delete_network(name)
         try:
-            self._cli.create_network(name=name,
+            self._cli.create_network(name=name or self._net_name,
                                      driver='bridge',
                                      ipam={'subnet': subnet},
                                      check_duplicate=True)
         except errors.APIError:
             self._log.debug('network already exists!')
 
-    def delete_network(self, name):
+    def delete_network(self, name=''):
         assert isinstance(name, six.string_types)
         try:
-            self._cli.remove_network(name)
+            self._cli.remove_network(name or self._net_name)
         except errors.APIError:
             self._log.debug('network not exists!')
 
@@ -226,12 +231,8 @@ class Docker_interface:
         except errors.NotFound:
             pass
 
-    # TODO: splittare questo metodo in due, semantica non chiara!
-    # TODO: questo metodo puo esserre semplificato se il software deve essere
-    # installato su un volatile container
-    def update_container(self, node, cmd, from_saved=True):
+    def update_container(self, node, cmd):
         assert isinstance(node, Container)
-        # self._log.debug('container_conf: {}'.format(node.host_container))
         stat = self.inspect_image(node.image)
         old_cmd = stat['Config']['Cmd'] or None
         old_entry = stat['Config']['Entrypoint'] or None
@@ -241,7 +242,7 @@ class Docker_interface:
             self.delete_container(node)
 
         self.create_container(node, cmd=cmd, entrypoint='',
-                              from_saved=from_saved)
+                              from_saved=True)
 
         self.start_container(node.id, wait=True)
         self.stop_container(node.id)
@@ -265,7 +266,7 @@ class Docker_interface:
 
     @_get_name
     def get_saved_image(self, name):
-        return '{}/{}'.format(self._tpl.name, name)
+        return '{}/{}'.format(self._repo, name)
 
     def build_image(self, node):
         assert isinstance(node, Container)
@@ -278,3 +279,7 @@ class Docker_interface:
             quiet=True
         )
         # )
+
+    @property
+    def tmp_dir(self):
+        return self._tmp_dir

@@ -19,10 +19,9 @@ def _get_cmd(interface):
 
 class Software_manager:
 
-    def __init__(self, docker, tmp_dir):
+    def __init__(self, docker):
         self._log = Logger.get(__name__)
         self._docker = docker
-        self._tmp_dir = tmp_dir
 
     @_get_cmd('create')
     def create(self, cmd, node):
@@ -58,7 +57,9 @@ class Software_manager:
             self._docker.exec_cmd(node.host_container, cmd)
 
     def _copy_files(self, node):
-        tmp = path.join(self._tmp_dir, node.host_container.name, node.name)
+        tmp = path.join(self._docker.tmp_dir,
+                        node.host_container.name,
+                        node.name)
         try:
             os.makedirs(tmp)
         except os.error:
