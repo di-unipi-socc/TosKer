@@ -79,15 +79,7 @@ class Docker_interface:
 
         if con.to_build:
             self._log.debug('start building..')
-            # utility.print_json(
-            self._cli.build(
-                path='/'.join(con.dockerfile.split('/')[0:-1]),
-                dockerfile='./' + con.dockerfile.split('/')[-1],
-                tag=con.image,
-                pull=True,
-                quiet=True
-            )
-            # )
+            self.build_image(con)
             self._log.debug('stop building..')
         elif not from_saved:
             self._log.debug('start pulling.. {}'.format(con.image))
@@ -274,3 +266,15 @@ class Docker_interface:
     @_get_name
     def get_saved_image(self, name):
         return '{}/{}'.format(self._tpl.name, name)
+
+    def build_image(self, node):
+        assert isinstance(node, Container)
+        # utility.print_json(
+        return self._cli.build(
+            path='/'.join(node.dockerfile.split('/')[0:-1]),
+            dockerfile='./' + node.dockerfile.split('/')[-1],
+            tag=node.image,
+            pull=True,
+            quiet=True
+        )
+        # )

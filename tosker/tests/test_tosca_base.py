@@ -30,27 +30,27 @@ class Test_Orchestrator(unittest.TestCase):
     def _start(self, check):
         self.orchestrator.start()
         for c in self.orchestrator._tpl.container_order:
-            stat = self._docker.inspect(c.name)
+            stat = self._docker.inspect_container(c.name)
             # print('DEBUG: ', stat)
             self.assertIsNotNone(stat)
             self.assertTrue(check(stat))
 
         for c in self.orchestrator._tpl.volume_order:
             self.assertIsNotNone(
-                self._docker.inspect(c.name)
+                self._docker.inspect_volume(c.name)
             )
 
     def stop(self):
         self.orchestrator.stop()
         for c in self.orchestrator._tpl.container_order:
-            stat = self._docker.inspect(c.name)
+            stat = self._docker.inspect_container(c.name)
             # print('DEBUG: ', stat)
             self.assertIsNotNone(stat)
             self.assertFalse(stat['State']['Running'])
 
         for c in self.orchestrator._tpl.volume_order:
             self.assertIsNotNone(
-                self._docker.inspect(c.name)
+                self._docker.inspect_volume(c.name)
             )
 
     def delete(self):

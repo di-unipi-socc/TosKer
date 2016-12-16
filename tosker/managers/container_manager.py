@@ -11,8 +11,10 @@ class Container_manager:
         if node.persistent:
             self._docker.create_container(node)
         else:
-            # TODO: pull or build!
-            self._docker.pull_image(node.image)
+            if node.to_build:
+                self._docker.build_image(node)
+            else:
+                self._docker.pull_image(node.image)
 
     def start(self, node):
         stat = self._docker.inspect_container(node)
