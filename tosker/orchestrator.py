@@ -77,7 +77,7 @@ class Orchestrator:
         for node in self._tpl.deploy_order:
             Logger.print_('  {}'.format(node))
 
-            if isinstance(node, Container) and node.persistent:
+            if isinstance(node, Container):
                 self._container_manager.start(node)
             elif isinstance(node, Software):
                 self._software_manager.start(node)

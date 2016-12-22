@@ -56,8 +56,8 @@ topology_template:
         package: package.json
       requirements:
         - host: nodejs3
-        - connect: server1
-        - connect: server2
+        - connection: server1
+        - connection: server2
       interfaces:
         Standard:
           create:

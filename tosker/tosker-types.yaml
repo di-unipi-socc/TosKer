@@ -19,7 +19,6 @@ node_types:
       # BEGIN work around for the get_attribute bug in toscaparser
       ports:
         type: map
-        required: false
       # END
 
     properties:
@@ -28,7 +27,7 @@ node_types:
         required: false
 
     requirements:
-      - attach:
+      - storage:
           capability: tosca.capabilities.Attachment
           occurrences: [0, UNBOUNDED]
           node: tosker.nodes.Volume
@@ -48,10 +47,8 @@ node_types:
       # BEGIN work around for the get_attribute bug in toscaparser
       env_variable:
         type: map
-        required: false
       command:
         type: string
-        required: false
       # END
 
     properties:
@@ -63,23 +60,23 @@ node_types:
         required: false
 
     requirements:
-      - connect:
+      - connection:
           capability: tosca.capabilities.Endpoint
           occurrences: [0, UNBOUNDED]
           node: tosker.nodes.Root
           relationship: tosca.relationships.ConnectsTo
-      - depend:
+      - dependency:
           capability: tosca.capabilities.Node
           occurrences: [0, UNBOUNDED]
           node: tosker.nodes.Root
           relationship: tosca.relationships.DependsOn
 
     capabilities:
-      connect:
+      endpoint:
         type: tosca.capabilities.Endpoint
         valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
         occurrences: [0, UNBOUNDED]
-      depend:
+      feature:
         type: tosca.capabilities.Node
         valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
         occurrences: [0, UNBOUNDED]
@@ -92,42 +89,18 @@ node_types:
       id:
         type: string
       # BEGIN work around for the get_attribute bug in toscaparser
-      driver:
-        type: string
-        required: false
-      device:
-        type: string
-        required: false
-      type:
-        type: string
-        required: false
       size:
         type: string
-        required: false
-      driver_opt:
-        type: map
-        required: false
       # END
 
     properties:
-      driver: # by default it is local
+      # set the size. For example: 100m
+      size:
         type: string
-        required: false
-      device: # the device to mount. for example: /dev/sdb1
-        type: string
-        required: false
-      type: # the file system type. for example: tmpfs, btrfs, nfs..
-        type: string
-        required: false
-      size: # restrict to a given size. for example: 100m
-        type: string
-        required: false
-      driver_opt: # other options similar to the one of the unix mount command
-        type: map
         required: false
 
     capabilities:
-      attach:
+      attachment:
         type: tosca.capabilities.Attachment
         valid_source_types: [tosker.nodes.Container, tosker.nodes.Container.Executable]
         occurrences: [0, UNBOUNDED]
@@ -137,12 +110,12 @@ node_types:
     derived_from: tosker.nodes.Root
 
     requirements:
-      - connect:
+      - connection:
           capability: tosca.capabilities.Endpoint
           occurrences: [0, UNBOUNDED]
           node: tosker.nodes.Root
           relationship: tosca.relationships.ConnectsTo
-      - depend:
+      - dependency:
           capability: tosca.capabilities.Node
           occurrences: [0, UNBOUNDED]
           node: tosker.nodes.Root
@@ -154,17 +127,17 @@ node_types:
           relationship: tosca.relationships.HostedOn
 
     capabilities:
-      host:
-        type: tosca.capabilities.Container
-        valid_source_types: [tosker.nodes.Software]
-        occurrences: [0, UNBOUNDED]
-      connect:
+      endpoint:
         type: tosca.capabilities.Endpoint
         valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
         occurrences: [0, UNBOUNDED]
-      depend:
+      feature:
         type: tosca.capabilities.Node
         valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
+        occurrences: [0, UNBOUNDED]
+      host:
+        type: tosca.capabilities.Container
+        valid_source_types: [tosker.nodes.Software]
         occurrences: [0, UNBOUNDED]
 
 artifact_types:

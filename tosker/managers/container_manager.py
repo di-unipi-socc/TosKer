@@ -1,4 +1,5 @@
 from ..utility import Logger
+from ..nodes import Container
 
 
 class Container_manager:
@@ -8,6 +9,7 @@ class Container_manager:
         self._docker = docker
 
     def create(self, node):
+        assert isinstance(node, Container)
         if node.persistent:
             self._docker.create_container(node)
         else:
@@ -17,6 +19,9 @@ class Container_manager:
                 self._docker.pull_image(node.image)
 
     def start(self, node):
+        assert isinstance(node, Container)
+        if not node.persistent:
+            return
         stat = self._docker.inspect_container(node)
         if stat is not None:
             node.id = stat['Id']
@@ -26,10 +31,12 @@ class Container_manager:
                 'ERROR: Container "{}" not exists!'.format(node.name))
 
     def stop(self, node):
+        assert isinstance(node, Container)
         self._docker.stop_container(node)
         self._docker.delete_container(node)
         self._docker.create_container(node, from_saved=True)
 
     def delete(self, node):
+        assert isinstance(node, Container)
         self._docker.delete_container(node)
         self._docker.delete_image(self._docker.get_saved_image(node))

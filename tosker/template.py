@@ -18,15 +18,15 @@ class Template:
 
     @property
     def container_order(self):
-        return [i for i in self.deploy_order if type(i) is Container]
+        return (i for i in self.deploy_order if type(i) is Container)
 
     @property
     def volume_order(self):
-        return [i for i in self.deploy_order if type(i) is Volume]
+        return (i for i in self.deploy_order if type(i) is Volume)
 
     @property
     def software_order(self):
-        return [i for i in self.deploy_order if type(i) is Software]
+        return (i for i in self.deploy_order if type(i) is Software)
 
     def __str__(self):
-        return ', '.join([i.name for i in self.deploy_order])
+        return ', '.join((i.name for i in self.deploy_order))

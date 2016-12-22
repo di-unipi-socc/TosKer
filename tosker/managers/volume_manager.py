@@ -1,4 +1,5 @@
 from ..utility import Logger
+from ..nodes import Volume
 
 
 class Volume_manager:
@@ -8,7 +9,9 @@ class Volume_manager:
         self._docker = docker
 
     def create(self, node):
+        assert isinstance(node, Volume)
         self._docker.create_volume(node)
 
     def delete(self, node):
+        assert isinstance(node, Volume)
         self._docker.delete_volume(node)

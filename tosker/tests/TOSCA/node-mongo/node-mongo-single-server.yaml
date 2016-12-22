@@ -18,7 +18,7 @@ topology_template:
         package: app/package.json
       requirements:
         - host: node
-        - connect: db
+        - connection: db
       interfaces:
         Standard:
           create:

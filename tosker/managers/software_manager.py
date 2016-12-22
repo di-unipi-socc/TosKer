@@ -4,6 +4,7 @@ from shutil import copy
 from functools import wraps
 
 from ..nodes import Container
+from ..nodes import Software
 from ..utility import Logger
 
 
@@ -11,6 +12,7 @@ def _get_cmd(interface):
     def _get_cmd_decorator(func):
         @wraps(func)
         def func_wrapper(self, *args):
+            assert isinstance(args[0], Software)
             cmd = self._get_cmd_args(args[0], interface)
             return func(self, cmd, *args) if cmd else None
         return func_wrapper

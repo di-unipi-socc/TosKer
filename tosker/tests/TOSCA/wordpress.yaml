@@ -43,7 +43,7 @@ topology_template:
         ports:
           80: { get_input: wp_host_port }
       requirements:
-        - connect: mysql_container
+        - connection: mysql_container
       artifacts:
         my_image:
           file: wordpress

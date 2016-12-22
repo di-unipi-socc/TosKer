@@ -25,9 +25,9 @@ DOCKERFILE1 = 'tosker.artifacts.Dockerfile'
 DOCKERFILE2 = 'tosca.artifacts.File'
 
 # REQUIREMENTS
-CONNECT = 'connect'
-DEPENDS = 'depend'
-ATTACH = 'attach'
+CONNECT = 'connection'
+DEPENDS = 'dependency'
+ATTACH = 'storage'
 HOST = 'host'
 
 
