@@ -42,8 +42,6 @@ topology_template:
 
     mysql_volume:
       type: tosker.nodes.Volume
-      properties:
-        driver: local
 
     # The WordPress container based on official WordPress image in Docker hub
     wordpress_container:
