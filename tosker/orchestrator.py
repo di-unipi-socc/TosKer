@@ -15,7 +15,7 @@ from .graph.nodes import Container, Software, Volume
 from .managers.software_manager import Software_manager
 from .managers.container_manager import Container_manager
 from .managers.volume_manager import Volume_manager
-from .tosca_helper import get_tosca_template
+from .tosca_utility import get_tosca_template
 from .helper import Logger
 
 
