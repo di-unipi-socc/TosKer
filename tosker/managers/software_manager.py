@@ -4,7 +4,7 @@ from shutil import copy
 from functools import wraps
 
 from ..graph.nodes import Software
-from ..utility import Logger
+from ..helper import Logger
 
 
 def _get_cmd(interface):

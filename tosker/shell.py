@@ -8,8 +8,8 @@ from sys import argv
 from six import print_
 
 from tosker.orchestrator import Orchestrator
-from tosker.utility import Logger
-from tosker import utility
+from tosker.helper import Logger
+from tosker import helper
 from tosker import __version__
 
 
@@ -117,7 +117,7 @@ def run():
 
     if flags.get('debug', False):
         orchestrator = Orchestrator(file_name, inputs,
-                                    log_handler=utility.get_consol_handler(),
+                                    log_handler=helper.get_consol_handler(),
                                     quiet=False)
     else:
         orchestrator = Orchestrator(file_name,

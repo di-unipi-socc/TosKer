@@ -6,9 +6,9 @@ import six
 from functools import wraps
 from docker import Client, errors
 
-from . import utility
+from . import helper
 from .graph.nodes import Container, Volume
-from .utility import Logger
+from .helper import Logger
 
 
 def _get_name(func):
@@ -88,7 +88,7 @@ class Docker_interface:
             self._log.debug('stop building..')
         elif not from_saved:
             self._log.debug('start pulling.. {}'.format(con.image))
-            # utility.print_json(
+            # helper.print_json(
             self._cli.pull(con.image)
             # , self._log.debug)
             self._log.debug('end pulling..')
@@ -119,7 +119,7 @@ class Docker_interface:
         if wait:
             self._log.debug('wait container..')
             self._cli.wait(name)
-            utility.print_byte(
+            helper.print_byte(
                 self._cli.logs(name, stream=True),
                 self._log.debug
             )
@@ -270,7 +270,7 @@ class Docker_interface:
 
     def build_image(self, node):
         assert isinstance(node, Container)
-        # utility.print_json(
+        # helper.print_json(
         return self._cli.build(
             path='/'.join(node.dockerfile.split('/')[0:-1]),
             dockerfile='./' + node.dockerfile.split('/')[-1],

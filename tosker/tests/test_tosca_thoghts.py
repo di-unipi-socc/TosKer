@@ -1,7 +1,7 @@
 import unittest
 from tosker.orchestrator import Orchestrator
 from .test_tosca_base import Test_Orchestrator
-from tosker import utility
+from tosker import helper
 
 
 class Test_Thoughts(Test_Orchestrator):
@@ -10,7 +10,7 @@ class Test_Thoughts(Test_Orchestrator):
         super(self.__class__, self).setUp()
         self.orchestrator = \
             Orchestrator('tosker/tests/TOSCA/thoughts-app/thoughts.csar'
-                     # , log_handler=utility.get_consol_handler()
+                     # , log_handler=helper.get_consol_handler()
                      )
 
     def test(self):

@@ -7,7 +7,7 @@ from toscaparser.tosca_template import ToscaTemplate
 from toscaparser.prereq.csar import CSAR
 from toscaparser.common.exception import ValidationError
 
-from . import utility
+from . import helper
 from .graph.nodes import Container, Software, Volume
 from .graph.template import Template
 
@@ -186,7 +186,7 @@ def _parse_conf(node, inputs, repos, base_path):
 
 def get_tosca_template(file_path, inputs):
     global _log
-    _log = utility.Logger.get(__name__)
+    _log = helper.Logger.get(__name__)
 
     # Work around bug validation csar of toscaparser
     if file_path.endswith(('.zip', '.csar')):
@@ -207,7 +207,7 @@ def get_tosca_template(file_path, inputs):
     base_path = '/'.join(tosca.path.split('/')[:-1]) + '/'
     _log.debug('base_path: {}'.format(base_path))
     _parse_functions(tosca, inputs, base_path)
-    # print(utility.print_TOSCA(tosca))
+    # print(helper.print_TOSCA(tosca))
 
     tpl = Template(tosca.input_path.split('/')[-1][:-5])
 
@@ -311,7 +311,7 @@ def _parse_functions(tosca, inputs, base_path):
     def _get(name, value, args):
         if 'SELF' == args[0]:
             args[0] = name
-        return utility.get_attributes(args[1:], tpl[args[0]][value])
+        return helper.get_attributes(args[1:], tpl[args[0]][value])
 
     for k, v in tpl.items():
         _parse_node(k, v)

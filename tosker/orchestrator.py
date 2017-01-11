@@ -8,15 +8,15 @@ from termcolor import colored
 from docker import Client, errors
 from six import print_
 
-from tosker import utility
+from tosker import helper
 
 from .docker_interface import Docker_interface
 from .graph.nodes import Container, Software, Volume
 from .managers.software_manager import Software_manager
 from .managers.container_manager import Container_manager
 from .managers.volume_manager import Volume_manager
-from .tosca_utility import get_tosca_template
-from .utility import Logger
+from .tosca_helper import get_tosca_template
+from .helper import Logger
 
 
 class Orchestrator:
@@ -122,7 +122,7 @@ class Orchestrator:
         for out in self._tpl.outputs:
             self._log.debug('args: {}'.format(out.value.args))
             Logger.println('  - ' + out.name + ":",
-                           utility.get_attributes(out.value.args, self._tpl))
+                           helper.get_attributes(out.value.args, self._tpl))
 
     def _print_tick(self):
         Logger.println(' ' + colored(u"\u2714", 'green'))
