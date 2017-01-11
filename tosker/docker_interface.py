@@ -7,7 +7,7 @@ from functools import wraps
 from docker import Client, errors
 
 from . import utility
-from .nodes import Container, Volume
+from .graph.nodes import Container, Volume
 from .utility import Logger
 
 
@@ -157,7 +157,7 @@ class Docker_interface:
         assert isinstance(volume, Volume)
         self._log.debug('volume opt: {}'.format(volume.get_all_opt()))
         return self._cli.create_volume(
-            volume.name, volume.driver, volume.get_all_opt()
+            volume.name, 'local', volume.get_all_opt()
         )
 
     @_get_name

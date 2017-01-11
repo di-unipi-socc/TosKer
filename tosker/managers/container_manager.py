@@ -1,5 +1,5 @@
 from ..utility import Logger
-from ..nodes import Container
+from ..graph.nodes import Container
 
 
 class Container_manager:

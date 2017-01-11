@@ -11,7 +11,7 @@ from six import print_
 from tosker import utility
 
 from .docker_interface import Docker_interface
-from .nodes import Container, Software, Volume
+from .graph.nodes import Container, Software, Volume
 from .managers.software_manager import Software_manager
 from .managers.container_manager import Container_manager
 from .managers.volume_manager import Volume_manager
@@ -21,7 +21,8 @@ from .utility import Logger
 
 class Orchestrator:
 
-    def __init__(self, file_path,
+    def __init__(self,
+                 file_path,
                  inputs={},
                  log_handler=logging.NullHandler(),
                  quiet=True,
@@ -120,9 +121,6 @@ class Orchestrator:
             Logger.println('\nOUTPUTS:')
         for out in self._tpl.outputs:
             self._log.debug('args: {}'.format(out.value.args))
-            self._log.debug('hello_container.id: {}'.format(
-                self._tpl['hello_container']))
-
             Logger.println('  - ' + out.name + ":",
                            utility.get_attributes(out.value.args, self._tpl))
 

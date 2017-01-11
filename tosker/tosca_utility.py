@@ -8,8 +8,8 @@ from toscaparser.prereq.csar import CSAR
 from toscaparser.common.exception import ValidationError
 
 from . import utility
-from .nodes import Container, Software, Volume
-from .template import Template
+from .graph.nodes import Container, Software, Volume
+from .graph.template import Template
 
 
 _log = None

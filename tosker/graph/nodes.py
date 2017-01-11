@@ -16,26 +16,19 @@ def _str_obj(o):
     return ', '.join(["{}: {}".format(k, v) for k, v in vars(o).items()])
 
 
-class Base(object):
+class Root(object):
 
     def __init__(self, name):
         self.name = name
+
         self.link = None
         self.depends = None
-        self._fuctions = {}
 
     def add_link(self, item):
         self.link = _add_to_list(self.link, item)
 
     def add_depends(self, item):
         self.depends = _add_to_list(self.depends, item)
-
-    def __getitem__(self, item):
-        attr = vars(self)
-        if item in attr:
-            return attr[item]
-        else:
-            return None
 
     def __str__(self):
         return self.name
@@ -44,37 +37,33 @@ class Base(object):
         _str_obj(self)
 
 
-class Container(Base):
+class Container(Root):
 
     def __init__(self, name):
-        # super().__init__(name)
         super(self.__class__, self).__init__(name)
         self.id = None
+        self.env = None
+        self.cmd = None
+        self.ports = None
+        self._ATTRIBUTE = {
+            'id': self.id,
+            'ports': self.ports,
+            'env_variable': self.env,
+            'command': self.cmd
+        }
+
         self.image_name = None
         self.tag_name = None
         self.dockerfile = None
-        self.env = None
-        self.cmd = None
         self.entrypoint = None
-        self.ports = None
         self.persistent = False
-        self.volume = None
         self.saved_image = None
 
-        self.software_layer = []  # This is not used now
+        self.volume = None
 
     @property
     def to_build(self):
         return self.dockerfile is not None
-
-    def add_volume(self, key, value):
-        self.volume = _add_to_map(self.volume, key, value)
-
-    def add_env(self, name, value):
-        self.env = _add_to_map(self.env, name, value)
-
-    def add_port(self, name, value):
-        self.ports = _add_to_map(self.ports, name, value)
 
     @property
     def image(self):
@@ -88,40 +77,42 @@ class Container(Base):
             self.image_name = attr
             self.tag_name = 'latest'
 
+    def add_volume(self, key, value):
+        self.volume = _add_to_map(self.volume, key, value)
+
+    def add_env(self, name, value):
+        self.env = _add_to_map(self.env, name, value)
+
+    def add_port(self, name, value):
+        self.ports = _add_to_map(self.ports, name, value)
+
     def __getitem__(self, item):
-        attr = super(self.__class__, self).__getitem__(item)
-        if attr:
-            return attr
-        else:
-            attr = vars(self)
-            if item in attr:
-                return attr[item]
-        return None
+        return self._ATTRIBUTE.get(item, None)
 
     def get_str_obj(self):
-        return '{}, {}'.format(super(self.__class__, self).__str__(), _str_obj(self))
+        return '{}, {}'.format(
+            super(self.__class__, self).__str__(), _str_obj(self)
+        )
 
     def __str__(self):
         return '{} ({})'.format(self.name, 'container')
 
 
-class Volume(Base):
+class Volume(Root):
 
     def __init__(self, name):
-        # super().__init__(name)
         super(self.__class__, self).__init__(name)
-        self.driver = 'local'
-        self.device = None
-        self.type = None
+        self.id = None
         self.size = None
+        self._ATTRIBUTE = {
+            'id': self.id,
+            'size': self.size
+        }
+
         self.driver_opt = None
 
     def get_all_opt(self):
         ris = self.driver_opt.copy() if self.driver_opt else {}
-        if self.device:
-            ris['device'] = self.device
-        if self.type:
-            ris['type'] = self.type
         if self.size:
             ris['size'] = self.size
         return ris
@@ -129,28 +120,27 @@ class Volume(Base):
     def add_driver_opt(self, name, value):
         self.driver_opt = _add_to_map(self.driver_opt, name, value)
 
-    def get_str_obj(self):
-        return '{}, {}'.format(super(self.__class__, self), _str_obj(self))
+    def __getitem__(self, item):
+        return self._ATTRIBUTE.get(item, None)
 
     def __str__(self):
         return '{} ({})'.format(self.name, 'volume')
 
+    def get_str_obj(self):
+        return '{}, {}'.format(super(self.__class__, self), _str_obj(self))
 
-class Software(Base):
+
+class Software(Root):
 
     def __init__(self, name):
-        # super().__init__(name)
         super(self.__class__, self).__init__(name)
         self.host = None
+        self.host_container = None
         self.artifacts = None
         self.interfaces = {}
-        self.host_container = None
 
     def add_artifact(self, name, value):
         self.artifacts = _add_to_map(self.artifacts, name, value)
-
-    # def add_input(self, name, value):
-    #     self.inputs = _add_to_map(self.inputs, name, value)
 
     def get_str_obj(self):
         return '{}, {}'.format(super(self.__class__, self), _str_obj(self))

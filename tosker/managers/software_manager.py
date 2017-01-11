@@ -3,8 +3,7 @@ from os import path
 from shutil import copy
 from functools import wraps
 
-from ..nodes import Container
-from ..nodes import Software
+from ..graph.nodes import Software
 from ..utility import Logger
 
 

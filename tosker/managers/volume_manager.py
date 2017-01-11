@@ -1,5 +1,5 @@
 from ..utility import Logger
-from ..nodes import Volume
+from ..graph.nodes import Volume
 
 
 class Volume_manager:
