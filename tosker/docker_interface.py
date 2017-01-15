@@ -57,7 +57,7 @@ class Docker_interface:
             con.id = self._cli.create_container(
                 name=con.name,
                 image=img_name,
-                entrypoint=entrypoint if entrypoint else con.entrypoint,
+                entrypoint=entrypoint,
                 command=cmd if cmd else con.cmd,
                 environment=con.env,
                 detach=True,
@@ -69,11 +69,9 @@ class Docker_interface:
                 networking_config=self._cli.create_networking_config({
                     self._net_name: self._cli.create_endpoint_config(
                         links=con.link
-                        # ,aliases=['db']
                     )}),
                 host_config=self._cli.create_host_config(
                     port_bindings=con.ports,
-                    # links=con.link,
                     binds=[tmp_dir + ':/tmp/dt'] +
                     ([v + ':' + k for k, v in con.volume.items()]
                      if con.volume else []),
@@ -253,7 +251,7 @@ class Docker_interface:
         self.delete_container(node)
         self.create_container(node,
                               cmd=node.cmd or old_cmd,
-                              entrypoint=node.entrypoint or old_entry,
+                              entrypoint=old_entry,
                               from_saved=True)
 
         self._cli.commit(node.id, self.get_saved_image(node))

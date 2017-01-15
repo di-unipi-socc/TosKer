@@ -58,17 +58,22 @@ class Software_manager:
             self._docker.exec_cmd(node.host_container, cmd)
 
     def _copy_files(self, node):
+        # generate path for the tmp folder
         tmp = path.join(self._docker.tmp_dir,
                         node.host_container.name,
                         node.name)
+
+        # create the folder for the software
         try:
             os.makedirs(tmp)
         except os.error:
             pass
 
+        # copy all the interfaces scripts
         for key, value in node.interfaces.items():
             copy(value['cmd']['file_path'], tmp)
 
+        # if present copy all the artifacts
         if node.artifacts:
             for key, value in node.artifacts.items():
                 copy(value['file_path'], tmp)
@@ -77,7 +82,6 @@ class Software_manager:
         def _get_inside_path(p):
             return path.join('/tmp/dt/', node.name, p['file'])
 
-        # self._log.debug('interface: {}'.format(node.interfaces))
         if interface not in node.interfaces:
             return None
         self._log.debug('interface: {}'.format(node.interfaces[interface]))

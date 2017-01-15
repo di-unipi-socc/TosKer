@@ -20,18 +20,13 @@ class Root(object):
 
     def __init__(self, name):
         self.name = name
-
-        self.link = None
-        self.depends = None
-
-    def add_link(self, item):
-        self.link = _add_to_list(self.link, item)
-
-    def add_depends(self, item):
-        self.depends = _add_to_list(self.depends, item)
+        self._ATTRIBUTE = {}
 
     def __str__(self):
         return self.name
+
+    def __getitem__(self, item):
+        return self._ATTRIBUTE.get(item, lambda: None)()
 
     def get_str_obj(self):
         _str_obj(self)
@@ -41,24 +36,29 @@ class Container(Root):
 
     def __init__(self, name):
         super(self.__class__, self).__init__(name)
+        # attributes
         self.id = None
         self.env = None
         self.cmd = None
         self.ports = None
         self._ATTRIBUTE = {
-            'id': self.id,
-            'ports': self.ports,
-            'env_variable': self.env,
-            'command': self.cmd
+            'id': lambda: self.id,
+            'ports': lambda: self.ports,
+            'env_variable': lambda: self.env,
+            'command': lambda: self.cmd
         }
 
+        # artifacts
         self.image_name = None
         self.tag_name = None
         self.dockerfile = None
-        self.entrypoint = None
-        self.persistent = False
-        self.saved_image = None
 
+        # flags
+        self.persistent = False
+
+        # relationships
+        self.depends = None
+        self.link = None
         self.volume = None
 
     @property
@@ -71,14 +71,8 @@ class Container(Root):
 
     @image.setter
     def image(self, attr):
-        if ':' in attr:
-            self.image_name, self.tag_name = attr.split(':')
-        else:
-            self.image_name = attr
-            self.tag_name = 'latest'
-
-    def add_volume(self, key, value):
-        self.volume = _add_to_map(self.volume, key, value)
+        self.image_name, self.tag_name = attr.split(':') if ':' in attr \
+                                                         else (attr, 'latest')
 
     def add_env(self, name, value):
         self.env = _add_to_map(self.env, name, value)
@@ -86,8 +80,14 @@ class Container(Root):
     def add_port(self, name, value):
         self.ports = _add_to_map(self.ports, name, value)
 
-    def __getitem__(self, item):
-        return self._ATTRIBUTE.get(item, None)
+    def add_depends(self, item):
+        self.depends = _add_to_list(self.depends, item)
+
+    def add_link(self, item):
+        self.link = _add_to_list(self.link, item)
+
+    def add_volume(self, key, value):
+        self.volume = _add_to_map(self.volume, key, value)
 
     def get_str_obj(self):
         return '{}, {}'.format(
@@ -105,8 +105,8 @@ class Volume(Root):
         self.id = None
         self.size = None
         self._ATTRIBUTE = {
-            'id': self.id,
-            'size': self.size
+            'id': lambda: self.id,
+            'size': lambda: self.size
         }
 
         self.driver_opt = None
@@ -120,9 +120,6 @@ class Volume(Root):
     def add_driver_opt(self, name, value):
         self.driver_opt = _add_to_map(self.driver_opt, name, value)
 
-    def __getitem__(self, item):
-        return self._ATTRIBUTE.get(item, None)
-
     def __str__(self):
         return '{} ({})'.format(self.name, 'volume')
 
@@ -134,10 +131,20 @@ class Software(Root):
 
     def __init__(self, name):
         super(self.__class__, self).__init__(name)
-        self.host = None
-        self.host_container = None
         self.artifacts = None
         self.interfaces = {}
+
+        # relationships
+        self.host = None
+        self.host_container = None
+        self.depends = None
+        self.link = None
+
+    def add_depends(self, item):
+        self.depends = _add_to_list(self.depends, item)
+
+    def add_link(self, item):
+        self.link = _add_to_list(self.link, item)
 
     def add_artifact(self, name, value):
         self.artifacts = _add_to_map(self.artifacts, name, value)

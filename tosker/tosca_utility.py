@@ -242,44 +242,79 @@ def get_tosca_template(file_path, inputs):
 # - add pointer host_container pointer on software
 # - add pointer on host property
 # - add software links to the corrisponding container
-# - pack together installation scripts
 def _post_computation(tpl):
     for node in tpl.software_order:
         if type(node.host) is str:
             node.host = tpl[node.host]
 
-    # add property host_container
+    # Add the host_container property
     for node in tpl.software_order:
         if type(node.host) is Container:
             node.host_container = node.host
         elif type(node.host) is Software:
             node.host_container = node.host.host_container
 
-    # manage the case when a software node is connected
-    # to a software node or a container
+    # Manage the case wqhene a Software is connected
+    # to a Container or a Software
     for node in tpl.software_order:
         if node.link is not None:
-            for link in node.link:
-                link = link[0]
-                if type(tpl[link]) is Container:
+            for link, _ in node.link:
+                if isinstance(tpl[link], Container):
                     container_name = tpl[link].name
-                else:
+                if isinstance(tpl[link], Software):
                     container_name = tpl[link].host_container.name
-                _log.debug('link: {}'.format((container_name, link)))
                 node.host_container.add_link((container_name, link))
 
-    # manage the case when the container is connected to a software node
+    # Manage the case whene a Container is connected to a Software
     for node in tpl.container_order:
-        _log.debug(node)
         if node.link is not None:
-            for i, link in enumerate(node.link):
-                link = link[0]
-                if type(tpl[link]) is Software:
+            for i, (link, _) in enumerate(node.link):
+                if isinstance(tpl[link], Software):
                     container_name = tpl[link].host_container.name
-                    _log.debug('link: {}'.format((container_name, link)))
                     node.link[i] = (container_name, link)
 
 
+# def _parse_functions(tosca, inputs, base_path):
+#     # Get the template nodes
+#     tpl = tosca.topology_template.tpl['node_templates']
+#
+#     # Get the inputs of the TOSCA file
+#     if 'inputs' in tosca.topology_template.tpl:
+#         tosca_inputs = tosca.topology_template.tpl['inputs']
+#
+#     # Recurvive function searching for TOSCA function in the node
+#     def parse_node(name, node):
+#
+#         # This function return the result of the TOSCA function
+#         def execute_function(value, args):
+#             if 'SELF' == args[0]:
+#                 args[0] = name
+#             return helper.get_attributes(args[1:], tpl[args[0]][value])
+#
+#         for k, v in node.items():
+#             # If the function is already parse by toscaparser use the result
+#             if isinstance(v, toscaparser.functions.Function):
+#                 node[k] = v.result()
+#             elif type(v) is dict:
+#                 # Found a get_property function
+#                 if 'get_property' == v:
+#                     node[k] = execute_function('properties', v['get_property'])
+#                 # Found a get_artifact function
+#                 if 'get_artifact' == v:
+#                     art = execute_function('artifacts', v['get_artifact'])
+#                     node[k] = _parse_path(base_path, art)
+#                 # Found a get_input function
+#                 elif 'get_input' == v:
+#                     if v['get_input'] in inputs:
+#                         node[k] = inputs[v['get_input']]
+#                     else:
+#                         node[k] = tosca_inputs[v['get_input']]['default']
+#                 else:
+#                     parse_node(name, v)
+#
+#     # Scan each component of the application to find TOSCA funcions
+#     for k, v in tpl.items():
+#         parse_node(k, v)
 def _parse_functions(tosca, inputs, base_path):
     tpl = tosca.topology_template.tpl['node_templates']
     if 'inputs' in tosca.topology_template.tpl:
@@ -288,30 +323,32 @@ def _parse_functions(tosca, inputs, base_path):
     if 'outputs' in tosca.topology_template.tpl:
         pass
 
-    def _parse_node(name, node):
+    def parse_node(name, node):
         for k, v in node.items():
-            if type(v) is dict:
+            # If the function is already parse by toscaparser use the result
+            if isinstance(v, toscaparser.functions.Function):
+                node[k] = v.result()
+            elif isinstance(v, dict):
+                # Found a get_property function
                 if 'get_property' in v:
-                    node[k] = _get(name, 'properties', v['get_property'])
+                    node[k] = get(name, 'properties', v['get_property'])
+                # Found a get_artifact function
                 elif 'get_artifact' in v:
-                    node[k] = _parse_path(base_path, _get(
-                        name, 'artifacts', v['get_artifact']))
+                    art = get(name, 'artifacts', v['get_artifact'])
+                    node[k] = _parse_path(base_path, art)
+                # Found a get_input function
                 elif 'get_input' in v:
                     if v['get_input'] in inputs:
                         node[k] = inputs[v['get_input']]
                     else:
                         node[k] = tosca_inputs[v['get_input']]['default']
                 else:
-                    _parse_node(name, v)
-            elif isinstance(v, toscaparser.functions.GetProperty):
-                node[k] = v.result()
-            elif isinstance(v, toscaparser.functions.GetInput):
-                node[k] = v.result()
+                    parse_node(name, v)
 
-    def _get(name, value, args):
+    def get(name, value, args):
         if 'SELF' == args[0]:
             args[0] = name
         return helper.get_attributes(args[1:], tpl[args[0]][value])
 
     for k, v in tpl.items():
-        _parse_node(k, v)
+        parse_node(k, v)
