@@ -68,7 +68,7 @@ class Docker_interface:
                                        if con.volume else []),
                 networking_config=self._cli.create_networking_config({
                     self._net_name: self._cli.create_endpoint_config(
-                        links=con.link
+                        links=con.connection
                     )}),
                 host_config=self._cli.create_host_config(
                     port_bindings=con.ports,

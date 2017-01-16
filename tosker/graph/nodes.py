@@ -57,8 +57,8 @@ class Container(Root):
         self.persistent = False
 
         # relationships
-        self.depends = None
-        self.link = None
+        self.depend = None
+        self.connection = None
         self.volume = None
 
     @property
@@ -80,11 +80,11 @@ class Container(Root):
     def add_port(self, name, value):
         self.ports = _add_to_map(self.ports, name, value)
 
-    def add_depends(self, item):
-        self.depends = _add_to_list(self.depends, item)
+    def add_depend(self, item):
+        self.depend = _add_to_list(self.depend, item)
 
-    def add_link(self, item):
-        self.link = _add_to_list(self.link, item)
+    def add_connection(self, item):
+        self.connection = _add_to_list(self.connection, item)
 
     def add_volume(self, key, value):
         self.volume = _add_to_map(self.volume, key, value)
@@ -137,14 +137,14 @@ class Software(Root):
         # relationships
         self.host = None
         self.host_container = None
-        self.depends = None
-        self.link = None
+        self.depend = None
+        self.connection = None
 
-    def add_depends(self, item):
-        self.depends = _add_to_list(self.depends, item)
+    def add_depend(self, item):
+        self.depend = _add_to_list(self.depend, item)
 
-    def add_link(self, item):
-        self.link = _add_to_list(self.link, item)
+    def add_connection(self, item):
+        self.connection = _add_to_list(self.connection, item)
 
     def add_artifact(self, name, value):
         self.artifacts = _add_to_map(self.artifacts, name, value)

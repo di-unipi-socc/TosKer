@@ -26,7 +26,7 @@ DOCKERFILE2 = 'tosca.artifacts.File'
 
 # REQUIREMENTS
 CONNECT = 'connection'
-DEPENDS = 'dependency'
+DEPEND = 'dependency'
 ATTACH = 'storage'
 HOST = 'host'
 
@@ -171,9 +171,9 @@ def _parse_conf(node, inputs, repos, base_path):
         requirements = node.entity_tpl['requirements']
         for value in requirements:
             if CONNECT in value:
-                conf.add_link((value[CONNECT], value[CONNECT]))
-            if DEPENDS in value:
-                conf.add_depends(value[DEPENDS])
+                conf.add_connection((value[CONNECT], value[CONNECT]))
+            if DEPEND in value:
+                conf.add_depend(value[DEPEND])
             if HOST in value:
                 conf.host = value[HOST]
             if ATTACH in value:
@@ -257,21 +257,21 @@ def _post_computation(tpl):
     # Manage the case wqhene a Software is connected
     # to a Container or a Software
     for node in tpl.software_order:
-        if node.link is not None:
-            for link, _ in node.link:
-                if isinstance(tpl[link], Container):
-                    container_name = tpl[link].name
-                if isinstance(tpl[link], Software):
-                    container_name = tpl[link].host_container.name
-                node.host_container.add_link((container_name, link))
+        if node.connection is not None:
+            for con, _ in node.connection:
+                if isinstance(tpl[con], Container):
+                    container_name = tpl[con].name
+                if isinstance(tpl[con], Software):
+                    container_name = tpl[con].host_container.name
+                node.host_container.add_connection((container_name, con))
 
     # Manage the case whene a Container is connected to a Software
     for node in tpl.container_order:
-        if node.link is not None:
-            for i, (link, _) in enumerate(node.link):
-                if isinstance(tpl[link], Software):
-                    container_name = tpl[link].host_container.name
-                    node.link[i] = (container_name, link)
+        if node.connection is not None:
+            for i, (con, _) in enumerate(node.connection):
+                if isinstance(tpl[con], Software):
+                    container_name = tpl[con].host_container.name
+                    node.connection[i] = (container_name, con)
 
 
 # def _parse_functions(tosca, inputs, base_path):

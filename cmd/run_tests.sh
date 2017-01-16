@@ -18,14 +18,14 @@ python -m unittest discover -v 2>> $TEST_LOG
 deactivate
 
 # test on python3
-echo '\nTEST PYTHON3' >> $TEST_LOG
+echo "\nTEST PYTHON3" >> $TEST_LOG
 . ./venv3/bin/activate
 pip install -r requirements.txt &> /dev/null
 python -m unittest discover -v 2>> $TEST_LOG
 deactivate
 
 # coverage
-echo '\nCOVERAGE' >> $TEST_LOG
+echo "\nCOVERAGE" >> $TEST_LOG
 . ./venv3/bin/activate
 coverage run --source tosker -m unittest discover 2> /dev/null
 coverage report -m >> $TEST_LOG
