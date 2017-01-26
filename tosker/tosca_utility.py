@@ -254,7 +254,7 @@ def _post_computation(tpl):
         elif type(node.host) is Software:
             node.host_container = node.host.host_container
 
-    # Manage the case wqhene a Software is connected
+    # Manage the case when a Software is connected
     # to a Container or a Software
     for node in tpl.software_order:
         if node.connection is not None:
