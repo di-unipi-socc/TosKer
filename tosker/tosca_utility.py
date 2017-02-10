@@ -325,7 +325,8 @@ def _parse_functions(tosca, inputs, base_path):
 
     def parse_node(name, node):
         for k, v in node.items():
-            # If the function is already parse by toscaparser use the result
+            # If the function is already parsed by toscaparser,
+            # then use the result
             if isinstance(v, toscaparser.functions.Function):
                 node[k] = v.result()
             elif isinstance(v, dict):
@@ -345,6 +346,7 @@ def _parse_functions(tosca, inputs, base_path):
                 else:
                     parse_node(name, v)
 
+    # This function returns the result of the TOSCA function
     def get(name, value, args):
         if 'SELF' == args[0]:
             args[0] = name

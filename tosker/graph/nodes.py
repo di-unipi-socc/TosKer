@@ -54,9 +54,10 @@ class Container(Root):
         self.dockerfile = None
 
         # flags
+        # TODO: create two distint classes and remove this flag
         self.persistent = False
 
-        # relationships
+        # requirements
         self.depend = None
         self.connection = None
         self.volume = None
@@ -134,7 +135,7 @@ class Software(Root):
         self.artifacts = None
         self.interfaces = {}
 
-        # relationships
+        # requirements
         self.host = None
         self.host_container = None
         self.depend = None
