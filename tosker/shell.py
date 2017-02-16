@@ -110,7 +110,7 @@ def run():
         print_(_usage())
         exit()
     elif flags.get('version', False):
-        print_('tosKer version {}'.format(__version__))
+        print_('TosKer version {}'.format(__version__))
         exit()
 
     file_name = None
