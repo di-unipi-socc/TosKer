@@ -15,26 +15,37 @@ from tosker import __version__
 
 def _usage():
     return '''
-Usage:
-    tosker <file> (create|start|stop|delete)... [<inputs>...]
-    tosker <file> (create|start|stop|delete)... -q|--quiet [<inputs>...]
-    tosker <file> (create|start|stop|delete)... --debug [<inputs>...]
-    tosker -h|--help
+Usage: tosker FILE COMMANDS... [OPTIONS] [INPUTS]
+       tosker -h|--help
+       tosker -v|--version
+Orchestrate TOSCA applications on top of Docker.
 
-Options:
-    -h --help     Show this help.
-    -q --quiet    Active quiet mode.
-    --debug       Active debugging mode.
+FILE: TOSCA YAML file or CSAR file
+
+COMMANDS:
+  create   Create application components
+  start    Start applications components
+  stop     Stop application components
+  delete   Delete application components (except volume)
+
+OPTIONS:
+  -h --help      Print usage
+  -q --quiet     Enable quiet mode
+  --debug        Enable debugging mode (override quiet mode)
+  -v --version   Print version
+
+INPUTS: provide TOSCA inputs (syntax: --NAME VALUE)
 
 Examples:
-    tosker hello.yaml create --name mario
-    tosker hello.yaml start -q
-    tosker hello.yaml stop --debuug
-    tosker hello.yaml delete
+  tosker hello.yaml create --name mario
+  tosker hello.yaml start -q
+  tosker hello.yaml stop --debuug
+  tosker hello.yaml delete
 
-    tosker hello.yaml create start --name mario
-    tosker hello.yaml stop delete -q
+  tosker hello.yaml create start --name mario
+  tosker hello.yaml stop delete -q
 '''
+
 
 _FLAG = {
     '--debug': 'debug',

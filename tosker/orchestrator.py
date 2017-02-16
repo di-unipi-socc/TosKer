@@ -38,8 +38,8 @@ class Orchestrator:
             self._log.info(e)
 
         self._docker = Docker_interface(
-            'tosker-repo_{}'.format(self._tpl.name),
-            'tosker-net_{}'.format(self._tpl.name),
+            'tosker_{}'.format(self._tpl.name),
+            'tosker_{}'.format(self._tpl.name),
             self._tmp_dir
         )
         self._container_manager = Container_manager(self._docker)

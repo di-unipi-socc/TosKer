@@ -10,22 +10,22 @@ imports:
 
 topology_template:
   inputs:
-    app_port:
+    gui_port:
       type: integer
       default: 8080
-      description: the application port
+      description: GUI port
+    gui_branch:
+      type: string
+      default: master
+      description: Branch of the GUI repository
     api_port:
       type: integer
       default: 8000
-      description: the API port
-    app_repo:
-      type: string
-      default: https://github.com/jacopogiallo/thoughts-gui
-      description: the code repository for the application
-    app_branch:
+      description: API port
+    api_branch:
       type: string
       default: master
-      description: the branch to use when download the repository
+      description: Branch of the API repository
 
   node_templates:
     api:
@@ -39,7 +39,7 @@ topology_template:
             implementation: scripts/api/install.sh
             inputs:
               repo: https://github.com/jacopogiallo/thoughts-api
-              branch: master
+              branch: { get_input: api_branch }
           configure:
             implementation: scripts/api/configure.sh
             inputs:
@@ -64,8 +64,8 @@ topology_template:
           create:
             implementation: scripts/gui/install.sh
             inputs:
-              repo: { get_input: app_repo }
-              branch: { get_input: app_branch }
+              repo: https://github.com/jacopogiallo/thoughts-gui
+              branch: { get_input: gui_branch }
           configure:
             implementation: scripts/gui/configure.sh
             inputs:
@@ -94,7 +94,7 @@ topology_template:
       type: tosker.nodes.Container
       properties:
         ports:
-          3000: { get_input: app_port }
+          3000: { get_input: gui_port }
       artifacts:
         my_image:
           file: node:6

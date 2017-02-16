@@ -239,15 +239,14 @@ class Docker_interface:
             self.stop_container(node)
             self.delete_container(node)
 
-        self.create_container(node, cmd=cmd, entrypoint='',
-                              from_saved=True)
+        self.create_container(node, cmd=cmd, entrypoint='', from_saved=True)
 
         self.start_container(node.id, wait=True)
         self.stop_container(node.id)
 
         self._cli.commit(node.id, self.get_saved_image(node))
 
-        self.stop_container(node)
+        # self.stop_container(node)
         self.delete_container(node)
         self.create_container(node,
                               cmd=node.cmd or old_cmd,
