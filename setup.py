@@ -13,7 +13,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 exec(open('tosker/__init__.py').read())
 
 setup(
-    name='tosKer',
+    name='TosKer',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
