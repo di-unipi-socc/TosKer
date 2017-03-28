@@ -7,7 +7,8 @@ class Test_Dockerfile(Test_Orchestrator):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.orchestrator = Orchestrator('tosker/tests/TOSCA/dockerfile/hello-dockerfile.yaml')
+        self.orchestrator = Orchestrator(
+            'tosker/tests/TOSCA/dockerfile/hello-dockerfile.yaml')
 
     def test(self):
         self.create()
@@ -16,6 +17,7 @@ class Test_Dockerfile(Test_Orchestrator):
         self.start_check_exit()
         self.stop()
         self.delete()
+
 
 if __name__ == '__main__':
     unittest.main()

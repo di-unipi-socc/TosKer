@@ -4,7 +4,7 @@ from os import path
 import requests.exceptions
 import six
 from functools import wraps
-from docker import Client, errors
+from docker import APIClient, errors
 
 from . import helper
 from .graph.nodes import Container, Volume
@@ -33,7 +33,7 @@ class Docker_interface:
         self._repo = repo
         self._net_name = net_name
         self._tmp_dir = tmp_dir
-        self._cli = Client(base_url=os.environ.get('DOCKER_HOST') or socket)
+        self._cli = APIClient(base_url=os.environ.get('DOCKER_HOST') or socket)
 
     def create_container(self,
                          con,

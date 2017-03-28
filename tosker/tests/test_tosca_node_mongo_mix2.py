@@ -18,5 +18,6 @@ class Test_Node_Mongo_Mix2(Test_Orchestrator):
         self.stop()
         self.delete()
 
+
 if __name__ == '__main__':
     unittest.main()

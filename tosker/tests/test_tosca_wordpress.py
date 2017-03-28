@@ -17,5 +17,6 @@ class Test_Wordpress(Test_Orchestrator):
         self.stop()
         self.delete()
 
+
 if __name__ == '__main__':
     unittest.main()

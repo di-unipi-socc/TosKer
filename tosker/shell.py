@@ -7,10 +7,10 @@ from sys import argv
 
 from six import print_
 
-from tosker.orchestrator import Orchestrator
-from tosker.helper import Logger
-from tosker import helper
-from tosker import __version__
+from .orchestrator import Orchestrator
+from .helper import Logger
+from . import helper
+from . import __version__
 
 
 def _usage():
@@ -103,7 +103,7 @@ def _error(*str):
 
 def run():
     if len(argv) < 2:
-        _error('few arguments.')
+        _error('few arguments.', '\n', _usage())
 
     file, cmds, flags, inputs = _parse_unix_input(argv[1:])
     if flags.get('help', False):

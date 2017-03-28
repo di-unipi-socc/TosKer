@@ -7,7 +7,8 @@ class Test_Wordpress_light(Test_Orchestrator):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.orchestrator = Orchestrator('tosker/tests/TOSCA/wordpress-light.yaml')
+        self.orchestrator = Orchestrator(
+            'tosker/tests/TOSCA/wordpress-light.yaml')
 
     def test(self):
         self.create()
@@ -16,6 +17,7 @@ class Test_Wordpress_light(Test_Orchestrator):
         self.start()
         self.stop()
         self.delete()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -62,7 +62,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['docker-py', 'tosca-parser', 'termcolor', 'six'],
+    install_requires=['docker', 'tosca-parser', 'termcolor', 'six'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -87,9 +87,9 @@ setup(
     # need to place data files outside of your packages. See:
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files # noqa
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
-    data_files=[
-        ('/etc/tosker', ['tosker/tosker-types.yaml'])
-    ],
+    # data_files=[
+    #     ('/etc/tosker', ['tosker/tosker-types.yaml'])
+    # ],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
