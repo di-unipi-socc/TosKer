@@ -1,4 +1,5 @@
-from .nodes import Container, Software, Volume
+import six
+from .nodes import Root, Container, Software, Volume
 
 
 class Template:
@@ -27,6 +28,14 @@ class Template:
 
     def __getitem__(self, name):
         return self._nodes.get(name, None)
+
+    def __contains__(self, b):
+        if isinstance(b, six.string_types):
+            return self[b] is not None
+        elif isinstance(b, Root):
+            return self[b.name] is not None
+        else:
+            return False
 
     def __str__(self):
         return ', '.join((i.name for i in self.deploy_order))

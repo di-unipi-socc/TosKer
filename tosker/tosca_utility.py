@@ -184,6 +184,35 @@ def _parse_conf(node, inputs, repos, base_path):
     return conf
 
 
+def filter_components(tpl, components):
+    if all(tpl[i] is not None for i in components):
+        res = Template(tpl.name)
+        for c in reversed(tpl.deploy_order):
+            # print(c)
+            if c.name in components:
+                _filter_components_rec(tpl, c, res)
+        return res
+
+
+def _filter_components_rec(tpl, c, new):
+    if c not in new:
+        if hasattr(c, 'volume') and c.volume is not None:
+            # new.push(c.volume)
+            for v in c.volume.values():
+                _filter_components_rec(tpl, v, new)
+        if hasattr(c, 'connection') and c.connection is not None:
+            for con in c.connection:
+                _filter_components_rec(tpl, con, new)
+        if hasattr(c, 'depend') and c.depend is not None:
+            # new.push(c.depend)
+            for dep in c.depend:
+                _filter_components_rec(tpl, dep, new)
+        if hasattr(c, 'host') and c.host is not None:
+            # new.push(c.host)
+            _filter_components_rec(tpl, c.host, new)
+        new.push(c)
+
+
 def get_tosca_template(file_path, inputs):
     global _log
     _log = helper.Logger.get(__name__)
