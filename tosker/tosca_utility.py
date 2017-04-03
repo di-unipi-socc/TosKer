@@ -1,5 +1,6 @@
 import json
 import re
+import random  # TODO: remove this
 from os import path
 
 import toscaparser
@@ -171,7 +172,7 @@ def _parse_conf(node, inputs, repos, base_path):
         requirements = node.entity_tpl['requirements']
         for value in requirements:
             if CONNECT in value:
-                conf.add_connection((value[CONNECT], value[CONNECT]))
+                conf.add_connection(value[CONNECT])
             if DEPEND in value:
                 conf.add_depend(value[DEPEND])
             if HOST in value:
@@ -179,41 +180,42 @@ def _parse_conf(node, inputs, repos, base_path):
             if ATTACH in value:
                 volume = value[ATTACH]
                 if type(volume) is dict:
-                    conf.add_volume(volume['relationship']['properties'][
-                                    'location'], volume['node'])
+                    conf.add_volume(volume['node'], volume['relationship']
+                                                          ['properties']
+                                                          ['location'])
     return conf
 
 
-def filter_components(tpl, components):
-    if all(tpl[i] is not None for i in components):
-        res = Template(tpl.name)
-        for c in reversed(tpl.deploy_order):
-            # print(c)
-            if c.name in components:
-                _filter_components_rec(tpl, c, res)
-        return res
+# def filter_components(tpl, components):
+#     if all(tpl[i] is not None for i in components):
+#         res = Template(tpl.name)
+#         for c in reversed(tpl.deploy_order):
+#             # print(c)
+#             if c.name in components:
+#                 _filter_components_rec(tpl, c, res)
+#         return res
+#
+#
+# def _filter_components_rec(tpl, c, new):
+#     if c not in new:
+#         if hasattr(c, 'volume') and c.volume is not None:
+#             # new.push(c.volume)
+#             for v in c.volume.values():
+#                 _filter_components_rec(tpl, v, new)
+#         if hasattr(c, 'connection') and c.connection is not None:
+#             for con in c.connection:
+#                 _filter_components_rec(tpl, con, new)
+#         if hasattr(c, 'depend') and c.depend is not None:
+#             # new.push(c.depend)
+#             for dep in c.depend:
+#                 _filter_components_rec(tpl, dep, new)
+#         if hasattr(c, 'host') and c.host is not None:
+#             # new.push(c.host)
+#             _filter_components_rec(tpl, c.host, new)
+#         new.push(c)
 
 
-def _filter_components_rec(tpl, c, new):
-    if c not in new:
-        if hasattr(c, 'volume') and c.volume is not None:
-            # new.push(c.volume)
-            for v in c.volume.values():
-                _filter_components_rec(tpl, v, new)
-        if hasattr(c, 'connection') and c.connection is not None:
-            for con in c.connection:
-                _filter_components_rec(tpl, con, new)
-        if hasattr(c, 'depend') and c.depend is not None:
-            # new.push(c.depend)
-            for dep in c.depend:
-                _filter_components_rec(tpl, dep, new)
-        if hasattr(c, 'host') and c.host is not None:
-            # new.push(c.host)
-            _filter_components_rec(tpl, c.host, new)
-        new.push(c)
-
-
-def get_tosca_template(file_path, inputs):
+def get_tosca_template(file_path, inputs={}, components=[]):
     global _log
     _log = helper.Logger.get(__name__)
 
@@ -238,69 +240,114 @@ def get_tosca_template(file_path, inputs):
     _parse_functions(tosca, inputs, base_path)
     # print(helper.print_TOSCA(tosca))
 
+    repositories = tosca.tpl.get('repositories', None)
+
     tpl = Template(tosca.input_path.split('/')[-1][:-5])
 
     if hasattr(tosca, 'nodetemplates'):
         if tosca.outputs:
             tpl.outputs = tosca.outputs
         if tosca.nodetemplates:
-            running_container = set()
-            nodes = tosca.nodetemplates
-            i = 0
-            while len(running_container) < len(nodes):
-                if i >= len(nodes):
-                    i = 0
-                node = nodes[i]
-                if node.name in running_container:
-                    i += 1
-                    continue
+            for node in tosca.nodetemplates:
+                if len(components) == 0 or node.name in components:
+                    tpl.push(_parse_conf(node,
+                                         inputs,
+                                         repositories,
+                                         base_path))
+            print('DEBUG', tpl)
 
-                if not _check_requirements(node, running_container):
-                    i += 1
-                    continue
+            if len(components) > 0:
+                for node in _get_dependency_nodes(tpl, tosca):
+                    tpl.push(_parse_conf(node,
+                                         inputs,
+                                         repositories,
+                                         base_path))
 
-                tpl_node = _parse_conf(node, inputs, tosca.tpl.get(
-                    'repositories', None), base_path)
-                tpl.push(tpl_node)
-                running_container.add(node.name)
+            _add_pointer(tpl)
 
-    _post_computation(tpl)
+            _sort(tpl)
+            # while len(nodes) > 0:
+            #     for node in nodes:
+            #         if node
+            #     if i >= len(nodes):
+            #         i = 0
+            #     node = nodes[i]
+            #     if node.name in running_container:
+            #         i += 1
+            #         continue
+            #
+            #     if not _check_requirements(node, running_container):
+            #         i += 1
+            #         continue
+            #
+            #     tpl_node = _parse_conf(node, inputs, tosca.tpl.get(
+            #         'repositories', None), base_path)
+            #     tpl.push(tpl_node)
+            #     running_container.add(node.name)
+
+            _post_computation(tpl)
     return tpl
+
+
+def _get_dependency_nodes(tpl, tosca):
+    for n in tpl.deploy_order:
+        for r in n.relationships:
+            if r.to not in tpl:
+                tosca_node = next((n for n in tosca.nodetemplates
+                                   if n.name == r.to))
+                yield tosca_node
+
+
+def _sort(tpl):
+    nodes = list((i.name for i in tpl.deploy_order))
+    # TODO: remove this
+    random.shuffle(nodes)
+    tpl.deploy_order = []
+    while len(nodes) > 0:
+        n = nodes.pop(0)
+        print("DEBUG", n)
+        if all((r.to.name not in nodes for r in tpl[n].relationships)):
+            print("DEBUG", 'good')
+            tpl.deploy_order.append(tpl[n])
+        else:
+            print("DEBUG", 'put back')
+            nodes.append(n)
+
+
+def _add_pointer(tpl):
+    for node in tpl.deploy_order:
+        for rel in node.relationships:
+            rel.to = tpl[rel.to]
 
 
 # - add pointer host_container pointer on software
 # - add pointer on host property
 # - add software links to the corrisponding container
 def _post_computation(tpl):
-    for node in tpl.software_order:
-        if type(node.host) is str:
-            node.host = tpl[node.host]
-
     # Add the host_container property
     for node in tpl.software_order:
-        if type(node.host) is Container:
-            node.host_container = node.host
-        elif type(node.host) is Software:
-            node.host_container = node.host.host_container
+        if node.host is not None:
+            if isinstance(node.host.to, Container):
+                node.host_container = node.host.to
+            elif isinstance(node.host.to, Software):
+                node.host_container = node.host.host_container
 
     # Manage the case when a Software is connected
     # to a Container or a Software
     for node in tpl.software_order:
-        if node.connection is not None:
-            for con, _ in node.connection:
-                if isinstance(tpl[con], Container):
-                    container_name = tpl[con].name
-                if isinstance(tpl[con], Software):
-                    container_name = tpl[con].host_container.name
-                node.host_container.add_connection((container_name, con))
+        for con in node._connection:
+            if isinstance(con.to, Container):
+                container = con.to
+            if isinstance(con.to, Software):
+                container = con.to.host_container
+            node.host_container.add_connection(container, con.to.name)
 
     # Manage the case whene a Container is connected to a Software
     for node in tpl.container_order:
-        if node.connection is not None:
-            for i, (con, _) in enumerate(node.connection):
-                if isinstance(tpl[con], Software):
-                    container_name = tpl[con].host_container.name
-                    node.connection[i] = (container_name, con)
+        for con in node._connection:
+                if isinstance(con.to, Software):
+                    con.alias = con.to.name
+                    con.to = con.to.host_container
 
 
 # def _parse_functions(tosca, inputs, base_path):

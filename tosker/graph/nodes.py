@@ -1,3 +1,5 @@
+from .relationships import HostedOn, ConnectsTo, AttachesTo, DependsOn
+
 def _add_to_map(d, k, v):
     if d is None:
         d = {}
@@ -21,6 +23,42 @@ class Root(object):
     def __init__(self, name):
         self.name = name
         self._ATTRIBUTE = {}
+
+        # requirements
+        self._depend = []
+        self._connection = []
+        self._volume = []
+
+    @property
+    def depend(self):
+        return (i.format() for i in self._depend)
+
+    @property
+    def connection(self):
+        return (i.format() for i in self._connection)
+
+    @property
+    def volume(self):
+        return (i.format() for i in self._volume)
+
+    @property
+    def relationships(self):
+        return self._connection + self._volume + self._depend
+
+    def add_depend(self, item):
+        if not isinstance(item, DependsOn):
+            item = DependsOn(item)
+        self._depend.append(item)
+
+    def add_connection(self, item, alias=None):
+        if not isinstance(item, ConnectsTo):
+            item = ConnectsTo(item, alias)
+        self._connection.append(item)
+
+    def add_volume(self, item, location=None):
+        if not isinstance(item, AttachesTo):
+            item = AttachesTo(item, location)
+        self._volume.append(item)
 
     def __str__(self):
         return self.name
@@ -57,11 +95,6 @@ class Container(Root):
         # TODO: create two distint classes and remove this flag
         self.persistent = False
 
-        # requirements
-        self.depend = None
-        self.connection = None
-        self.volume = None
-
     @property
     def to_build(self):
         return self.dockerfile is not None
@@ -80,15 +113,6 @@ class Container(Root):
 
     def add_port(self, name, value):
         self.ports = _add_to_map(self.ports, name, value)
-
-    def add_depend(self, item):
-        self.depend = _add_to_list(self.depend, item)
-
-    def add_connection(self, item):
-        self.connection = _add_to_list(self.connection, item)
-
-    def add_volume(self, key, value):
-        self.volume = _add_to_map(self.volume, key, value)
 
     def get_str_obj(self):
         return '{}, {}'.format(
@@ -136,16 +160,30 @@ class Software(Root):
         self.interfaces = {}
 
         # requirements
-        self.host = None
-        self.host_container = None
-        self.depend = None
-        self.connection = None
+        self._host = None
+        # self.host_container = None
+        # self.depend = None
+        # self.connection = None
 
-    def add_depend(self, item):
-        self.depend = _add_to_list(self.depend, item)
+    # def add_depend(self, item):
+    #     self.depend = _add_to_list(self.depend, item)
+    #
+    # def add_connection(self, item):
+    #     self.connection = _add_to_list(self.connection, item)
+    @property
+    def relationships(self):
+        return super(self.__class__, self).relationships + \
+               ([self._host] if self._host is not None else [])
 
-    def add_connection(self, item):
-        self.connection = _add_to_list(self.connection, item)
+    @property
+    def host(self):
+        return self._host
+
+    @host.setter
+    def host(self, item):
+        if not isinstance(item, HostedOn):
+            item = HostedOn(item)
+        self._host = item
 
     def add_artifact(self, name, value):
         self.artifacts = _add_to_map(self.artifacts, name, value)
