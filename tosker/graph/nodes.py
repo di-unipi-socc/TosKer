@@ -1,4 +1,6 @@
 from .relationships import HostedOn, ConnectsTo, AttachesTo, DependsOn
+from .artifacts import File, DockerImage, DockerImageExecutable
+
 
 def _add_to_map(d, k, v):
     if d is None:
@@ -28,18 +30,19 @@ class Root(object):
         self._depend = []
         self._connection = []
         self._volume = []
+        self.artifacts = []
 
     @property
     def depend(self):
-        return (i.format() for i in self._depend)
+        return (i.format for i in self._depend)
 
     @property
     def connection(self):
-        return (i.format() for i in self._connection)
+        return (i.format for i in self._connection)
 
     @property
     def volume(self):
-        return (i.format() for i in self._volume)
+        return (i.format for i in self._volume)
 
     @property
     def relationships(self):
@@ -59,6 +62,10 @@ class Root(object):
         if not isinstance(item, AttachesTo):
             item = AttachesTo(item, location)
         self._volume.append(item)
+
+    def add_artifact(self, art):
+        assert isinstance(art, Artifact)
+        self.artifacts.append(art)
 
     def __str__(self):
         return self.name
@@ -87,26 +94,19 @@ class Container(Root):
         }
 
         # artifacts
-        self.image_name = None
-        self.tag_name = None
-        self.dockerfile = None
-
-        # flags
-        # TODO: create two distint classes and remove this flag
-        self.persistent = False
-
-    @property
-    def to_build(self):
-        return self.dockerfile is not None
 
     @property
     def image(self):
-        return '{}:{}'.format(self.image_name, self.tag_name)
+        return self.artifacts[0]
 
     @image.setter
-    def image(self, attr):
-        self.image_name, self.tag_name = attr.split(':') if ':' in attr \
-                                                         else (attr, 'latest')
+    def image(self, img):
+        assert isinstance(img, DockerImage)
+        self.artifacts = [img]
+
+    @property
+    def executable(self):
+        return isinstance(self.image, DockerImageExecutable)
 
     def add_env(self, name, value):
         self.env = _add_to_map(self.env, name, value)
@@ -156,12 +156,12 @@ class Software(Root):
 
     def __init__(self, name):
         super(self.__class__, self).__init__(name)
-        self.artifacts = None
+        self.artifacts = []
         self.interfaces = {}
 
         # requirements
         self._host = None
-        # self.host_container = None
+        self.host_container = None
         # self.depend = None
         # self.connection = None
 
@@ -185,8 +185,9 @@ class Software(Root):
             item = HostedOn(item)
         self._host = item
 
-    def add_artifact(self, name, value):
-        self.artifacts = _add_to_map(self.artifacts, name, value)
+    def add_artifact(self, file):
+        assert isinstance(file, File)
+        self.artifacts.append(file)
 
     def get_str_obj(self):
         return '{}, {}'.format(super(self.__class__, self), _str_obj(self))

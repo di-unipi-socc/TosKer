@@ -20,6 +20,7 @@ class ConnectsTo(Relationship):
         super(self.__class__, self).__init__(node)
         self.alias = alias
 
+    @property
     def format(self):
         if self.alias is not None:
             return (_get_str_name(self.to), self.alias)
@@ -35,6 +36,7 @@ class HostedOn(Relationship):
     def __init__(self, node):
         super(self.__class__, self).__init__(node)
 
+    @property
     def format(self):
         return _get_str_name(self.to)
 
@@ -50,7 +52,7 @@ class AttachesTo(Relationship):
 
     def format(self):
         if self.location is not None:
-            return {self.location: _get_str_name(self.to)}
+            return (self.location, _get_str_name(self.to))
         else:
             return _get_str_name(self.to)
 
@@ -63,6 +65,7 @@ class DependsOn(Relationship):
     def __init__(self, node):
         super(self.__class__, self).__init__(node)
 
+    @property
     def format(self):
         return _get_str_name(self.to)
 

@@ -4,6 +4,7 @@ from shutil import copy
 from functools import wraps
 
 from ..graph.nodes import Software
+from ..graph.artifacts import File
 from ..helper import Logger
 
 
@@ -71,16 +72,15 @@ class Software_manager:
 
         # copy all the interfaces scripts
         for key, value in node.interfaces.items():
-            copy(value['cmd']['file_path'], tmp)
+            copy(value['cmd'].file_path, tmp)
 
         # if present copy all the artifacts
-        if node.artifacts:
-            for key, value in node.artifacts.items():
-                copy(value['file_path'], tmp)
+        for art in node.artifacts:
+            copy(art.file_path, tmp)
 
     def _get_cmd_args(self, node, interface):
         def _get_inside_path(p):
-            return path.join('/tmp/dt/', node.name, p['file'])
+            return path.join('/tmp/dt/', node.name, p.file)
 
         if interface not in node.interfaces:
             return None
@@ -90,7 +90,7 @@ class Software_manager:
         res = None
         if 'inputs' in node.interfaces[interface]:
             for key, value in node.interfaces[interface]['inputs'].items():
-                if type(value) is dict:
+                if isinstance(value, File):
                     value = _get_inside_path(value)
                 args.append('--{} {}'.format(key, value))
                 args_env.append(

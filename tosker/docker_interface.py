@@ -46,7 +46,9 @@ class Docker_interface:
                 os.makedirs(tmp_dir)
             except:
                 pass
-            img_name = con.image
+            img_name = con.image.format
+            self._log.debug('image_name: {}'.format(img_name))
+
             if from_saved:
                 saved_image = self.get_saved_image(con)
                 if self.inspect_image(saved_image):
@@ -64,8 +66,7 @@ class Docker_interface:
                 # stdin_open=True,
                 ports=[key for key in con.ports.keys()]
                 if con.ports else None,
-                volumes=['/tmp/dt'] + ([k for k, v in con.volume.items()]
-                                       if con.volume else []),
+                volumes=['/tmp/dt'] + ([k for k, v in con.volume]),
                 networking_config=self._cli.create_networking_config({
                     self._net_name: self._cli.create_endpoint_config(
                         links=con.connection
@@ -73,21 +74,20 @@ class Docker_interface:
                 host_config=self._cli.create_host_config(
                     port_bindings=con.ports,
                     binds=[tmp_dir + ':/tmp/dt'] +
-                    ([v + ':' + k for k, v in con.volume.items()]
-                     if con.volume else []),
+                    ([v + ':' + k for k, v in con.volume]),
                 )
             ).get('Id')
 
         assert isinstance(con, Container)
 
-        if con.to_build:
+        if con.image.to_build:
             self._log.debug('start building..')
             self.build_image(con)
             self._log.debug('stop building..')
         elif not from_saved:
             self._log.debug('start pulling.. {}'.format(con.image))
             # helper.print_json(
-            self._cli.pull(con.image)
+            self._cli.pull(con.image.format)
             # , self._log.debug)
             self._log.debug('end pulling..')
 
@@ -174,8 +174,8 @@ class Docker_interface:
                 self.inspect_container(item) or
                 self.inspect_volume(item))
 
-    @_get_name
     def inspect_image(self, name):
+        assert isinstance(name, six.string_types)
         try:
             return self._cli.inspect_image(name)
         except errors.NotFound:
@@ -231,7 +231,7 @@ class Docker_interface:
 
     def update_container(self, node, cmd):
         assert isinstance(node, Container)
-        stat = self.inspect_image(node.image)
+        stat = self.inspect_image(node.image.format)
         old_cmd = stat['Config']['Cmd'] or None
         old_entry = stat['Config']['Entrypoint'] or None
 
@@ -269,9 +269,9 @@ class Docker_interface:
         assert isinstance(node, Container)
         # helper.print_json(
         return self._cli.build(
-            path='/'.join(node.dockerfile.split('/')[0:-1]),
-            dockerfile='./' + node.dockerfile.split('/')[-1],
-            tag=node.image,
+            path='/'.join(node.image.dockerfile.split('/')[0:-1]),
+            dockerfile='./' + node.image.dockerfile.split('/')[-1],
+            tag=node.image.name,
             pull=True,
             quiet=True
         )

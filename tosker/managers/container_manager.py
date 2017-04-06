@@ -1,6 +1,6 @@
 from ..helper import Logger
 from ..graph.nodes import Container
-
+from ..graph.artifacts import DockerImageExecutable
 
 class Container_manager:
 
@@ -10,17 +10,17 @@ class Container_manager:
 
     def create(self, node):
         assert isinstance(node, Container)
-        if node.persistent:
+        if node.executable:
             self._docker.create_container(node)
         else:
-            if node.to_build:
+            if node.image.to_build:
                 self._docker.build_image(node)
             else:
-                self._docker.pull_image(node.image)
+                self._docker.pull_image(node.image.format)
 
     def start(self, node):
         assert isinstance(node, Container)
-        if not node.persistent:
+        if not node.executable:
             return
         stat = self._docker.inspect_container(node)
         if stat is not None:

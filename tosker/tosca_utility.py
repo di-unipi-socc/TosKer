@@ -10,20 +10,25 @@ from toscaparser.common.exception import ValidationError
 
 from . import helper
 from .graph.nodes import Container, Software, Volume
+from .graph.artifacts import DockerImage, DockerImageExecutable, File
 from .graph.template import Template
 
 
 _log = None
 
 # CUSTOM TYPE
-PERSISTENT_CONTAINER = 'tosker.nodes.Container.Executable'
-VOLATILE_CONTAINER = 'tosker.nodes.Container'
+# PERSISTENT_CONTAINER = 'tosker.nodes.Container.Executable'
+CONTAINER = 'tosker.nodes.Container'
 VOLUME = 'tosker.nodes.Volume'
 SOFTWARE = 'tosker.nodes.Software'
-IMAGE1 = 'tosker.artifacts.Image'
-IMAGE2 = 'tosca.artifacts.Deployment.Image.Container.Docker'
-DOCKERFILE1 = 'tosker.artifacts.Dockerfile'
-DOCKERFILE2 = 'tosca.artifacts.File'
+IMAGE = 'tosker.artifacts.Image'
+IMAGE_EXE = 'tosker.artifacts.Image.Executable'
+# DOCKERFILE = 'tosker.artifacts.Dockerfile'
+# DOCKERFILE_EXE = 'tosker.artifacts.Dockerfile.Executable'
+
+# EXECUTABLE_IMAGE = 'tosker.artifacts.ExecutableImage'
+# IMAGE2 = 'tosca.artifacts.Deployment.Image.Container.Docker'
+# DOCKERFILE2 = 'tosca.artifacts.File'
 
 # REQUIREMENTS
 CONNECT = 'connection'
@@ -41,53 +46,80 @@ def _check_requirements(node, running):
     return True
 
 
-def _parse_path(base_path, value):
+# def _parse_path(base_path, value):
+#     abs_path = path.abspath(
+#         path.join(base_path, value)
+#     )
+#     split_path = abs_path.split('/')
+#     return {'path': '/'.join(split_path[:-1]),
+#             'file': split_path[-1],
+#             'file_path': abs_path}
+
+
+def _get_file(base_path, name, file):
     abs_path = path.abspath(
-        path.join(base_path, value)
+        path.join(base_path, file)
     )
-    split_path = abs_path.split('/')
-    return {'path': '/'.join(split_path[:-1]),
-            'file': split_path[-1],
-            'file_path': abs_path}
+    return File(name, abs_path)
 
 
 def _parse_conf(node, inputs, repos, base_path):
     conf = None
 
-    if node.type == PERSISTENT_CONTAINER or node.type == VOLATILE_CONTAINER:
+    if node.type == CONTAINER:
         conf = Container(node.name)
-        conf.persistent = node.type == PERSISTENT_CONTAINER
 
-        def parse_dockerfile(image, dockerfile):
-            conf.image = image
-            conf.dockerfile = dockerfile
+        def parse_dockerfile(name, file, executable=False):
+            # dockerfile = path.abspath(path.join(base_path, art['file']))
+            conf.image = DockerImageExecutable(name, file) if executable else\
+                         DockerImage(name, file)
 
-        def parse_pull_image(img_name, repo_url=None):
-            conf.image = img_name
-            if repo_url:
+        def parse_image(name, repo, executable=False):
+            conf.image = DockerImageExecutable(name) if executable else\
+                         DockerImage(name)
+            if repo:
                 p = re.compile('(https://|http://)')
-                repo = p.sub('', repos[repo_url]).strip('/')
+                repo = p.sub('', repos[repo]).strip('/')
                 if repo != 'registry.hub.docker.com':
                     conf.image = '/'.join([repo.strip('/'),
-                                           conf.image.strip('/')])
+                                           conf.image.format.strip('/')])
 
         # get artifacts
         artifacts = node.entity_tpl['artifacts']
         for key, value in artifacts.items():
-            if type(value) is dict:
-                if value['type'] == IMAGE1 or value['type'] == IMAGE2:
-                    parse_pull_image(
-                        value['file'], value.get('repository', None))
-                else:
-                    parse_dockerfile(key, path.abspath(
-                        path.join(base_path, value['file'])))
+            if isinstance(value, dict):
+                name = value['file']
+                type = value['type']
+                repo = value.get('repository', None)
             else:
-                docker_dir = path.abspath(
-                    path.join(base_path, value)).strip('/Dockerfile')
-                if path.exists(docker_dir):
-                    parse_dockerfile(key, docker_dir)
-                else:
-                    parse_pull_image(value)
+                type = IMAGE
+                name = value
+                repo = None
+
+            docker_dir = path.abspath(
+                            path.join(base_path, name)
+                         ).strip('/Dockerfile')
+            if path.exists(docker_dir):
+                parse_dockerfile(key, docker_dir,
+                                 type == IMAGE_EXE)
+            else:
+                parse_image(name, repo, type == IMAGE_EXE)
+                # if value['type'] in IMAGE:
+                #     parse_image(value, False)
+                # elif value['type'] in IMAGE_EXE):
+                #     parse_dockerfile(key,
+                #                      value['file'],
+                #                      value['type'] == DOCKERFILE_EXE)
+                # if 'properties' in value:
+                #     conf.image.executable = value['properties'] \
+                #                             .get('executable', False)
+            # else:
+            #     docker_dir = path.abspath(
+            #         path.join(base_path, value)).strip('/Dockerfile')
+            #     if path.exists(docker_dir):
+            #         parse_dockerfile(key, docker_dir)
+            #     else:
+            #         parse_image(value)
 
         def _parse_map(m):
             res = {}
@@ -128,7 +160,7 @@ def _parse_conf(node, inputs, repos, base_path):
             artifacts = node.entity_tpl['artifacts']
             for key, value in artifacts.items():
                 _log.debug('artifacts: {}'.format(value))
-                conf.add_artifact(key, _parse_path(base_path, value))
+                conf.add_artifact(_get_file(base_path, key, value))
                 _log.debug('artifacts: {}'.format(conf.artifacts))
 
         # get interfaces
@@ -142,15 +174,17 @@ def _parse_conf(node, inputs, repos, base_path):
                     abs_path = path.abspath(
                         path.join(base_path, value['implementation'])
                     )
-                    path_split = abs_path.split('/')
-                    intf[key]['cmd'] = {
-                        'file': path_split[-1],
-                        'path': '/'.join(path_split[:-1]),
-                        'file_path': abs_path
-                    }
+                    # path_split = abs_path.split('/')
+
+                    intf[key]['cmd'] = File(None, abs_path)
+                    # {
+                    #     'file': path_split[-1],
+                    #     'path': '/'.join(path_split[:-1]),
+                    #     'file_path': abs_path
+                    # }
                     _log.debug('path: {} file: {}'
-                               .format(intf[key]['cmd']['path'],
-                                       intf[key]['cmd']['file']))
+                               .format(intf[key]['cmd'].path,
+                                       intf[key]['cmd'].file))
                 if 'inputs' in value:
                     intf[key]['inputs'] = value['inputs']
                     # intf[key]['inputs'] = _parse_map(value['inputs'])
@@ -300,17 +334,18 @@ def _get_dependency_nodes(tpl, tosca):
 
 def _sort(tpl):
     nodes = list((i.name for i in tpl.deploy_order))
-    # TODO: remove this
+    # TODO: remove this, it is only for debugging
     random.shuffle(nodes)
+
     tpl.deploy_order = []
     while len(nodes) > 0:
         n = nodes.pop(0)
-        print("DEBUG", n)
+        # print("DEBUG", n)
         if all((r.to.name not in nodes for r in tpl[n].relationships)):
-            print("DEBUG", 'good')
+            # print("DEBUG", 'good')
             tpl.deploy_order.append(tpl[n])
         else:
-            print("DEBUG", 'put back')
+            # print("DEBUG", 'put back')
             nodes.append(n)
 
 
@@ -330,7 +365,7 @@ def _post_computation(tpl):
             if isinstance(node.host.to, Container):
                 node.host_container = node.host.to
             elif isinstance(node.host.to, Software):
-                node.host_container = node.host.host_container
+                node.host_container = node.host.to.host_container
 
     # Manage the case when a Software is connected
     # to a Container or a Software
@@ -412,7 +447,7 @@ def _parse_functions(tosca, inputs, base_path):
                 # Found a get_artifact function
                 elif 'get_artifact' in v:
                     art = get(name, 'artifacts', v['get_artifact'])
-                    node[k] = _parse_path(base_path, art)
+                    node[k] = _get_file(base_path, None, art)
                 # Found a get_input function
                 elif 'get_input' in v:
                     if v['get_input'] in inputs:

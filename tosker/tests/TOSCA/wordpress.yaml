@@ -7,7 +7,8 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
+  # - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
+  - tosker: ../../tosker-types.yaml
 
 topology_template:
   inputs:
@@ -23,19 +24,29 @@ topology_template:
   node_templates:
     # The MYSQL container based on official MySQL image in Docker hub
     mysql_container:
-      type: tosker.nodes.Container.Executable
+      type: tosker.nodes.Container
       properties:
         env_variable:
           MYSQL_ROOT_PASSWORD: { get_input: db_root_pwd }
       artifacts:
         my_image:
           file: mysql
-          type: tosker.artifacts.Image
+          type: tosker.artifacts.Image.Executable
           repository: docker_hub
+      requirements:
+        - storage:
+            node: mysql_volume
+            relationship:
+              type: tosca.relationships.AttachesTo
+              properties:
+                location: /var/lib/mysql
+
+    mysql_volume:
+      type: tosker.nodes.Volume
 
     # The WordPress container based on official WordPress image in Docker hub
     wordpress_container:
-      type: tosker.nodes.Container.Executable
+      type: tosker.nodes.Container
       properties:
         env_variable:
           WORDPRESS_DB_PASSWORD: { get_input: db_root_pwd }
@@ -47,5 +58,5 @@ topology_template:
       artifacts:
         my_image:
           file: wordpress
-          type: tosker.artifacts.Image
+          type: tosker.artifacts.Image.Executable
           repository: docker_hub

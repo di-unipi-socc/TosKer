@@ -1,13 +1,14 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
-description: Definitoon of the custom types of TosKer.
+description: Definition of the custom types of TosKer.
 
 node_types:
   tosker.nodes.Root:
     derived_from: tosca.nodes.Root
 
+
   tosker.nodes.Container:
-    derived_from: tosker.nodes.Root
+    derived_from: tosca.nodes.Root
 
     attributes:
       id:
@@ -19,11 +20,21 @@ node_types:
       # BEGIN work around for the get_attribute bug in toscaparser
       ports:
         type: map
+      env_variable:
+        type: map
+      command:
+        type: string
       # END
 
     properties:
       ports:
         type: map
+        required: false
+      env_variable:
+        type: map
+        required: false
+      command:
+        type: string
         required: false
 
     requirements:
@@ -32,34 +43,6 @@ node_types:
           occurrences: [0, UNBOUNDED]
           node: tosker.nodes.Volume
           relationship: tosca.relationships.AttachesTo
-
-    capabilities:
-      host:
-        type: tosca.capabilities.Container
-        valid_source_types: [tosker.nodes.Software]
-        occurrences: [0, UNBOUNDED]
-
-
-  tosker.nodes.Container.Executable:
-    derived_from: tosker.nodes.Container
-
-    attributes:
-      # BEGIN work around for the get_attribute bug in toscaparser
-      env_variable:
-        type: map
-      command:
-        type: string
-      # END
-
-    properties:
-      env_variable:
-        type: map
-        required: false
-      command:
-        type: string
-        required: false
-
-    requirements:
       - connection:
           capability: tosca.capabilities.Endpoint
           occurrences: [0, UNBOUNDED]
@@ -72,13 +55,17 @@ node_types:
           relationship: tosca.relationships.DependsOn
 
     capabilities:
+      host:
+        type: tosca.capabilities.Container
+        valid_source_types: [tosker.nodes.Software]
+        occurrences: [0, UNBOUNDED]
       endpoint:
         type: tosca.capabilities.Endpoint
-        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
+        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container]
         occurrences: [0, UNBOUNDED]
       feature:
         type: tosca.capabilities.Node
-        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
+        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container]
         occurrences: [0, UNBOUNDED]
 
 
@@ -102,7 +89,7 @@ node_types:
     capabilities:
       attachment:
         type: tosca.capabilities.Attachment
-        valid_source_types: [tosker.nodes.Container, tosker.nodes.Container.Executable]
+        valid_source_types: [tosker.nodes.Container]
         occurrences: [0, UNBOUNDED]
 
 
@@ -129,16 +116,17 @@ node_types:
     capabilities:
       endpoint:
         type: tosca.capabilities.Endpoint
-        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
+        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container]
         occurrences: [0, UNBOUNDED]
       feature:
         type: tosca.capabilities.Node
-        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container.Executable]
+        valid_source_types: [tosker.nodes.Software, tosker.nodes.Container]
         occurrences: [0, UNBOUNDED]
       host:
         type: tosca.capabilities.Container
         valid_source_types: [tosker.nodes.Software]
         occurrences: [0, UNBOUNDED]
+
 
 artifact_types:
   tosker.artifacts.Root:
@@ -148,6 +136,6 @@ artifact_types:
     derived_from: tosker.artifacts.Root
     description: a Docker image
 
-  tosker.artifacts.Dockerfile:
-    derived_from: tosker.artifacts.Root
-    description: a Dockerfile
+  tosker.artifacts.Image.Executable:
+    derived_from: tosker.artifacts.Image
+    description: a Docker image executable

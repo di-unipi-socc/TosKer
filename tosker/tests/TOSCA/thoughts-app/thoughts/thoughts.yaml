@@ -6,7 +6,8 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
+  # - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
+  - tosker: ../../../tosker-types.yaml
 
 topology_template:
   inputs:
@@ -102,11 +103,11 @@ topology_template:
           repository: docker_hub
 
     db_container:
-      type: tosker.nodes.Container.Executable
+      type: tosker.nodes.Container
       artifacts:
         my_image:
           file: mongo:3.4
-          type: tosker.artifacts.Image
+          type: tosker.artifacts.Image.Executable
           repository: docker_hub
       requirements:
         - storage:
