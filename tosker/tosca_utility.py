@@ -63,7 +63,7 @@ def _get_file(base_path, name, file):
     return File(name, abs_path)
 
 
-def _parse_conf(node, inputs, repos, base_path):
+def _parse_conf(node, repos, base_path):
     conf = None
 
     if node.type == CONTAINER:
@@ -96,13 +96,16 @@ def _parse_conf(node, inputs, repos, base_path):
                 name = value
                 repo = None
 
-            docker_dir = path.abspath(
+            dockerfile = path.abspath(
                             path.join(base_path, name)
-                         ).strip('/Dockerfile')
-            if path.exists(docker_dir):
-                parse_dockerfile(key, docker_dir,
+                         )
+            _log.debug('dockerfile: {}'.format(dockerfile))
+            if path.isfile(dockerfile) and repo is None:
+                _log.debug('Find a Dockerfile')
+                parse_dockerfile(key, dockerfile,  # .strip('/Dockerfile'),
                                  type == IMAGE_EXE)
             else:
+                _log.debug('Find an Immage')
                 parse_image(name, repo, type == IMAGE_EXE)
                 # if value['type'] in IMAGE:
                 #     parse_image(value, False)
@@ -276,7 +279,8 @@ def get_tosca_template(file_path, inputs={}, components=[]):
 
     repositories = tosca.tpl.get('repositories', None)
 
-    tpl = Template(tosca.input_path.split('/')[-1][:-5])
+    tosca_name = tosca.input_path.split('/')[-1][:-5]
+    tpl = Template(tosca_name)
 
     if hasattr(tosca, 'nodetemplates'):
         if tosca.outputs:
@@ -285,7 +289,6 @@ def get_tosca_template(file_path, inputs={}, components=[]):
             for node in tosca.nodetemplates:
                 if len(components) == 0 or node.name in components:
                     tpl.push(_parse_conf(node,
-                                         inputs,
                                          repositories,
                                          base_path))
             # print('DEBUG', tpl)
@@ -293,7 +296,6 @@ def get_tosca_template(file_path, inputs={}, components=[]):
             if len(components) > 0:
                 for node in _get_dependency_nodes(tpl, tosca):
                     tpl.push(_parse_conf(node,
-                                         inputs,
                                          repositories,
                                          base_path))
 

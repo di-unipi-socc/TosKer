@@ -261,9 +261,15 @@ class Docker_interface:
         self._log.debug('State: {}'.format(stat))
         return stat
 
-    @_get_name
     def get_saved_image(self, name):
+        if isinstance(name, Container):
+            name = name.name
         return '{}/{}'.format(self._repo, name)
+
+    # def get_container_name(self, name):
+    #     if isinstance(name, Container):
+    #         name = name.name
+    #     return '{}_{}'.format(self._repo, name)
 
     def build_image(self, node):
         assert isinstance(node, Container)

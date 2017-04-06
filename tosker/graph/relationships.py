@@ -22,10 +22,11 @@ class ConnectsTo(Relationship):
 
     @property
     def format(self):
+        name = _get_str_name(self.to)
         if self.alias is not None:
-            return (_get_str_name(self.to), self.alias)
+            return (name, self.alias)
         else:
-            return _get_str_name(self.to)
+            return (name, name)
 
     def __str__(self):
         return 'ConnectsTo'
@@ -50,6 +51,7 @@ class AttachesTo(Relationship):
         super(self.__class__, self).__init__(node)
         self.location = folder
 
+    @property
     def format(self):
         if self.location is not None:
             return (self.location, _get_str_name(self.to))
