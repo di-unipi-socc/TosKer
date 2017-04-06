@@ -24,7 +24,7 @@ topology_template:
             implementation: mongo/start.sh
 
     app_container:
-      type: tosker.nodes.Container.Executable
+      type: tosker.nodes.Container
       properties:
         ports:
           80: 8080
@@ -33,7 +33,7 @@ topology_template:
       artifacts:
         node_mogo_image:
           file: app/Dockerfile
-          type: tosker.artifacts.Dockerfile
+          type: tosker.artifacts.Image.Executable
 
     server2:
       type: tosker.nodes.Container

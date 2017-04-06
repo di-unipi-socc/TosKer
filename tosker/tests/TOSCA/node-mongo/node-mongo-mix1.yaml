@@ -33,11 +33,11 @@ topology_template:
               port: 80
 
     db:
-      type: tosker.nodes.Container.Executable
+      type: tosker.nodes.Container
       artifacts:
         image:
           file: mongo
-          type: tosker.artifacts.Image
+          type: tosker.artifacts.Image.Executable
           repository: docker_hub
 
     node:

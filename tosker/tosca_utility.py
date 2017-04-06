@@ -213,7 +213,7 @@ def _parse_conf(node, inputs, repos, base_path):
                 conf.host = value[HOST]
             if ATTACH in value:
                 volume = value[ATTACH]
-                if type(volume) is dict:
+                if isinstance(volume, dict):
                     conf.add_volume(volume['node'], volume['relationship']
                                                           ['properties']
                                                           ['location'])
@@ -288,7 +288,7 @@ def get_tosca_template(file_path, inputs={}, components=[]):
                                          inputs,
                                          repositories,
                                          base_path))
-            print('DEBUG', tpl)
+            # print('DEBUG', tpl)
 
             if len(components) > 0:
                 for node in _get_dependency_nodes(tpl, tosca):
