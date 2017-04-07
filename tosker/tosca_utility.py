@@ -291,7 +291,6 @@ def get_tosca_template(file_path, inputs={}, components=[]):
                     tpl.push(_parse_conf(node,
                                          repositories,
                                          base_path))
-            # print('DEBUG', tpl)
 
             if len(components) > 0:
                 for node in _get_dependency_nodes(tpl, tosca):
@@ -302,6 +301,9 @@ def get_tosca_template(file_path, inputs={}, components=[]):
             _add_pointer(tpl)
 
             _sort(tpl)
+
+            _add_extension(tpl)
+
             # while len(nodes) > 0:
             #     for node in nodes:
             #         if node
@@ -321,7 +323,6 @@ def get_tosca_template(file_path, inputs={}, components=[]):
             #     tpl.push(tpl_node)
             #     running_container.add(node.name)
 
-            _post_computation(tpl)
     return tpl
 
 
@@ -360,7 +361,7 @@ def _add_pointer(tpl):
 # - add pointer host_container pointer on software
 # - add pointer on host property
 # - add software links to the corrisponding container
-def _post_computation(tpl):
+def _add_extension(tpl):
     # Add the host_container property
     for node in tpl.software_order:
         if node.host is not None:
@@ -377,7 +378,7 @@ def _post_computation(tpl):
                 container = con.to
             if isinstance(con.to, Software):
                 container = con.to.host_container
-            node.host_container.add_connection(container, con.to.name)
+            node.host_container.add_overlay(container, con.to.name)
 
     # Manage the case whene a Container is connected to a Software
     for node in tpl.container_order:

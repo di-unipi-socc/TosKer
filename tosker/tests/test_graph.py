@@ -8,24 +8,26 @@ class Test_Graph(unittest.TestCase):
 
     # TODO: add more test to be sure that the graph is as should
 
-    def _assert_sorting(tpl):
-        running = {}
+    def _assert_sorting(self, tpl):
+        running = set()
         for c in tpl.deploy_order:
+            print("DEBUG", c)
             for r in c.relationships:
+                print("DEBUG", r)
                 self.assertIn(r.to.name, running)
             running.add(c.name)
 
     def test_deployment_order(self):
         tpl = get_tosca_template(
             'tosker/tests/TOSCA/software-link/software.yaml')
-        _assert_sorting(tpl)
+        self._assert_sorting(tpl)
 
     def test_components_1(self):
         tpl = get_tosca_template(
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['server1'])
 
-        _assert_sorting(tpl)
+        self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 2)
         for c in tpl.deploy_order:
             self.assertIn(c.name, ('server1', 'nodejs1'))
@@ -35,7 +37,7 @@ class Test_Graph(unittest.TestCase):
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['server2'])
 
-        _assert_sorting(tpl)
+        self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 2)
         for c in tpl.deploy_order:
             self.assertIn(c.name, ('server2', 'nodejs2'))
@@ -45,7 +47,7 @@ class Test_Graph(unittest.TestCase):
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['server3'])
 
-        _assert_sorting(tpl)
+        self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 6)
         for c in tpl.deploy_order:
             self.assertIn(c.name, ('server1', 'nodejs1',
@@ -57,7 +59,7 @@ class Test_Graph(unittest.TestCase):
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['server1', 'server2'])
 
-        _assert_sorting(tpl)
+        self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 4)
         for c in tpl.deploy_order:
             self.assertIn(c.name, ('server1', 'nodejs1',
@@ -67,8 +69,8 @@ class Test_Graph(unittest.TestCase):
         tpl = get_tosca_template(
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['server1', 'server3'])
-
-        _assert_sorting(tpl)
+        print('DEBUG', tpl)
+        self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 6)
         for c in tpl.deploy_order:
             self.assertIn(c.name, ('server1', 'nodejs1',
@@ -80,7 +82,7 @@ class Test_Graph(unittest.TestCase):
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['server2', 'server3'])
 
-        _assert_sorting(tpl)
+        self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 6)
         for c in tpl.deploy_order:
             self.assertIn(c.name, ('server1', 'nodejs1',
@@ -92,7 +94,7 @@ class Test_Graph(unittest.TestCase):
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['nodejs1'])
 
-        _assert_sorting(tpl)
+        self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 1)
         for c in tpl.deploy_order:
             self.assertIn(c.name, ('nodejs1'))
@@ -102,7 +104,7 @@ class Test_Graph(unittest.TestCase):
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['nodejs2'])
 
-        _assert_sorting(tpl)
+        self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 1)
         for c in tpl.deploy_order:
             self.assertIn(c.name, ('nodejs2'))
@@ -112,7 +114,7 @@ class Test_Graph(unittest.TestCase):
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['nodejs3'])
 
-        _assert_sorting(tpl)
+        self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 1)
         for c in tpl.deploy_order:
             self.assertIn(c.name, ('nodejs3'))

@@ -92,8 +92,7 @@ class Container(Root):
             'env_variable': lambda: self.env,
             'command': lambda: self.cmd
         }
-
-        # artifacts
+        self._overlay = []
 
     @property
     def image(self):
@@ -108,6 +107,15 @@ class Container(Root):
     def executable(self):
         return isinstance(self.image, DockerImageExecutable)
 
+    @property
+    def connection(self):
+        return (i.format for i in self._connection + self._overlay)
+
+    def add_overlay(self, item, alias=None):
+        if not isinstance(item, ConnectsTo):
+            item = ConnectsTo(item, alias)
+        self._overlay.append(item)
+    
     def add_env(self, name, value):
         self.env = _add_to_map(self.env, name, value)
 
