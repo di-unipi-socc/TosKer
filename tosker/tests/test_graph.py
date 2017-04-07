@@ -11,9 +11,7 @@ class Test_Graph(unittest.TestCase):
     def _assert_sorting(self, tpl):
         running = set()
         for c in tpl.deploy_order:
-            print("DEBUG", c)
             for r in c.relationships:
-                print("DEBUG", r)
                 self.assertIn(r.to.name, running)
             running.add(c.name)
 
@@ -69,7 +67,6 @@ class Test_Graph(unittest.TestCase):
         tpl = get_tosca_template(
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['server1', 'server3'])
-        print('DEBUG', tpl)
         self._assert_sorting(tpl)
         self.assertEqual(len(tpl.deploy_order), 6)
         for c in tpl.deploy_order:
