@@ -8,15 +8,111 @@ class Test_Graph(unittest.TestCase):
 
     # TODO: add more test to be sure that the graph is as should
 
-    def test_order(self):
+    def _assert_sorting(tpl):
+        running = {}
+        for c in tpl.deploy_order:
+            for r in c.relationships:
+                self.assertIn(r.to.name, running)
+            running.add(c.name)
+
+    def test_deployment_order(self):
         tpl = get_tosca_template(
             'tosker/tests/TOSCA/software-link/software.yaml')
-        for n in tpl.deploy_order:
-            print(n)
+        _assert_sorting(tpl)
 
-    def test_components(self):
+    def test_components_1(self):
         tpl = get_tosca_template(
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['server1'])
-        for n in tpl.deploy_order:
-            print(n)
+
+        _assert_sorting(tpl)
+        self.assertEqual(len(tpl.deploy_order), 2)
+        for c in tpl.deploy_order:
+            self.assertIn(c.name, ('server1', 'nodejs1'))
+
+    def test_components_2(self):
+        tpl = get_tosca_template(
+            'tosker/tests/TOSCA/software-link/software.yaml',
+            components=['server2'])
+
+        _assert_sorting(tpl)
+        self.assertEqual(len(tpl.deploy_order), 2)
+        for c in tpl.deploy_order:
+            self.assertIn(c.name, ('server2', 'nodejs2'))
+
+    def test_components_3(self):
+        tpl = get_tosca_template(
+            'tosker/tests/TOSCA/software-link/software.yaml',
+            components=['server3'])
+
+        _assert_sorting(tpl)
+        self.assertEqual(len(tpl.deploy_order), 6)
+        for c in tpl.deploy_order:
+            self.assertIn(c.name, ('server1', 'nodejs1',
+                                   'server2', 'nodejs2',
+                                   'server3', 'nodejs3'))
+
+    def test_components_1_2(self):
+        tpl = get_tosca_template(
+            'tosker/tests/TOSCA/software-link/software.yaml',
+            components=['server1', 'server2'])
+
+        _assert_sorting(tpl)
+        self.assertEqual(len(tpl.deploy_order), 4)
+        for c in tpl.deploy_order:
+            self.assertIn(c.name, ('server1', 'nodejs1',
+                                   'server2', 'nodejs2'))
+
+    def test_components_1_3(self):
+        tpl = get_tosca_template(
+            'tosker/tests/TOSCA/software-link/software.yaml',
+            components=['server1', 'server3'])
+
+        _assert_sorting(tpl)
+        self.assertEqual(len(tpl.deploy_order), 6)
+        for c in tpl.deploy_order:
+            self.assertIn(c.name, ('server1', 'nodejs1',
+                                   'server2', 'nodejs2',
+                                   'server3', 'nodejs3'))
+
+    def test_components_2_3(self):
+        tpl = get_tosca_template(
+            'tosker/tests/TOSCA/software-link/software.yaml',
+            components=['server2', 'server3'])
+
+        _assert_sorting(tpl)
+        self.assertEqual(len(tpl.deploy_order), 6)
+        for c in tpl.deploy_order:
+            self.assertIn(c.name, ('server1', 'nodejs1',
+                                   'server2', 'nodejs2',
+                                   'server3', 'nodejs3'))
+
+    def test_components_n1(self):
+        tpl = get_tosca_template(
+            'tosker/tests/TOSCA/software-link/software.yaml',
+            components=['nodejs1'])
+
+        _assert_sorting(tpl)
+        self.assertEqual(len(tpl.deploy_order), 1)
+        for c in tpl.deploy_order:
+            self.assertIn(c.name, ('nodejs1'))
+
+    def test_components_n2(self):
+        tpl = get_tosca_template(
+            'tosker/tests/TOSCA/software-link/software.yaml',
+            components=['nodejs2'])
+
+        _assert_sorting(tpl)
+        self.assertEqual(len(tpl.deploy_order), 1)
+        for c in tpl.deploy_order:
+            self.assertIn(c.name, ('nodejs2'))
+
+    def test_components_n3(self):
+        tpl = get_tosca_template(
+            'tosker/tests/TOSCA/software-link/software.yaml',
+            components=['nodejs3'])
+
+        _assert_sorting(tpl)
+        self.assertEqual(len(tpl.deploy_order), 1)
+        for c in tpl.deploy_order:
+            self.assertIn(c.name, ('nodejs3'))
