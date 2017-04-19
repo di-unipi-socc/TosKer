@@ -15,7 +15,7 @@ from . import __version__
 
 def _usage():
     return '''
-Usage: tosker FILE COMMANDS... [OPTIONS] [INPUTS]
+Usage: tosker FILE [COMPONENTS...] COMMANDS...  [OPTIONS] [INPUTS]
        tosker -h|--help
        tosker -v|--version
 Orchestrate TOSCA applications on top of Docker.
@@ -27,6 +27,8 @@ COMMANDS:
   start    Start applications components
   stop     Stop application components
   delete   Delete application components (except volume)
+
+COMPONENTS: list of components to deploy
 
 OPTIONS:
   -h --help      Print usage
@@ -63,6 +65,7 @@ _CMD = {'create', 'start', 'stop', 'delete'}
 def _parse_unix_input(args):
     inputs = {}
     cmds = []
+    comps = []
     flags = {}
     file = ''
     p1 = re.compile('--.*')
@@ -86,14 +89,17 @@ def _parse_unix_input(args):
             else:
                 _error('known parameter.')
         elif args[i] and file:
-            cmds.append(args[i])
+            if args[i] in _CMD:
+                cmds.append(args[i])
+            else:
+                comps.append(args[i])
         elif i == 0:
             file = args[i]
         else:
             _error('first argument must be a TOSCA yaml file or a '
                    'directory with in a CSAR file.')
         i += 1
-    return file, cmds, flags, inputs
+    return file, cmds, comps, flags, inputs
 
 
 def _error(*str):
@@ -105,7 +111,7 @@ def run():
     if len(argv) < 2:
         _error('few arguments.', '\n', _usage())
 
-    file, cmds, flags, inputs = _parse_unix_input(argv[1:])
+    file, cmds, comps, flags, inputs = _parse_unix_input(argv[1:])
     if flags.get('help', False):
         print_(_usage())
         exit()
@@ -129,11 +135,13 @@ def run():
     if flags.get('debug', False):
         orchestrator = Orchestrator(file_name, inputs,
                                     log_handler=helper.get_consol_handler(),
-                                    quiet=False)
+                                    quiet=False,
+                                    components=comps)
     else:
         orchestrator = Orchestrator(file_name,
                                     inputs,
-                                    quiet=flags.get('quiet', False))
+                                    quiet=flags.get('quiet', False),
+                                    components=comps)
 
     for c in cmds:
         {

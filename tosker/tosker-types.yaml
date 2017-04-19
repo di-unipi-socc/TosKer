@@ -2,6 +2,32 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 
 description: Definition of the custom types of TosKer.
 
+# data_types:
+#   tosker.data.metadata:
+#     version: 0.1.1
+#     description: metadata for the container node
+#     properties:
+#       software:
+#         type: map
+#         required: false
+#         entry_schema:
+#           type: version
+#       size:
+#         type: scalar-unit.size
+#         required: false
+#         constraints:
+#           - greater_or_equal: 0 MB
+#       pulls:
+#         type: integer
+#         required: false
+#         constraints:
+#           - greater_or_equal: 0
+#       stars:
+#         type: integer
+#         required: false
+#         constraints:
+#           - greater_or_equal: 0
+
 node_types:
   tosker.nodes.Root:
     derived_from: tosca.nodes.Root
@@ -24,6 +50,28 @@ node_types:
         type: map
       command:
         type: string
+      # metadata:
+      #   type: tosker.data.metadata
+      software:
+        type: map
+        required: false
+        entry_schema:
+          type: version
+      size:
+        type: scalar-unit.size
+        required: false
+        constraints:
+          - greater_or_equal: 0 MB
+      pulls:
+        type: integer
+        required: false
+        constraints:
+          - greater_or_equal: 0
+      stars:
+        type: integer
+        required: false
+        constraints:
+          - greater_or_equal: 0
       # END
 
     properties:
@@ -36,6 +84,29 @@ node_types:
       command:
         type: string
         required: false
+      # metadata:
+      #   type: tosker.data.metadata
+      #   required: false
+      software:
+        type: map
+        required: false
+        entry_schema:
+          type: version
+      size:
+        type: scalar-unit.size
+        required: false
+        constraints:
+          - greater_or_equal: 0 MB
+      pulls:
+        type: integer
+        required: false
+        constraints:
+          - greater_or_equal: 0
+      stars:
+        type: integer
+        required: false
+        constraints:
+          - greater_or_equal: 0
 
     requirements:
       - storage:

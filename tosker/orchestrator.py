@@ -24,11 +24,12 @@ class Orchestrator:
                  inputs={},
                  log_handler=logging.NullHandler(),
                  quiet=True,
-                 tmp_dir='/tmp/tosker/'):
+                 tmp_dir='/tmp/tosker/',
+                 components=[]):
         Logger.set(log_handler, quiet)
         self._log = Logger.get(__name__)
 
-        self._tpl = get_tosca_template(file_path, inputs)
+        self._tpl = get_tosca_template(file_path, inputs, components)
         self._tmp_dir = path.join(tmp_dir, self._tpl.name)
         try:
             os.makedirs(self._tmp_dir)
@@ -50,6 +51,7 @@ class Orchestrator:
         ))
 
     def create(self):
+        self._log.debug('create operation')
         self._docker.create_network()  # TODO: da rimuovere
         Logger.println('\nCREATE')
         for node in self._tpl.deploy_order:
