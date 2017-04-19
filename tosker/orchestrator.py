@@ -5,7 +5,7 @@ import shutil
 from os import path
 
 from termcolor import colored
-from six import print_
+from functools import wraps
 
 from . import helper
 from .docker_interface import Docker_interface
@@ -20,17 +20,18 @@ from .helper import Logger
 class Orchestrator:
 
     def __init__(self,
-                 file_path,
-                 inputs={},
                  log_handler=logging.NullHandler(),
                  quiet=True,
-                 tmp_dir='/tmp/tosker/',
-                 components=[]):
+                 tmp_dir='/tmp/tosker/'):
         Logger.set(log_handler, quiet)
         self._log = Logger.get(__name__)
+        self._tmp_dir = tmp_dir
 
+    def parse(self, file_path, inputs, components):
         self._tpl = get_tosca_template(file_path, inputs, components)
-        self._tmp_dir = path.join(tmp_dir, self._tpl.name)
+        if self._tpl is None:
+            return False
+        self._tmp_dir = path.join(self._tmp_dir, self._tpl.name)
         try:
             os.makedirs(self._tmp_dir)
         except os.error as e:
@@ -49,8 +50,11 @@ class Orchestrator:
             ['{}. {}'.format(i + 1, n)
              for i, n in enumerate(self._tpl.deploy_order)]
         ))
+        return True
 
     def create(self):
+        if self._tpl is None:
+            return
         self._log.debug('create operation')
         self._docker.create_network()  # TODO: da rimuovere
         Logger.println('\nCREATE')

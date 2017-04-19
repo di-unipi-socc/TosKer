@@ -8,6 +8,7 @@ from docker import APIClient, errors
 
 from . import helper
 from .graph.nodes import Container, Volume
+from .graph.artifacts import Dockerfile
 from .helper import Logger
 
 
@@ -80,7 +81,7 @@ class Docker_interface:
 
         assert isinstance(con, Container)
 
-        if con.image.to_build:
+        if isinstance(con.image, Dockerfile):
             self._log.debug('start building..')
             self.build_image(con)
             self._log.debug('stop building..')

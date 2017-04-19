@@ -10,9 +10,10 @@ from toscaparser.common.exception import ValidationError
 
 from . import helper
 from .graph.nodes import Container, Software, Volume
-from .graph.artifacts import DockerImage, DockerImageExecutable, File
+from .graph.artifacts import DockerImage, DockerImageExecutable, File, \
+                             Dockerfile, DockerfileExecutable
 from .graph.template import Template
-
+from .helper import Logger
 
 _log = None
 
@@ -23,8 +24,8 @@ VOLUME = 'tosker.nodes.Volume'
 SOFTWARE = 'tosker.nodes.Software'
 IMAGE = 'tosker.artifacts.Image'
 IMAGE_EXE = 'tosker.artifacts.Image.Executable'
-# DOCKERFILE = 'tosker.artifacts.Dockerfile'
-# DOCKERFILE_EXE = 'tosker.artifacts.Dockerfile.Executable'
+DOCKERFILE = 'tosker.artifacts.Dockerfile'
+DOCKERFILE_EXE = 'tosker.artifacts.Dockerfile.Executable'
 
 # EXECUTABLE_IMAGE = 'tosker.artifacts.ExecutableImage'
 # IMAGE2 = 'tosca.artifacts.Deployment.Image.Container.Docker'
@@ -71,8 +72,8 @@ def _parse_conf(node, repos, base_path):
 
         def parse_dockerfile(name, file, executable=False):
             # dockerfile = path.abspath(path.join(base_path, art['file']))
-            conf.image = DockerImageExecutable(name, file) if executable else\
-                         DockerImage(name, file)
+            conf.image = DockerfileExecutable(name, file) if executable else\
+                         Dockerfile(name, file)
 
         def parse_image(name, repo, executable=False):
             conf.image = DockerImageExecutable(name) if executable else\
@@ -89,40 +90,25 @@ def _parse_conf(node, repos, base_path):
         for key, value in artifacts.items():
             if isinstance(value, dict):
                 name = value['file']
-                type = value['type']
+                art_type = value['type']
                 repo = value.get('repository', None)
             else:
-                type = IMAGE
+                art_type = IMAGE
                 name = value
                 repo = None
 
-            dockerfile = path.abspath(
-                            path.join(base_path, name)
-                         )
-            _log.debug('dockerfile: {}'.format(dockerfile))
-            if path.isfile(dockerfile) and repo is None:
+            if art_type == DOCKERFILE or art_type == DOCKERFILE_EXE:
+                dockerfile = path.abspath(
+                                path.join(base_path, name)
+                             )
+                _log.debug('dockerfile: {}'.format(dockerfile))
+                # if path.isfile(dockerfile) and repo is None:
                 _log.debug('Find a Dockerfile')
                 parse_dockerfile(key, dockerfile,  # .strip('/Dockerfile'),
-                                 type == IMAGE_EXE)
-            else:
+                                 art_type == DOCKERFILE_EXE)
+            elif art_type == IMAGE or art_type == IMAGE_EXE:
                 _log.debug('Find an Immage')
-                parse_image(name, repo, type == IMAGE_EXE)
-                # if value['type'] in IMAGE:
-                #     parse_image(value, False)
-                # elif value['type'] in IMAGE_EXE):
-                #     parse_dockerfile(key,
-                #                      value['file'],
-                #                      value['type'] == DOCKERFILE_EXE)
-                # if 'properties' in value:
-                #     conf.image.executable = value['properties'] \
-                #                             .get('executable', False)
-            # else:
-            #     docker_dir = path.abspath(
-            #         path.join(base_path, value)).strip('/Dockerfile')
-            #     if path.exists(docker_dir):
-            #         parse_dockerfile(key, docker_dir)
-            #     else:
-            #         parse_image(value)
+                parse_image(name, repo, art_type == IMAGE_EXE)
 
         def _parse_map(m):
             res = {}
@@ -164,6 +150,7 @@ def _parse_conf(node, repos, base_path):
             for key, value in artifacts.items():
                 _log.debug('artifacts: {}'.format(value))
                 conf.add_artifact(_get_file(base_path, key, value))
+                # TODO: parse also dictionary artifacts
                 _log.debug('artifacts: {}'.format(conf.artifacts))
 
         # get interfaces
@@ -286,6 +273,10 @@ def get_tosca_template(file_path, inputs={}, components=[]):
         if tosca.outputs:
             tpl.outputs = tosca.outputs
         if tosca.nodetemplates:
+            if not _components_exists(tosca.nodetemplates, components):
+                Logger.println('ERROR: a selected component do not exists')
+                return None
+
             for node in tosca.nodetemplates:
                 if len(components) == 0 or node.name in components:
                     tpl.push(_parse_conf(node,
@@ -303,7 +294,8 @@ def get_tosca_template(file_path, inputs={}, components=[]):
             error = _sort(tpl)
             if error:
                 # Not a DAG
-                pass
+                Logger.println('ERROR: the TOSCA file is not a DAG')
+                return None
 
             _add_extension(tpl)
 
@@ -336,6 +328,13 @@ def _get_dependency_nodes(tpl, tosca):
                 tosca_node = next((n for n in tosca.nodetemplates
                                    if n.name == r.to))
                 yield tosca_node
+
+
+def _components_exists(tosca_tpl, components):
+    for c in components:
+        if not any(c == n.name for n in tosca_tpl):
+            return False
+    return True
 
 
 def _sort(tpl):

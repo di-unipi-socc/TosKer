@@ -1,5 +1,6 @@
 from .relationships import HostedOn, ConnectsTo, AttachesTo, DependsOn
-from .artifacts import File, DockerImage, DockerImageExecutable
+from .artifacts import File, DockerImage, DockerImageExecutable, \
+                       DockerfileExecutable, Dockerfile
 
 
 def _add_to_map(d, k, v):
@@ -103,12 +104,13 @@ class Container(Root):
 
     @image.setter
     def image(self, img):
-        assert isinstance(img, DockerImage)
+        assert isinstance(img, (DockerImage, Dockerfile))
         self.artifacts = [img]
 
     @property
     def executable(self):
-        return isinstance(self.image, DockerImageExecutable)
+        return isinstance(self.image, (DockerImageExecutable,
+                                       DockerfileExecutable))
 
     @property
     def connection(self):

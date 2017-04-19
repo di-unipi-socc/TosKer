@@ -1,6 +1,7 @@
 from ..helper import Logger
 from ..graph.nodes import Container
-from ..graph.artifacts import DockerImageExecutable
+from ..graph.artifacts import Dockerfile
+
 
 class Container_manager:
 
@@ -13,7 +14,7 @@ class Container_manager:
         if node.executable:
             self._docker.create_container(node)
         else:
-            if node.image.to_build:
+            if isinstance(node.image, Dockerfile):
                 self._docker.build_image(node)
             else:
                 self._docker.pull_image(node.image.format)

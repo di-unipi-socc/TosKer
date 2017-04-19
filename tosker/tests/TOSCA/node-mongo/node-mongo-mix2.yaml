@@ -33,7 +33,7 @@ topology_template:
       artifacts:
         node_mogo_image:
           file: app/Dockerfile
-          type: tosker.artifacts.Image.Executable
+          type: tosker.artifacts.Dockerfile.Executable
 
     server2:
       type: tosker.nodes.Container

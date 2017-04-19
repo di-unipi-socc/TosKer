@@ -33,15 +33,10 @@ class File(Artifact):
 
 class DockerImage(Artifact):
 
-    def __init__(self, attr, dockerfile=None):
+    def __init__(self, attr):
         super(DockerImage, self).__init__('')
         self.name, self.tag = attr.split(':') if ':' in attr \
             else (attr, 'latest')
-        self.dockerfile = dockerfile
-
-    @property
-    def to_build(self):
-        return self.dockerfile is not None
 
     @property
     def format(self):
@@ -53,8 +48,33 @@ class DockerImage(Artifact):
 
 class DockerImageExecutable(DockerImage):
 
-    def __init__(self, name, dockerfile=None):
-        super(DockerImageExecutable, self).__init__(name, dockerfile)
+    def __init__(self, name):
+        super(DockerImageExecutable, self).__init__(name)
 
     def __str__(self):
         return 'DockerImageExecutable'
+
+
+class Dockerfile(Artifact):
+
+    def __init__(self, attr, dockerfile):
+        super(Dockerfile, self).__init__('')
+        self.name, self.tag = attr.split(':') if ':' in attr \
+            else (attr, 'latest')
+        self.dockerfile = dockerfile
+
+    @property
+    def format(self):
+        return '{}:{}'.format(self.name, self.tag)
+
+    def __str__(self):
+        return 'Dockerfile'
+
+
+class DockerfileExecutable(Dockerfile):
+
+    def __init__(self, name, dockerfile):
+        super(DockerfileExecutable, self).__init__(name, dockerfile)
+
+    def __str__(self):
+        return 'DockerfileExecutable'

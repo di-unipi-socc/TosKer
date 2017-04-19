@@ -91,8 +91,10 @@ def _parse_unix_input(args):
         elif args[i] and file:
             if args[i] in _CMD:
                 cmds.append(args[i])
-            else:
+            elif len(cmds) == 0:
                 comps.append(args[i])
+            else:
+                _error('{} is not a valid command.'.format(args[i]))
         elif i == 0:
             file = args[i]
         else:
@@ -133,22 +135,18 @@ def run():
                'directory with in a CSAR file.')
 
     if flags.get('debug', False):
-        orchestrator = Orchestrator(file_name, inputs,
-                                    log_handler=helper.get_consol_handler(),
-                                    quiet=False,
-                                    components=comps)
+        orchestrator = Orchestrator(log_handler=helper.get_consol_handler(),
+                                    quiet=False)
     else:
-        orchestrator = Orchestrator(file_name,
-                                    inputs,
-                                    quiet=flags.get('quiet', False),
-                                    components=comps)
+        orchestrator = Orchestrator(quiet=flags.get('quiet', False))
 
-    for c in cmds:
-        {
-            'create': orchestrator.create,
-            'start': orchestrator.start,
-            'stop': orchestrator.stop,
-            'delete': orchestrator.delete,
-        }.get(c, lambda: _error('command not found.'))()
+    if orchestrator.parse(file_name, inputs, comps):
+        for c in cmds:
+            {
+              'create': orchestrator.create,
+              'start': orchestrator.start,
+              'stop': orchestrator.stop,
+              'delete': orchestrator.delete,
+            }.get(c, lambda: _error('command not found.'))()
 
-    orchestrator.print_outputs()
+        orchestrator.print_outputs()
