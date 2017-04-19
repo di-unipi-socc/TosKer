@@ -300,7 +300,10 @@ def get_tosca_template(file_path, inputs={}, components=[]):
 
             _add_pointer(tpl)
 
-            _sort(tpl)
+            error = _sort(tpl)
+            if error:
+                # Not a DAG
+                pass
 
             _add_extension(tpl)
 
@@ -336,20 +339,29 @@ def _get_dependency_nodes(tpl, tosca):
 
 
 def _sort(tpl):
-    nodes = list((i.name for i in tpl.deploy_order))
-    # TODO: remove this, it is only for debugging
-    random.shuffle(nodes)
-
+    unmarked = set(tpl.deploy_order)
     tpl.deploy_order = []
-    while len(nodes) > 0:
-        n = nodes.pop(0)
-        # print("DEBUG", n)
-        if all((r.to.name not in nodes for r in tpl[n].relationships)):
-            # print("DEBUG", 'good')
-            tpl.deploy_order.append(tpl[n])
-        else:
-            # print("DEBUG", 'put back')
-            nodes.append(n)
+
+    def visit(n):
+        if n._mark == 'temp':
+            # not a DAG
+            return False
+        elif n._mark == '':
+            n._mark = 'temp'
+            if n in unmarked:
+                unmarked.remove(n)
+            for r in n.relationships:
+                error = visit(r.to)
+                if error:
+                    return error
+            n._mark = 'perm'
+            tpl.deploy_order.append(n)
+
+    while len(unmarked) > 0:
+        n = unmarked.pop()
+        error = visit(n)
+        if error:
+            return error
 
 
 def _add_pointer(tpl):

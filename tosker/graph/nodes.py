@@ -32,6 +32,9 @@ class Root(object):
         self._volume = []
         self.artifacts = []
 
+        # need by the topological sorting algorithm
+        self._mark = ''
+
     @property
     def depend(self):
         return (i.format for i in self._depend)
@@ -115,7 +118,7 @@ class Container(Root):
         if not isinstance(item, ConnectsTo):
             item = ConnectsTo(item, alias)
         self._overlay.append(item)
-    
+
     def add_env(self, name, value):
         self.env = _add_to_map(self.env, name, value)
 
