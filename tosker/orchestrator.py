@@ -27,7 +27,7 @@ class Orchestrator:
         self._log = Logger.get(__name__)
         self._tmp_dir = tmp_dir
 
-    def parse(self, file_path, inputs, components):
+    def parse(self, file_path, inputs={}, components=[]):
         self._tpl = get_tosca_template(file_path, inputs, components)
         if self._tpl is None:
             return False
@@ -53,8 +53,6 @@ class Orchestrator:
         return True
 
     def create(self):
-        if self._tpl is None:
-            return
         self._log.debug('create operation')
         self._docker.create_network()  # TODO: da rimuovere
         Logger.println('\nCREATE')

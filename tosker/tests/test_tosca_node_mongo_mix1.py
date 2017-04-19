@@ -7,8 +7,8 @@ class Test_Node_Mongo_Mix1(Test_Orchestrator):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.orchestrator = \
-            Orchestrator('tosker/tests/TOSCA/node-mongo/node-mongo-mix1.yaml')
+        self.orchestrator.parse(
+            'tosker/tests/TOSCA/node-mongo/node-mongo-mix1.yaml')
 
     def test(self):
         self.create()
