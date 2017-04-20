@@ -46,6 +46,8 @@ Examples:
 
   tosker hello.yaml create start --name mario
   tosker hello.yaml stop delete -q
+
+  tosker hello.yaml database api create start
 '''
 
 

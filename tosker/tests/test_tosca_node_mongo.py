@@ -8,7 +8,7 @@ class Test_Node_Mongo(Test_Orchestrator):
     def setUp(self):
         super(self.__class__, self).setUp()
         self.orchestrator.parse(
-            'tosker/tests/TOSCA/node-mongo/node-mongo.yaml')
+            'tosker/tests/TOSCA/node-mongo-csar/node-mongo.csar')
 
     def test(self):
         self.create()

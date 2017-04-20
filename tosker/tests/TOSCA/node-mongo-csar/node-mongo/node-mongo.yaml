@@ -8,7 +8,7 @@ repositories:
 
 imports:
   # - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
-  - tosker: ../../../tosker-types.yaml
+  - tosker: tosker-types.yaml
 
 topology_template:
   node_templates:
@@ -23,12 +23,12 @@ topology_template:
       interfaces:
         Standard:
           create:
-            implementation: app/install.sh
+            implementation: scripts/app/install.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
               main: { get_artifact: [ SELF, code ] }
           start:
-            implementation: app/start.sh
+            implementation: scripts/app/start.sh
             inputs:
               port: 80
 
@@ -39,9 +39,9 @@ topology_template:
       interfaces:
         Standard:
           create:
-            implementation: mongo/install.sh
+            implementation: scripts/mongo/install.sh
           start:
-            implementation: mongo/start.sh
+            implementation: scripts/mongo/start.sh
 
     node:
       type: tosker.nodes.Software
@@ -50,7 +50,7 @@ topology_template:
       interfaces:
         Standard:
           create:
-            implementation: install_node.sh
+            implementation: scripts/install_node.sh
 
     server1:
       type: tosker.nodes.Container

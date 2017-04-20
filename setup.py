@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
+from os import walk
 
 here = path.abspath(path.dirname(__file__))
 
@@ -24,7 +25,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/di-unipi-socc/tosKer',
+    url='https://github.com/di-unipi-socc/TosKer',
 
     # Author details
     author='lucarin91',
@@ -87,9 +88,13 @@ setup(
     # need to place data files outside of your packages. See:
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files # noqa
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
-    # data_files=[
-    #     ('/etc/tosker', ['tosker/tosker-types.yaml'])
-    # ],
+    data_files=[
+        ('/etc/tosker', ['tosker/tosker-types.yaml']),
+        ('/etc/tosker/examples',
+            ['tosker/tests/TOSCA/thoughts-app/thoughts.csar',
+             'tosker/tests/TOSCA/node-mongo-csar/node-mongo.csar'])
+
+    ],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
