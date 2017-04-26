@@ -1,7 +1,7 @@
 # TosKer
 Orchestrate TOSCA applications on top of Docker.
 
-## Intallation
+## Installation
 **Requirements**
 - python>=2.7
 - pip
