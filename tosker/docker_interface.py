@@ -96,10 +96,9 @@ class Docker_interface:
             create()
         except errors.APIError as e:
             self._log.debug(e)
-            # self.stop(con)
             self.delete_container(con)
             create()
-            # raise e
+        return True
 
     def pull_image(self, image):
         assert isinstance(image, six.string_types)
@@ -108,28 +107,36 @@ class Docker_interface:
     @_get_name
     def stop_container(self, name):
         try:
-            return self._cli.stop(name)
+            self._cli.stop(name)
+            return True
         except errors.NotFound as e:
             self._log.error(e)
+            return False
 
     @_get_name
     def start_container(self, name, wait=False):
-        self._cli.start(name)
-        if wait:
-            self._log.debug('wait container..')
-            self._cli.wait(name)
-            helper.print_byte(
-                self._cli.logs(name, stream=True),
-                self._log.debug
-            )
+        try:
+            self._cli.start(name)
+            if wait:
+                self._log.debug('wait container..')
+                self._cli.wait(name)
+                helper.print_byte(
+                    self._cli.logs(name, stream=True),
+                    self._log.debug
+                )
+            return True
+        except errors.NotFound as e:
+            self._log.error(e)
+            return False
 
     @_get_name
     def delete_container(self, name):
         try:
             self._cli.remove_container(name, v=True)
+            return True
         except (errors.NotFound, errors.APIError) as e:
             self._log.error(e)
-            raise e
+            return False
 
     @_get_name
     def exec_cmd(self, name, cmd):
