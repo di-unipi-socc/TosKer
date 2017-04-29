@@ -17,109 +17,109 @@ class Test_DockerInterface(unittest.TestCase):
     def test_create_container(self):
         self._docker.create_container(self._container)
         self.assertIsNotNone(
-            self._docker.inspect(c.name)
+            self._docker.inspect(self._container.name)
         )
         self._docker.create_container(self._container)
         self.assertIsNotNone(
-            self._docker.inspect(c.name)
+            self._docker.inspect(self._container.name)
         )
 
-    # def test_start_container(self):
-    #     self._docker.create_container(self._container)
-    #     self.assertIsNotNone(
-    #         self._docker.inspect(self._container.name)
-    #     )
-    #     self.assertTrue(
-    #         self._docker.start_container(self._container)
-    #     )
-    #     stat = self._docker.inspect_container(self._container.name)
-    #     self.assertIsNotNone(stat)
-    #     self.assertTrue(stat['State']['Running'])
-    #
-    #     # check ERROR
-    #     self._docker.delete_container(self._container)
-    #     res = self._docker.start_container(self._container)
-    #     self.assertFalse(res)
-    #     stat = self._docker.inspect_container(self._container.name)
-    #     self.assertIsNone(stat)
-    #
-    # def test_stop_container(self):
-    #     self._docker.create_container(self._container)
-    #     self.assertIsNotNone(
-    #         self._docker.inspect(self._container.name)
-    #     )
-    #     self.assertTrue(
-    #         self._docker.start_container(self._container)
-    #     )
-    #     stat = self._docker.inspect_container(self._container.name)
-    #     self.assertIsNotNone(stat)
-    #     self.assertTrue(stat['State']['Running'])
-    #
-    #     res = self._docker.stop_container(self._container)
-    #     self.assertTrue(res)
-    #     stat = self._docker.inspect_container(self._container.name)
-    #     self.assertIsNotNone(stat)
-    #     self.assertFalse(stat['State']['Running'])
-    #
-    #     # check ERROR
-    #     self._docker.delete_container(self._container)
-    #     res = self._docker.stop_container(self._container)
-    #     self.assertFalse(res)
-    #     stat = self._docker.inspect_container(self._container.name)
-    #     self.assertIsNone(stat)
-    #
-    # def test_container_delete(self):
-    #     self._docker.create_container(self._container)
-    #     self.assertIsNotNone(
-    #         self._docker.inspect(self._container.name)
-    #     )
-    #
-    #     self.assertTrue(
-    #         self._docker.delete_container(self._container)
-    #     )
-    #     self.assertNone(
-    #         self._docker.inspect(self._container.name)
-    #     )
-    #
-    #     # # check ERROR
-    #     # self.assertFalse(
-    #     #     self._docker.delete_container(self._container)
-    #     # )
-    #     # self.assertNone(
-    #     #     self._docker.inspect(self._container.name)
-    #     # )
-    #
-    # def test_container_exec(self):
-    #     self._docker.create_container(self._container)
-    #     self.assertIsNotNone(
-    #         self._docker.inspect(self._container.name)
-    #     )
-    #     self.assertTrue(
-    #         self._docker.start_container(self._container)
-    #     )
-    #     self.assertTrue(
-    #         self._docker.exec_cmd(self._container, 'echo hello!')
-    #     )
-    #
-    #     # check ERROR
-    #     self.assertTrue(
-    #         self._docker.stop_container(self._container)
-    #     )
-    #     self.assertIsNotNone(
-    #         self._docker.inspect(self._container.name)
-    #     )
-    #     self.assertFalse(
-    #         self._docker.exec_cmd(self._container, 'echo hello!')
-    #     )
-    #     self.assertTrue(
-    #         self._docker.delete_container(self._container)
-    #     )
-    #     self.assertIsNone(
-    #         self._docker.inspect(self._container.name)
-    #     )
-    #     self.assertFalse(
-    #         self._docker.exec_cmd(self._container, 'echo hello!')
-    #    )
+    def test_start_container(self):
+        self._docker.create_container(self._container)
+        self.assertIsNotNone(
+            self._docker.inspect(self._container.name)
+        )
+        self.assertTrue(
+            self._docker.start_container(self._container)
+        )
+        stat = self._docker.inspect_container(self._container.name)
+        self.assertIsNotNone(stat)
+        self.assertTrue(stat['State']['Running'])
+
+        # check ERROR
+        self._docker.delete_container(self._container)
+        res = self._docker.start_container(self._container)
+        self.assertFalse(res)
+        stat = self._docker.inspect_container(self._container.name)
+        self.assertIsNone(stat)
+
+    def test_stop_container(self):
+        self._docker.create_container(self._container)
+        self.assertIsNotNone(
+            self._docker.inspect(self._container.name)
+        )
+        self.assertTrue(
+            self._docker.start_container(self._container)
+        )
+        stat = self._docker.inspect_container(self._container.name)
+        self.assertIsNotNone(stat)
+        self.assertTrue(stat['State']['Running'])
+
+        res = self._docker.stop_container(self._container)
+        self.assertTrue(res)
+        stat = self._docker.inspect_container(self._container.name)
+        self.assertIsNotNone(stat)
+        self.assertFalse(stat['State']['Running'])
+
+        # check ERROR
+        self._docker.delete_container(self._container)
+        res = self._docker.stop_container(self._container)
+        self.assertFalse(res)
+        stat = self._docker.inspect_container(self._container.name)
+        self.assertIsNone(stat)
+
+    def test_container_delete(self):
+        self._docker.create_container(self._container)
+        self.assertIsNotNone(
+            self._docker.inspect(self._container.name)
+        )
+
+        self.assertTrue(
+            self._docker.delete_container(self._container)
+        )
+        self.assertNone(
+            self._docker.inspect(self._container.name)
+        )
+
+        # # check ERROR
+        # self.assertFalse(
+        #     self._docker.delete_container(self._container)
+        # )
+        # self.assertNone(
+        #     self._docker.inspect(self._container.name)
+        # )
+
+    def test_container_exec(self):
+        self._docker.create_container(self._container)
+        self.assertIsNotNone(
+            self._docker.inspect(self._container.name)
+        )
+        self.assertTrue(
+            self._docker.start_container(self._container)
+        )
+        self.assertTrue(
+            self._docker.exec_cmd(self._container, 'echo hello!')
+        )
+
+        # check ERROR
+        self.assertTrue(
+            self._docker.stop_container(self._container)
+        )
+        self.assertIsNotNone(
+            self._docker.inspect(self._container.name)
+        )
+        self.assertFalse(
+            self._docker.exec_cmd(self._container, 'echo hello!')
+        )
+        self.assertTrue(
+            self._docker.delete_container(self._container)
+        )
+        self.assertIsNone(
+            self._docker.inspect(self._container.name)
+        )
+        self.assertFalse(
+            self._docker.exec_cmd(self._container, 'echo hello!')
+       )
 
     # def test_network(self):
     #     self._docker.create_network()
