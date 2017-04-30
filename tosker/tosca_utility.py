@@ -185,12 +185,6 @@ def _parse_conf(node, repos, base_path):
         _log.error('node type "{}" not supported!'.format(node.type))
         # TODO: collect error like as real parser..
 
-    def add_to_list(l, value):
-        if l is None:
-            l = []
-        l.append(value)
-        return l
-
     # get requirements
     if 'requirements' in node.entity_tpl:
         requirements = node.entity_tpl['requirements']

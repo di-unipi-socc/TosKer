@@ -1,4 +1,5 @@
 import unittest
+from tosker import helper
 from tosker.orchestrator import Orchestrator
 from tosker.docker_interface import Docker_interface
 
@@ -9,7 +10,9 @@ class Test_Orchestrator(unittest.TestCase):
         self._docker = Docker_interface()
         self._docker.remove_all_containers()
         self._docker.remove_all_volumes()
-        self.orchestrator = Orchestrator()
+        self.orchestrator = Orchestrator(
+            # log_handler=helper.get_consol_handler()
+        )
 
     def create(self):
         self.orchestrator.create()

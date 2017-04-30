@@ -27,9 +27,6 @@ class Container_manager:
         if stat is not None:
             node.id = stat['Id']
             self._docker.start_container(node)
-        else:
-            self._log.error(
-                'ERROR: Container "{}" not exists!'.format(node.name))
 
     def stop(self, node):
         assert isinstance(node, Container)

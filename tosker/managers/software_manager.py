@@ -54,9 +54,11 @@ class Software_manager:
 
     @_get_cmd('delete')
     def delete(self, cmd, node):
+        self._log.debug('exec delete command!')
         if self._docker.is_running(node.host_container):
-            self._log.debug('exec delete command!')
             self._docker.exec_cmd(node.host_container, cmd)
+        else:
+            self._docker.update_container(node.host_container, cmd)
 
     def _copy_files(self, node):
         # generate path for the tmp folder
