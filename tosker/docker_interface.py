@@ -41,7 +41,7 @@ class Docker_interface:
                          cmd=None,
                          entrypoint=None,
                          from_saved=False,
-                         force=True):
+                         force=False):
         def create():
             tmp_dir = path.join(self._tmp_dir, con.name)
             try:
@@ -241,23 +241,28 @@ class Docker_interface:
         old_cmd = stat['Config']['Cmd'] or None
         old_entry = stat['Config']['Entrypoint'] or None
 
-        if self.inspect_container(node):
-            self.stop_container(node)
-            self.delete_container(node)
+        # if self.is_running(node):
+        #     self.stop_container(node)
+        #     self.delete_container(node)
 
-        self.create_container(node, cmd=cmd, entrypoint='', from_saved=True)
+        self.create_container(node,
+                              cmd=cmd,
+                              entrypoint='',
+                              from_saved=True,
+                              force=True)
 
         self.start_container(node.id, wait=True)
-        self.stop_container(node.id)
+        # self.stop_container(node.id)
 
         self._cli.commit(node.id, self.get_saved_image(node))
 
         # self.stop_container(node)
-        self.delete_container(node)
+        # self.delete_container(node)
         self.create_container(node,
                               cmd=node.cmd or old_cmd,
                               entrypoint=old_entry,
-                              from_saved=True)
+                              from_saved=True,
+                              force=True)
 
         self._cli.commit(node.id, self.get_saved_image(node))
 

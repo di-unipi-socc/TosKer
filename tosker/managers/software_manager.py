@@ -40,11 +40,12 @@ class Software_manager:
             self._docker.exec_cmd(node.host_container, cmd)
         except Exception as e:
             self._log.debug('is not running!')
-            self._docker.delete_container(node.host_container)
+            # self._docker.delete_container(node.host_container)
             self._docker.create_container(node.host_container,
                                           cmd=cmd,
                                           entrypoint='',
-                                          from_saved=True)
+                                          from_saved=True,
+                                          force=True)
             self._docker.start_container(node.host_container)
 
     @_get_cmd('stop')

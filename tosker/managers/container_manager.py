@@ -12,7 +12,7 @@ class Container_manager:
     def create(self, node):
         assert isinstance(node, Container)
         # if node.executable:
-        self._docker.create_container(node, force=False)
+        self._docker.create_container(node)
         # else:
         #     if isinstance(node.image, Dockerfile):
         #         self._docker.build_image(node)
@@ -30,9 +30,9 @@ class Container_manager:
 
     def stop(self, node):
         assert isinstance(node, Container)
-        self._docker.stop_container(node)
-        self._docker.delete_container(node)
-        self._docker.create_container(node, from_saved=True)
+        # self._docker.stop_container(node)
+        # self._docker.delete_container(node)
+        self._docker.create_container(node, from_saved=True, force=True)
 
     def delete(self, node):
         assert isinstance(node, Container)
