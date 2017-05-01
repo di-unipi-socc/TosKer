@@ -11,17 +11,22 @@ if [ ! -d "venv3" ]; then
 fi
 
 # test on python2
-echo 'TEST PYTHON2' >> $TEST_LOG
-. ./venv2/bin/activate
-pip install -r requirements.txt &> /dev/null
-python -m unittest discover -v 2>> $TEST_LOG
-deactivate
+if [ $# == 0 ] || [ $1 == "python2" ]; then
+  echo 'TEST PYTHON2' >> $TEST_LOG
+  . ./venv2/bin/activate
+  pip install -r requirements.txt &> /dev/null
+  python -m unittest discover -v 2>> $TEST_LOG
+  deactivate
+fi
+
 
 # test on python3 and coverage
-echo "\nTEST PYTHON3 and COVERAGE" >> $TEST_LOG
-pip install -r requirements.txt &> /dev/null
-. ./venv3/bin/activate
-coverage run --source tosker -m unittest discover 2> /dev/null
-coverage report -m  --omit 'tosker/tests/*,tosker/graph/*,tosker/helper.py,*__init__.py' >> $TEST_LOG
-coverage html --omit 'tosker/tests/*,tosker/graph/*,tosker/helper.py,*__init__.py'
-deactivate
+if [ $# == 0 ] || [ $1 == "python3" ]; then
+  echo "\nTEST PYTHON3 and COVERAGE" >> $TEST_LOG
+  . ./venv3/bin/activate
+  pip install -r requirements.txt &> /dev/null
+  coverage run --source tosker -m unittest discover 2> /dev/null
+  coverage report -m  --omit 'tosker/tests/*,tosker/graph/*,tosker/helper.py,*__init__.py' >> $TEST_LOG
+  coverage html --omit 'tosker/tests/*,tosker/graph/*,tosker/helper.py,*__init__.py'
+  deactivate
+fi
