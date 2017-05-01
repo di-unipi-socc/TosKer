@@ -12,7 +12,7 @@ class Volume_manager:
         assert isinstance(node, Volume)
         self._docker.create_volume(node)
 
-    def delete(self, node):
-        assert isinstance(node, Volume)
-        # TODO: test this function
-        self._docker.delete_volume(node)
+    # def delete(self, node):
+    #     assert isinstance(node, Volume)
+    #     # TODO: test this function
+    #     self._docker.delete_volume(node)

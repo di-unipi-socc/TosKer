@@ -30,7 +30,7 @@ class Container_manager:
 
     def stop(self, node):
         assert isinstance(node, Container)
-        # self._docker.stop_container(node)
+        self._docker.stop_container(node)
         # self._docker.delete_container(node)
         self._docker.create_container(node, from_saved=True, force=True)
 

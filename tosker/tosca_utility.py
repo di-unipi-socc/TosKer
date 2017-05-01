@@ -173,7 +173,8 @@ def _parse_conf(node, repos, base_path):
             conf.interfaces = intf
 
     else:
-        raise Exception('ERROR: node type "{}" not supported!'.format(node.type))
+        raise Exception(
+            'ERROR: node type "{}" not supported!'.format(node.type))
 
     # get requirements
     if 'requirements' in node.entity_tpl:
@@ -419,9 +420,6 @@ def _parse_functions(tosca, inputs, base_path):
     if 'inputs' in tosca.topology_template.tpl:
         tosca_inputs = tosca.topology_template.tpl['inputs']
 
-    if 'outputs' in tosca.topology_template.tpl:
-        pass
-
     def parse_node(name, node):
         for k, v in node.items():
             # If the function is already parsed by toscaparser,
@@ -454,3 +452,7 @@ def _parse_functions(tosca, inputs, base_path):
 
     for k, v in tpl.items():
         parse_node(k, v)
+
+    if 'outputs' in tosca.topology_template.tpl:
+        for k, v in tosca.topology_template.tpl['outputs'].items():
+            parse_node(k, v)

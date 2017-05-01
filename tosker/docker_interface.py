@@ -46,7 +46,7 @@ class Docker_interface:
             tmp_dir = path.join(self._tmp_dir, con.name)
             try:
                 os.makedirs(tmp_dir)
-            except:
+            except Exception:
                 pass
             img_name = con.image.format
             self._log.debug('image_name: {}'.format(img_name))
@@ -103,9 +103,9 @@ class Docker_interface:
             else:
                 raise e
 
-    def pull_image(self, image):
-        assert isinstance(image, six.string_types)
-        self._cli.pull(image)
+    # def pull_image(self, image):
+    #     assert isinstance(image, six.string_types)
+    #     self._cli.pull(image)
 
     @_get_name
     def stop_container(self, name):

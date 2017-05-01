@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import shutil
+import six
 from os import path
 
 from termcolor import colored
@@ -128,9 +129,10 @@ class Orchestrator:
         if len(self._tpl.outputs) != 0:
             Logger.println('\nOUTPUTS:')
         for out in self._tpl.outputs:
-            self._log.debug('args: {}'.format(out.value.args))
-            Logger.println('  - ' + out.name + ":",
-                           helper.get_attributes(out.value.args, self._tpl))
+            self._log.debug('value: {}'.format(out.value))
+            value = out.value if isinstance(out.value, six.string_types) \
+                else helper.get_attributes(out.value.args, self._tpl)
+            Logger.println('  - ' + out.name + ":", value)
 
     def _print_tick(self):
         Logger.println(' ' + colored(u"\u2714", 'green'))
