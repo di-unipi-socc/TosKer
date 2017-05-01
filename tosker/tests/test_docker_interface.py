@@ -7,7 +7,7 @@ from tosker.helper import Logger
 
 
 class Test_DockerInterface(unittest.TestCase):
-
+    # TODO: fix this
     @classmethod
     def setUpClass(self):
         # Logger.set(helper.get_consol_handler(), False)
@@ -28,11 +28,14 @@ class Test_DockerInterface(unittest.TestCase):
         self._docker.remove_all_containers()
 
     def test_create_container(self):
-        self._docker.create_container(self._container)
+        self._docker.create_container(self._container, force=False)
         self.assertIsNotNone(
             self._docker.inspect(self._container.name)
         )
-        self._docker.create_container(self._container)
+        self.assertRaises(
+            Exception,
+            lambda: self._docker.create_container(self._container, force=False)
+        )
         self.assertIsNotNone(
             self._docker.inspect(self._container.name)
         )
@@ -42,16 +45,15 @@ class Test_DockerInterface(unittest.TestCase):
         self.assertIsNotNone(
             self._docker.inspect(self._container.name)
         )
-        self.assertTrue(
-            self._docker.start_container(self._container)
-        )
+        self._docker.start_container(self._container)
         stat = self._docker.inspect_container(self._container.name)
         self.assertIsNotNone(stat)
         self.assertTrue(stat['State']['Running'])
 
     def test_start_container_error(self):
-        self.assertFalse(
-            self._docker.start_container(self._container)
+        self.assertRaises(
+            Exception,
+            lambda: self._docker.start_container(self._container)
         )
         self.assertIsNone(
             self._docker.inspect_container(self._container.name)
@@ -62,22 +64,21 @@ class Test_DockerInterface(unittest.TestCase):
         self.assertIsNotNone(
             self._docker.inspect(self._container.name)
         )
-        self.assertTrue(
-            self._docker.start_container(self._container)
-        )
+        self._docker.start_container(self._container)
+
         stat = self._docker.inspect_container(self._container.name)
         self.assertIsNotNone(stat)
         self.assertTrue(stat['State']['Running'])
 
-        res = self._docker.stop_container(self._container)
-        self.assertTrue(res)
+        self._docker.stop_container(self._container)
         stat = self._docker.inspect_container(self._container.name)
         self.assertIsNotNone(stat)
         self.assertFalse(stat['State']['Running'])
 
     def test_stop_container_error(self):
-        self.assertFalse(
-            self._docker.stop_container(self._container)
+        self.assertRaises(
+            Exception,
+            lambda: self._docker.stop_container(self._container)
         )
         self.assertIsNone(
             self._docker.inspect_container(self._container.name)
@@ -89,16 +90,15 @@ class Test_DockerInterface(unittest.TestCase):
             self._docker.inspect(self._container.name)
         )
 
-        self.assertTrue(
-            self._docker.delete_container(self._container)
-        )
+        self._docker.delete_container(self._container)
         self.assertIsNone(
             self._docker.inspect(self._container.name)
         )
 
-        # check ERROR
-        self.assertFalse(
-            self._docker.delete_container(self._container)
+    def test_container_delete_error(self):
+        self.assertRaises(
+            Exception,
+            lambda: self._docker.delete_container(self._container)
         )
         self.assertIsNone(
             self._docker.inspect(self._container.name)
@@ -109,29 +109,25 @@ class Test_DockerInterface(unittest.TestCase):
         self.assertIsNotNone(
             self._docker.inspect(self._container.name)
         )
-        self.assertTrue(
-            self._docker.start_container(self._container)
-        )
-        self.assertTrue(
-            self._docker.exec_cmd(self._container, 'echo hello!')
-        )
+        self._docker.start_container(self._container)
+        self._docker.exec_cmd(self._container, 'echo hello!')
 
     def test_container_exec_error(self):
         self._docker.create_container(self._container)
         self.assertIsNotNone(
             self._docker.inspect(self._container.name)
         )
-        self.assertFalse(
-            self._docker.exec_cmd(self._container, 'echo hello!')
+        self.assertRaises(
+            Exception,
+            lambda: self._docker.exec_cmd(self._container, 'echo hello!')
         )
-        self.assertTrue(
-            self._docker.delete_container(self._container)
-        )
+        self._docker.delete_container(self._container)
         self.assertIsNone(
             self._docker.inspect(self._container.name)
         )
-        self.assertFalse(
-            self._docker.exec_cmd(self._container, 'echo hello!')
+        self.assertRaises(
+            Exception,
+            lambda: self._docker.exec_cmd(self._container, 'echo hello!')
         )
 
     def test_network(self):

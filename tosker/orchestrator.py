@@ -28,9 +28,12 @@ class Orchestrator:
         self._tmp_dir = tmp_dir
 
     def parse(self, file_path, inputs={}, components=[]):
-        self._tpl = get_tosca_template(file_path, inputs, components)
-        if self._tpl is None:
+        try:
+            self._tpl = get_tosca_template(file_path, inputs, components)
+        except Exception as e:
+            Logger.println(e.args[0])
             return False
+
         self._tmp_dir = path.join(self._tmp_dir, self._tpl.name)
         try:
             os.makedirs(self._tmp_dir)
@@ -71,7 +74,8 @@ class Orchestrator:
                 self._print_cross()
                 Logger.println(e)
                 self._log.exception(e)
-                exit(-1)
+                raise e
+                # TODO: catch this error
 
             self._print_tick()
 
@@ -111,13 +115,15 @@ class Orchestrator:
             except Exception as e:
                 self._print_cross()
                 Logger.println(e)
-                exit(-1)
+                raise e
+                # TODO: catch this error
 
             self._print_tick()
 
         self._docker.delete_network()
         shutil.rmtree(self._tmp_dir)
 
+    # TODO: test this function
     def print_outputs(self):
         if len(self._tpl.outputs) != 0:
             Logger.println('\nOUTPUTS:')

@@ -36,8 +36,9 @@ class Software_manager:
 
     @_get_cmd('start')
     def start(self, cmd, node):
-        status = self._docker.exec_cmd(node.host_container, cmd)
-        if not status:
+        try:
+            self._docker.exec_cmd(node.host_container, cmd)
+        except Exception as e:
             self._log.debug('is not running!')
             self._docker.delete_container(node.host_container)
             self._docker.create_container(node.host_container,
@@ -55,10 +56,7 @@ class Software_manager:
     @_get_cmd('delete')
     def delete(self, cmd, node):
         self._log.debug('exec delete command!')
-        if self._docker.is_running(node.host_container):
-            self._docker.exec_cmd(node.host_container, cmd)
-        else:
-            self._docker.update_container(node.host_container, cmd)
+        self._docker.update_container(node.host_container, cmd)
 
     def _copy_files(self, node):
         # generate path for the tmp folder

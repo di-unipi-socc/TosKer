@@ -40,7 +40,8 @@ class Docker_interface:
                          con,
                          cmd=None,
                          entrypoint=None,
-                         from_saved=False):
+                         from_saved=False,
+                         force=True):
         def create():
             tmp_dir = path.join(self._tmp_dir, con.name)
             try:
@@ -96,9 +97,11 @@ class Docker_interface:
             create()
         except errors.APIError as e:
             self._log.debug(e)
-            self.delete_container(con)
-            create()
-        return True
+            if force:
+                self.delete_container(con)
+                create()
+            else:
+                raise e
 
     def pull_image(self, image):
         assert isinstance(image, six.string_types)
@@ -108,10 +111,9 @@ class Docker_interface:
     def stop_container(self, name):
         try:
             self._cli.stop(name)
-            return True
         except errors.NotFound as e:
             self._log.error(e)
-            return False
+            raise e
 
     @_get_name
     def start_container(self, name, wait=False):
@@ -124,24 +126,22 @@ class Docker_interface:
                     self._cli.logs(name, stream=True),
                     self._log.debug
                 )
-            return True
         except errors.NotFound as e:
             self._log.error(e)
-            return False
+            raise e
 
     @_get_name
     def delete_container(self, name):
         try:
             self._cli.remove_container(name, v=True)
-            return True
         except (errors.NotFound, errors.APIError) as e:
             self._log.error(e)
-            return False
+            raise e
 
     @_get_name
     def exec_cmd(self, name, cmd):
         if not self.is_running(name):
-            return False
+            raise e
         try:
             exec_id = self._cli.exec_create(name, cmd,
                                             stdout=False,
@@ -151,13 +151,11 @@ class Docker_interface:
 
             check = 'rpc error:' != status[:10].decode("utf-8")
             self._log.debug('check: {}'.format(check))
-            return check
+            if not check:
+                raise errors.APIError
         except errors.APIError as e:
             self._log.error(e)
-            return False
-        except requests.exceptions.ConnectionError as e:
-            self._log.error(e)
-            return False
+            raise e
 
     def create_volume(self, volume):
         assert isinstance(volume, Volume)

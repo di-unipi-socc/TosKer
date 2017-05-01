@@ -1,6 +1,5 @@
 import json
 import re
-import random  # TODO: remove this
 from os import path
 
 import toscaparser
@@ -38,14 +37,13 @@ ATTACH = 'storage'
 HOST = 'host'
 
 
-def _check_requirements(node, running):
-    for req in node.requirements:
-        for key, value in req.items():
-            value = value['node'] if type(value) is dict else value
-            if value not in running:
-                return False
-    return True
-
+# def _check_requirements(node, running):
+#     for req in node.requirements:
+#         for key, value in req.items():
+#             value = value['node'] if type(value) is dict else value
+#             if value not in running:
+#                 return False
+#     return True
 
 # def _parse_path(base_path, value):
 #     abs_path = path.abspath(
@@ -82,6 +80,7 @@ def _parse_conf(node, repos, base_path):
                 p = re.compile('(https://|http://)')
                 repo = p.sub('', repos[repo]).strip('/')
                 if repo != 'registry.hub.docker.com':
+                    # TODO: test private repository
                     conf.image = '/'.join([repo.strip('/'),
                                            conf.image.format.strip('/')])
 
@@ -92,23 +91,19 @@ def _parse_conf(node, repos, base_path):
                 name = value['file']
                 art_type = value['type']
                 repo = value.get('repository', None)
-            else:
-                art_type = IMAGE
-                name = value
-                repo = None
 
-            if art_type == DOCKERFILE or art_type == DOCKERFILE_EXE:
-                dockerfile = path.abspath(
-                                path.join(base_path, name)
-                             )
-                _log.debug('dockerfile: {}'.format(dockerfile))
-                # if path.isfile(dockerfile) and repo is None:
-                _log.debug('Find a Dockerfile')
-                parse_dockerfile(key, dockerfile,  # .strip('/Dockerfile'),
-                                 art_type == DOCKERFILE_EXE)
-            elif art_type == IMAGE or art_type == IMAGE_EXE:
-                _log.debug('Find an Immage')
-                parse_image(name, repo, art_type == IMAGE_EXE)
+                if art_type == DOCKERFILE or art_type == DOCKERFILE_EXE:
+                    dockerfile = path.abspath(
+                                    path.join(base_path, name)
+                                 )
+                    _log.debug('dockerfile: {}'.format(dockerfile))
+                    # if path.isfile(dockerfile) and repo is None:
+                    _log.debug('Find a Dockerfile')
+                    parse_dockerfile(key, dockerfile,  # .strip('/Dockerfile'),
+                                     art_type == DOCKERFILE_EXE)
+                elif art_type == IMAGE or art_type == IMAGE_EXE:
+                    _log.debug('Find an Immage')
+                    parse_image(name, repo, art_type == IMAGE_EXE)
 
         def _parse_map(m):
             res = {}
@@ -135,13 +130,9 @@ def _parse_conf(node, repos, base_path):
 
     elif node.type == VOLUME:
         conf = Volume(node.name)
-        if 'properties' in node.entity_tpl:
-            properties = node.entity_tpl['properties']
-            conf.driver = properties.get('driver', None)
-            conf.type = properties.get('type', None)
-            conf.device = properties.get('device', None)
-            conf.size = properties.get('size', None)
-            conf.driver_opt = properties.get('driver_opt', None)
+        # if 'properties' in node.entity_tpl:
+        #     properties = node.entity_tpl['properties']
+        #     conf.size = properties.get('size', None)
 
     elif node.type == SOFTWARE:
         conf = Software(node.name)
@@ -182,8 +173,7 @@ def _parse_conf(node, repos, base_path):
             conf.interfaces = intf
 
     else:
-        _log.error('node type "{}" not supported!'.format(node.type))
-        # TODO: collect error like as real parser..
+        raise Exception('ERROR: node type "{}" not supported!'.format(node.type))
 
     # get requirements
     if 'requirements' in node.entity_tpl:
@@ -268,8 +258,7 @@ def get_tosca_template(file_path, inputs={}, components=[]):
             tpl.outputs = tosca.outputs
         if tosca.nodetemplates:
             if not _components_exists(tosca.nodetemplates, components):
-                Logger.println('ERROR: a selected component do not exists')
-                return None
+                raise Exception('ERROR: a selected component do not exists')
 
             for node in tosca.nodetemplates:
                 if len(components) == 0 or node.name in components:
@@ -285,11 +274,7 @@ def get_tosca_template(file_path, inputs={}, components=[]):
 
             _add_pointer(tpl)
 
-            error = _sort(tpl)
-            if error:
-                # Not a DAG
-                Logger.println('ERROR: the TOSCA file is not a DAG')
-                return None
+            _sort(tpl)
 
             _add_extension(tpl)
 
@@ -337,24 +322,19 @@ def _sort(tpl):
 
     def visit(n):
         if n._mark == 'temp':
-            # not a DAG
-            return False
+            raise Exception('ERROR: the TOSCA file is not a DAG')
         elif n._mark == '':
             n._mark = 'temp'
             if n in unmarked:
                 unmarked.remove(n)
             for r in n.relationships:
-                error = visit(r.to)
-                if error:
-                    return error
+                visit(r.to)
             n._mark = 'perm'
             tpl.deploy_order.append(n)
 
     while len(unmarked) > 0:
         n = unmarked.pop()
-        error = visit(n)
-        if error:
-            return error
+        visit(n)
 
 
 def _add_pointer(tpl):
@@ -451,6 +431,7 @@ def _parse_functions(tosca, inputs, base_path):
             elif isinstance(v, dict):
                 # Found a get_property function
                 if 'get_property' in v:
+                    # TODO: test get property
                     node[k] = get(name, 'properties', v['get_property'])
                 # Found a get_artifact function
                 elif 'get_artifact' in v:

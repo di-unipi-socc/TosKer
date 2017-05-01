@@ -70,6 +70,7 @@ def _parse_unix_input(args):
     comps = []
     flags = {}
     file = ''
+    error = None
     p1 = re.compile('--.*')
     p2 = re.compile('-.?')
     i = 0
@@ -84,26 +85,26 @@ def _parse_unix_input(args):
                 i += 2
                 continue
             else:
-                _error('missing input value for', args[i])
+                error = 'missing input value for {}'.format(args[i])
         elif p2.match(args[i]):
             if _FLAG.get(args[i], False):
                 flags[_FLAG[args[i]]] = True
             else:
-                _error('known parameter.')
+                error = 'known parameter.'
         elif args[i] and file:
             if args[i] in _CMD:
                 cmds.append(args[i])
             elif len(cmds) == 0:
                 comps.append(args[i])
             else:
-                _error('{} is not a valid command.'.format(args[i]))
+                error = '{} is not a valid command.'.format(args[i])
         elif i == 0:
             file = args[i]
         else:
-            _error('first argument must be a TOSCA yaml file or a '
-                   'directory with in a CSAR file.')
+            error = 'first argument must be a TOSCA yaml file or a '\
+                    'directory with in a CSAR file.'
         i += 1
-    return file, cmds, comps, flags, inputs
+    return error, file, cmds, comps, flags, inputs
 
 
 def _error(*str):
@@ -115,7 +116,10 @@ def run():
     if len(argv) < 2:
         _error('few arguments.', '\n', _usage())
 
-    file, cmds, comps, flags, inputs = _parse_unix_input(argv[1:])
+    error, file, cmds, comps, flags, inputs = _parse_unix_input(argv[1:])
+    if error is not None:
+        _error(error)
+
     if flags.get('help', False):
         print_(_usage())
         exit()

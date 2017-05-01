@@ -11,13 +11,13 @@ class Container_manager:
 
     def create(self, node):
         assert isinstance(node, Container)
-        if node.executable:
-            self._docker.create_container(node)
-        else:
-            if isinstance(node.image, Dockerfile):
-                self._docker.build_image(node)
-            else:
-                self._docker.pull_image(node.image.format)
+        # if node.executable:
+        self._docker.create_container(node, force=False)
+        # else:
+        #     if isinstance(node.image, Dockerfile):
+        #         self._docker.build_image(node)
+        #     else:
+        #         self._docker.pull_image(node.image.format)
 
     def start(self, node):
         assert isinstance(node, Container)
