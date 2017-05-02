@@ -60,6 +60,12 @@ class Test_Ui(unittest.TestCase):
         error, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNotNone(error)
 
+        args = ['asd',
+                'comp1', 'comp2', 'comp3',
+                'create', 'start', 'stop', 'delete']
+        error, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        self.assertIsNotNone(error)
+
     def test_args_inputs(self):
         args = ['--input1', 'value1', '--input2', 'value2']
         error, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
