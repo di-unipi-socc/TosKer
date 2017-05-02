@@ -2,8 +2,20 @@ import unittest
 from tosker.orchestrator import Orchestrator
 from .test_tosca_base import Test_Orchestrator
 
-import contextlib
+# import contextlib
 from io import StringIO
+
+import sys
+from contextlib import contextmanager
+
+
+@contextmanager
+def redirect_stdout(new_target):
+    old_target, sys.stdout = sys.stdout, new_target  # replace sys.stdout
+    try:
+        yield new_target  # run some code with the replaced stdout
+    finally:
+        sys.stdout = old_target  # restore to the previous value
 
 
 class Test_Hello(Test_Orchestrator):
@@ -25,7 +37,7 @@ class Test_Hello(Test_Orchestrator):
 
         # verify output
         temp_stdout = StringIO()
-        with contextlib.redirect_stdout(temp_stdout):
+        with redirect_stdout(temp_stdout):
             self.orchestrator.print_outputs()
         output = temp_stdout.getvalue().strip()
 
