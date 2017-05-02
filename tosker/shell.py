@@ -100,9 +100,6 @@ def _parse_unix_input(args):
                 error = '{} is not a valid command.'.format(args[i])
         elif i == 0:
             file = args[i]
-        else:
-            error = 'first argument must be a TOSCA yaml file or a '\
-                    'directory with in a CSAR file.'
         i += 1
     return error, file, cmds, comps, flags, inputs
 
@@ -137,8 +134,8 @@ def run():
             if file.endswith(('.yaml', '.csar', '.zip')):
                 file_name = file
     if not file_name:
-        _error('first argument must be a TOSCA yaml file or a '
-               'directory with in a CSAR file.')
+        _error('first argument must be a TOSCA yaml file, a CSAR or a '
+               'directory with a CSAR file inside.')
 
     if flags.get('debug', False):
         orchestrator = Orchestrator(log_handler=helper.get_consol_handler(),

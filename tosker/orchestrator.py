@@ -124,7 +124,6 @@ class Orchestrator:
         self._docker.delete_network()
         shutil.rmtree(self._tmp_dir)
 
-    # TODO: test this function
     def print_outputs(self):
         if len(self._tpl.outputs) != 0:
             Logger.println('\nOUTPUTS:')
