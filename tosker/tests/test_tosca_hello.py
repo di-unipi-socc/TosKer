@@ -1,12 +1,9 @@
+import sys
 import unittest
+from contextlib import contextmanager
+from six import StringIO
 from tosker.orchestrator import Orchestrator
 from .test_tosca_base import Test_Orchestrator
-
-# import contextlib
-from io import StringIO
-
-import sys
-from contextlib import contextmanager
 
 
 @contextmanager
