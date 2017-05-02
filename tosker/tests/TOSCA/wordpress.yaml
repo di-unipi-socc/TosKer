@@ -31,7 +31,7 @@ topology_template:
       artifacts:
         my_image:
           file: mysql
-          type: tosker.artifacts.Image.Executable
+          type: tosker.artifacts.Image.Service
           repository: docker_hub
       requirements:
         - storage:
@@ -58,5 +58,5 @@ topology_template:
       artifacts:
         my_image:
           file: wordpress
-          type: tosker.artifacts.Image.Executable
+          type: tosker.artifacts.Image.Service
           repository: docker_hub

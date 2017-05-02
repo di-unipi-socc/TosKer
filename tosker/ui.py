@@ -99,9 +99,20 @@ def _parse_unix_input(args):
             else:
                 error = '{} is not a valid command.'.format(args[i])
         elif i == 0:
-            file = args[i]
+            file = _check_file(args[i])
+            if file is None:
+                error = ('first argument must be a TOSCA yaml file, a CSAR or '
+                         'a ZIP archive.')
         i += 1
     return error, file, cmds, comps, flags, inputs
+
+
+def _check_file(file):
+    file_name = None
+    if path.isfile(file):
+        if file.endswith(('.yaml', '.csar', '.CSAR', '.YAML')):
+            file_name = file
+    return file_name
 
 
 def _error(*str):
@@ -124,32 +135,9 @@ def run():
         print_('TosKer version {}'.format(__version__))
         exit()
 
-    file_name = None
-    if path.exists(file):
-        if path.isdir(file):
-            files = glob(path.join(argv[1], "*.csar"))
-            if len(files) != 0:
-                file_name = files[0]
-        else:
-            if file.endswith(('.yaml', '.csar', '.zip')):
-                file_name = file
-    if not file_name:
-        _error('first argument must be a TOSCA yaml file, a CSAR or a '
-               'directory with a CSAR file inside.')
-
     if flags.get('debug', False):
         orchestrator = Orchestrator(log_handler=helper.get_consol_handler(),
                                     quiet=False)
     else:
         orchestrator = Orchestrator(quiet=flags.get('quiet', False))
-
-    if orchestrator.parse(file_name, inputs, comps):
-        for c in cmds:
-            {
-              'create': orchestrator.create,
-              'start': orchestrator.start,
-              'stop': orchestrator.stop,
-              'delete': orchestrator.delete,
-            }.get(c, lambda: _error('command not found.'))()
-
-        orchestrator.print_outputs()
+    orchestrator.orchestrate(file, cmds, comps, inputs)

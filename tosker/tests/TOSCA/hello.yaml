@@ -24,7 +24,7 @@ topology_template:
       artifacts:
         my_image:
           file: ubuntu
-          type: tosker.artifacts.Image.Executable
+          type: tosker.artifacts.Image.Service
           repository: docker_hub
       properties:
         env_variable:

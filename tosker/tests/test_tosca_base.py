@@ -15,7 +15,7 @@ class Test_Orchestrator(unittest.TestCase):
         )
 
     def create(self):
-        self.orchestrator.create()
+        self.orchestrator._create()
         for c in self.orchestrator._tpl.container_order:
             self.assertIsNotNone(
                 self._docker.inspect(c.name)
@@ -33,7 +33,7 @@ class Test_Orchestrator(unittest.TestCase):
         self._start(check=lambda x: x['State']['ExitCode'] == 0)
 
     def _start(self, check):
-        self.orchestrator.start()
+        self.orchestrator._start()
         for c in self.orchestrator._tpl.container_order:
             stat = self._docker.inspect_container(c.name)
             # print('DEBUG: ', stat)
@@ -46,7 +46,7 @@ class Test_Orchestrator(unittest.TestCase):
             )
 
     def stop(self):
-        self.orchestrator.stop()
+        self.orchestrator._stop()
         for c in self.orchestrator._tpl.container_order:
             stat = self._docker.inspect_container(c.name)
             # print('DEBUG: ', stat)
@@ -59,7 +59,7 @@ class Test_Orchestrator(unittest.TestCase):
             )
 
     def delete(self):
-        self.orchestrator.delete()
+        self.orchestrator._delete()
         for c in self.orchestrator._tpl.container_order:
             self.assertIsNone(
                 self._docker.inspect(c.name)

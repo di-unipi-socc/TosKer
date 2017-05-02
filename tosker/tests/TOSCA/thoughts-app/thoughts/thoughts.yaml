@@ -29,11 +29,11 @@ topology_template:
       description: Branch of the API repository
 
   node_templates:
-    api:
+    API:
       type: tosker.nodes.Software
       requirements:
-        - host: maven_container
-        - connection: db_container
+        - host: Maven
+        - connection: MongoDB
       interfaces:
         Standard:
           create:
@@ -55,11 +55,11 @@ topology_template:
           delete:
             implementation: scripts/api/uninstall.sh
 
-    gui:
+    GUI:
       type: tosker.nodes.Software
       requirements:
-        - host: node_container
-        - dependency: api
+        - host: Node
+        - dependency: API
       interfaces:
         Standard:
           create:
@@ -80,7 +80,7 @@ topology_template:
           delete:
             implementation: scripts/gui/uninstall.sh
 
-    maven_container:
+    Maven:
       type: tosker.nodes.Container
       properties:
         ports:
@@ -91,7 +91,7 @@ topology_template:
           type: tosker.artifacts.Image
           repository: docker_hub
 
-    node_container:
+    Node:
       type: tosker.nodes.Container
       properties:
         ports:
@@ -102,20 +102,20 @@ topology_template:
           type: tosker.artifacts.Image
           repository: docker_hub
 
-    db_container:
+    MongoDB:
       type: tosker.nodes.Container
       artifacts:
         my_image:
           file: mongo:3.4
-          type: tosker.artifacts.Image.Executable
+          type: tosker.artifacts.Image.Service
           repository: docker_hub
       requirements:
         - storage:
-            node: db_volume
+            node: DBVolume
             relationship:
               type: tosca.relationships.AttachesTo
               properties:
                 location: /data/db
 
-    db_volume:
+    DBVolume:
       type: tosker.nodes.Volume

@@ -37,7 +37,7 @@ topology_template:
       artifacts:
         image:
           file: mongo
-          type: tosker.artifacts.Image.Executable
+          type: tosker.artifacts.Image.Service
           repository: docker_hub
 
     node:

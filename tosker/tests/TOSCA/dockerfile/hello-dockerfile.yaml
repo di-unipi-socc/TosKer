@@ -24,7 +24,7 @@ topology_template:
       artifacts:
         hello_image:
           file: ./Dockerfile
-          type: tosker.artifacts.Dockerfile.Executable
+          type: tosker.artifacts.Dockerfile.Service
       properties:
         env_variable:
           NAME: { get_input: your_name }

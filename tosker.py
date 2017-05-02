@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from tosker import shell
+from tosker import ui
 
 if __name__ == '__main__':
-    shell.run()
+    ui.run()

@@ -136,7 +136,7 @@ artifact_types:
     derived_from: tosker.artifacts.Root
     description: a Docker image
 
-  tosker.artifacts.Image.Executable:
+  tosker.artifacts.Image.Service:
     derived_from: tosker.artifacts.Image
     description: a Docker image executable
 
@@ -144,6 +144,6 @@ artifact_types:
     derived_from: tosker.artifacts.Root
     description: a Dockerfile to be build
 
-  tosker.artifacts.Dockerfile.Executable:
+  tosker.artifacts.Dockerfile.Service:
     derived_from: tosker.artifacts.Dockerfile
     description: a Dockerfile to be build in a executable image

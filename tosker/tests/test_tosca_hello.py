@@ -20,13 +20,13 @@ class Test_Hello(Test_Orchestrator):
     def setUp(self):
         super(self.__class__, self).setUp()
         self.orchestrator = Orchestrator(quiet=False)
-        self.orchestrator.parse('tosker/tests/TOSCA/hello.yaml')
+        self.orchestrator._parse('tosker/tests/TOSCA/hello.yaml')
 
     def test(self):
         self.create()
         self.start_check_exit()
         self.stop()
-        self.orchestrator.parse('tosker/tests/TOSCA/hello.yaml')
+        self.orchestrator._parse('tosker/tests/TOSCA/hello.yaml')
         self.start_check_exit()
         self.stop()
         con_id = self._docker.inspect_container('hello_container')['Id']
@@ -35,7 +35,7 @@ class Test_Hello(Test_Orchestrator):
         # verify output
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
-            self.orchestrator.print_outputs()
+            self.orchestrator._print_outputs()
         output = temp_stdout.getvalue().strip()
 
         verified = '''OUTPUTS:
