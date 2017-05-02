@@ -6,8 +6,6 @@ from tosker.tosca_utility import get_tosca_template
 
 class Test_Graph(unittest.TestCase):
 
-    # TODO: add more test to be sure that the graph is as should
-
     def _assert_sorting(self, tpl):
         running = set()
         for c in tpl.deploy_order:

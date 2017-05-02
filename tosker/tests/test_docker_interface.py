@@ -7,7 +7,6 @@ from tosker.helper import Logger
 
 
 class Test_DockerInterface(unittest.TestCase):
-    # TODO: fix this
     @classmethod
     def setUpClass(self):
         # Logger.set(helper.get_consol_handler(), False)

@@ -14,5 +14,4 @@ class Volume_manager:
 
     # def delete(self, node):
     #     assert isinstance(node, Volume)
-    #     # TODO: test this function
     #     self._docker.delete_volume(node)

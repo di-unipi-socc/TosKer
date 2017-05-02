@@ -429,7 +429,6 @@ def _parse_functions(tosca, inputs, base_path):
             elif isinstance(v, dict):
                 # Found a get_property function
                 if 'get_property' in v:
-                    # TODO: test get property
                     node[k] = get(name, 'properties', v['get_property'])
                 # Found a get_artifact function
                 elif 'get_artifact' in v:
