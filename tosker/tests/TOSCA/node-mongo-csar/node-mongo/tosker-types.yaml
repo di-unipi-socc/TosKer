@@ -75,16 +75,6 @@ node_types:
     attributes:
       id:
         type: string
-      # BEGIN work around for the get_attribute bug in toscaparser
-      size:
-        type: string
-      # END
-
-    properties:
-      # set the size. For example: 100m
-      size:
-        type: string
-        required: false
 
     capabilities:
       attachment:
