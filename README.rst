@@ -12,6 +12,25 @@ Intallation
 
     sudo pip install tosker
 
+After the installation it is possible to found in
+``/etc/tosker/examples`` the CSAR of two example application,
+``node-mongo.casr`` and ``thoughts.csar``.
+
+To create and start the thoughts application run the command:
+
+::
+
+    tosker /etc/tosker/examples/thoughts.csar create start
+
+Then the application can be accessible on
+``http://127.0.0.1:8080/thoughts.html``
+
+To stop and delete the application run the command:
+
+::
+
+    tosker /etc/tosker/examples/thoughts.csar stop delete
+
 Install from source
 ~~~~~~~~~~~~~~~~~~~
 
@@ -25,14 +44,14 @@ Run the tests:
 
 ::
 
-    python setup.py test
+    ./scripts/run_tests.sh
 
-Usage
------
+Usage details
+-------------
 
 ::
 
-    tosker FILE [COMPONENTS...] COMMANDS...  [OPTIONS] [INPUTS]
+    tosker FILE [COMPONENTS...] COMMANDS... [OPTIONS] [INPUTS]
     tosker -h|--help
     tosker -v|--version
 

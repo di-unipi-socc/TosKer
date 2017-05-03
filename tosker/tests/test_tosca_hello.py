@@ -21,7 +21,7 @@ class Test_Hello(Test_Orchestrator):
         super(self.__class__, self).setUp()
         self.orchestrator = Orchestrator(quiet=False)
         with redirect_stdout(StringIO()):
-          self.orchestrator._parse('tosker/tests/TOSCA/hello.yaml')
+            self.orchestrator._parse('tosker/tests/TOSCA/hello.yaml')
 
     def test(self):
         with redirect_stdout(StringIO()):
