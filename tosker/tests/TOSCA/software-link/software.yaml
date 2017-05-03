@@ -15,18 +15,18 @@ topology_template:
     server1:
       type: tosker.nodes.Software
       artifacts:
-        code: server1.js
-        package: package.json
+        code: code/server1.js
+        package: code/package.json
       requirements:
         - host: nodejs1
       interfaces:
         Standard:
           create:
-            implementation: install.sh
+            implementation: scripts/install.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
           start:
-            implementation: start.sh
+            implementation: scripts/start.sh
             inputs:
               main: { get_artifact: [ SELF, code ] }
               port: 80
@@ -34,18 +34,18 @@ topology_template:
     server2:
       type: tosker.nodes.Software
       artifacts:
-        code: server2.js
-        package: package.json
+        code: code/server2.js
+        package: code/package.json
       requirements:
         - host: nodejs2
       interfaces:
         Standard:
           create:
-            implementation: install.sh
+            implementation: scripts/install.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
           start:
-            implementation: start.sh
+            implementation: scripts/start.sh
             inputs:
               main: { get_artifact: [ SELF, code ] }
               port: 80
@@ -53,8 +53,8 @@ topology_template:
     server3:
       type: tosker.nodes.Software
       artifacts:
-        code: server3.js
-        package: package.json
+        code: code/server3.js
+        package: code/package.json
       requirements:
         - host: nodejs3
         - connection: server1
@@ -62,11 +62,11 @@ topology_template:
       interfaces:
         Standard:
           create:
-            implementation: install.sh
+            implementation: scripts/install.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
           start:
-            implementation: start.sh
+            implementation: scripts/start.sh
             inputs:
               main: { get_artifact: [ SELF, code ] }
               port: 80
@@ -100,6 +100,5 @@ topology_template:
           80: 8083
       artifacts:
         my_image:
-          file: node:6
-          type: tosker.artifacts.Image
-          repository: docker_hub
+          file: ./Dockerfile
+          type: tosker.artifacts.Dockerfile

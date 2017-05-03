@@ -40,12 +40,13 @@ class Docker_interface:
                          con,
                          cmd=None,
                          entrypoint=None,
-                         from_saved=False):
+                         from_saved=False,
+                         force=False):
         def create():
             tmp_dir = path.join(self._tmp_dir, con.name)
             try:
                 os.makedirs(tmp_dir)
-            except:
+            except Exception:
                 pass
             img_name = con.image.format
             self._log.debug('image_name: {}'.format(img_name))
@@ -96,32 +97,38 @@ class Docker_interface:
             create()
         except errors.APIError as e:
             self._log.debug(e)
-            # self.stop(con)
-            self.delete_container(con)
-            create()
-            # raise e
+            if force:
+                self.delete_container(con)
+                create()
+            else:
+                raise e
 
-    def pull_image(self, image):
-        assert isinstance(image, six.string_types)
-        self._cli.pull(image)
+    # def pull_image(self, image):
+    #     assert isinstance(image, six.string_types)
+    #     self._cli.pull(image)
 
     @_get_name
     def stop_container(self, name):
         try:
-            return self._cli.stop(name)
+            self._cli.stop(name)
         except errors.NotFound as e:
             self._log.error(e)
+            raise e
 
     @_get_name
     def start_container(self, name, wait=False):
-        self._cli.start(name)
-        if wait:
-            self._log.debug('wait container..')
-            self._cli.wait(name)
-            helper.print_byte(
-                self._cli.logs(name, stream=True),
-                self._log.debug
-            )
+        try:
+            self._cli.start(name)
+            if wait:
+                self._log.debug('wait container..')
+                self._cli.wait(name)
+                helper.print_byte(
+                    self._cli.logs(name, stream=True),
+                    self._log.debug
+                )
+        except errors.NotFound as e:
+            self._log.error(e)
+            raise e
 
     @_get_name
     def delete_container(self, name):
@@ -134,7 +141,7 @@ class Docker_interface:
     @_get_name
     def exec_cmd(self, name, cmd):
         if not self.is_running(name):
-            return False
+            raise e
         try:
             exec_id = self._cli.exec_create(name, cmd,
                                             stdout=False,
@@ -144,13 +151,11 @@ class Docker_interface:
 
             check = 'rpc error:' != status[:10].decode("utf-8")
             self._log.debug('check: {}'.format(check))
-            return check
+            if not check:
+                raise errors.APIError
         except errors.APIError as e:
             self._log.error(e)
-            return False
-        except requests.exceptions.ConnectionError as e:
-            self._log.error(e)
-            return False
+            raise e
 
     def create_volume(self, volume):
         assert isinstance(volume, Volume)
@@ -236,23 +241,28 @@ class Docker_interface:
         old_cmd = stat['Config']['Cmd'] or None
         old_entry = stat['Config']['Entrypoint'] or None
 
-        if self.inspect_container(node):
-            self.stop_container(node)
-            self.delete_container(node)
+        # if self.is_running(node):
+        #     self.stop_container(node)
+        #     self.delete_container(node)
 
-        self.create_container(node, cmd=cmd, entrypoint='', from_saved=True)
+        self.create_container(node,
+                              cmd=cmd,
+                              entrypoint='',
+                              from_saved=True,
+                              force=True)
 
         self.start_container(node.id, wait=True)
-        self.stop_container(node.id)
+        # self.stop_container(node.id)
 
         self._cli.commit(node.id, self.get_saved_image(node))
 
         # self.stop_container(node)
-        self.delete_container(node)
+        # self.delete_container(node)
         self.create_container(node,
                               cmd=node.cmd or old_cmd,
                               entrypoint=old_entry,
-                              from_saved=True)
+                              from_saved=True,
+                              force=True)
 
         self._cli.commit(node.id, self.get_saved_image(node))
 
@@ -262,10 +272,9 @@ class Docker_interface:
         self._log.debug('State: {}'.format(stat))
         return stat
 
+    @_get_name
     def get_saved_image(self, name):
-        if isinstance(name, Container):
-            name = name.name
-        return '{}/{}'.format(self._repo, name)
+        return '{}/{}'.format(self._repo, name.lower())
 
     # def get_container_name(self, name):
     #     if isinstance(name, Container):

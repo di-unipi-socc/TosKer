@@ -31,6 +31,8 @@ topology_template:
             implementation: app/start.sh
             inputs:
               port: 80
+          delete:
+            implementation: app/uninstall.sh
 
     db:
       type: tosker.nodes.Software
@@ -42,6 +44,8 @@ topology_template:
             implementation: mongo/install.sh
           start:
             implementation: mongo/start.sh
+          delete:
+            implementation: mongo/uninstall.sh
 
     node:
       type: tosker.nodes.Software

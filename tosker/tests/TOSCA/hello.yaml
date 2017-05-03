@@ -24,7 +24,7 @@ topology_template:
       artifacts:
         my_image:
           file: ubuntu
-          type: tosker.artifacts.Image.Executable
+          type: tosker.artifacts.Image.Service
           repository: docker_hub
       properties:
         env_variable:
@@ -35,3 +35,5 @@ topology_template:
     container_id:
       description: The id of the Docker container
       value: { get_attribute: [hello_container, id] }
+    env_variable:
+      value: { get_property: [hello_container, env_variable, NAME] }

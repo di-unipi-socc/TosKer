@@ -11,13 +11,13 @@ class Container_manager:
 
     def create(self, node):
         assert isinstance(node, Container)
-        if node.executable:
-            self._docker.create_container(node)
-        else:
-            if isinstance(node.image, Dockerfile):
-                self._docker.build_image(node)
-            else:
-                self._docker.pull_image(node.image.format)
+        # if node.executable:
+        self._docker.create_container(node)
+        # else:
+        #     if isinstance(node.image, Dockerfile):
+        #         self._docker.build_image(node)
+        #     else:
+        #         self._docker.pull_image(node.image.format)
 
     def start(self, node):
         assert isinstance(node, Container)
@@ -27,15 +27,12 @@ class Container_manager:
         if stat is not None:
             node.id = stat['Id']
             self._docker.start_container(node)
-        else:
-            self._log.error(
-                'ERROR: Container "{}" not exists!'.format(node.name))
 
     def stop(self, node):
         assert isinstance(node, Container)
         self._docker.stop_container(node)
-        self._docker.delete_container(node)
-        self._docker.create_container(node, from_saved=True)
+        # self._docker.delete_container(node)
+        self._docker.create_container(node, from_saved=True, force=True)
 
     def delete(self, node):
         assert isinstance(node, Container)
