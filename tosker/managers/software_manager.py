@@ -8,13 +8,13 @@ from ..graph.artifacts import File
 from ..helper import Logger
 
 
-def _get_cmd(interface):
+def _get_cmd(interface, force_exec=False):
     def _get_cmd_decorator(func):
         @wraps(func)
         def func_wrapper(self, *args):
             assert isinstance(args[0], Software)
             cmd = self._get_cmd_args(args[0], interface)
-            return func(self, cmd, *args) if cmd else None
+            return func(self, cmd, *args) if cmd or force_exec else None
         return func_wrapper
     return _get_cmd_decorator
 
@@ -25,10 +25,11 @@ class Software_manager:
         self._log = Logger.get(__name__)
         self._docker = docker
 
-    @_get_cmd('create')
+    @_get_cmd('create', force_exec=True)
     def create(self, cmd, node):
         self._copy_files(node)
-        self._docker.update_container(node.host_container, cmd)
+        if cmd is not None:
+            self._docker.update_container(node.host_container, cmd)
 
     @_get_cmd('configure')
     def configure(self, cmd, node):

@@ -31,7 +31,7 @@ class Docker_interface:
                  tmp_dir=None,
                  socket='unix://var/run/docker.sock'):
         self._log = Logger.get(__name__)
-        self._repo = repo
+        self._repo = repo.lower() if repo is not None else None
         self._net_name = net_name
         self._tmp_dir = tmp_dir
         self._cli = APIClient(base_url=os.environ.get('DOCKER_HOST') or socket)
@@ -275,11 +275,6 @@ class Docker_interface:
     @_get_name
     def get_saved_image(self, name):
         return '{}/{}'.format(self._repo, name.lower())
-
-    # def get_container_name(self, name):
-    #     if isinstance(name, Container):
-    #         name = name.name
-    #     return '{}_{}'.format(self._repo, name)
 
     def build_image(self, node):
         assert isinstance(node, Container)
