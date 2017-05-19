@@ -1,10 +1,12 @@
 TosKer
 ======
 
-Orchestrate TOSCA applications on top of Docker.
+TosKer is an orchestrator engine capable of automatically deploying and
+managing multi-component applications specifies in OASIS TOSCA on
+Docker.
 
 Installation
------------
+------------
 
 **Requirements** - python>=2.7 - pip
 
@@ -13,14 +15,14 @@ Installation
     sudo pip install tosker
 
 After the installation it is possible to found in
-``/etc/tosker/examples`` the CSAR of two example application,
+``/usr/share/tosker/examples`` the CSAR of two example application,
 ``node-mongo.casr`` and ``thoughts.csar``.
 
 To create and start the thoughts application run the command:
 
 ::
 
-    tosker /etc/tosker/examples/thoughts.csar create start
+    tosker /usr/share/tosker/examples/thoughts.csar create start
 
 Then the application can be accessible on
 ``http://127.0.0.1:8080/thoughts.html``
@@ -29,7 +31,7 @@ To stop and delete the application run the command:
 
 ::
 
-    tosker /etc/tosker/examples/thoughts.csar stop delete
+    tosker /usr/share/tosker/examples/thoughts.csar stop delete
 
 Install from source
 ~~~~~~~~~~~~~~~~~~~

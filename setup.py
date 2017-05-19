@@ -89,8 +89,8 @@ setup(
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files # noqa
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
     data_files=[
-        ('/etc/tosker', ['tosker/tosker-types.yaml']),
-        ('/etc/tosker/examples',
+        ('/usr/share/tosker', ['tosker/tosker-types.yaml']),
+        ('/usr/share/tosker/examples',
             ['tosker/tests/TOSCA/thoughts-app/thoughts.csar',
              'tosker/tests/TOSCA/node-mongo-csar/node-mongo.csar'])
 
