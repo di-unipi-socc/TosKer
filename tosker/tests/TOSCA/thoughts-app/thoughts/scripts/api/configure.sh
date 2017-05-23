@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TARGET=thoughts-api/api-config.yml
+TARGET=/thoughts-api/api-config.yml
 
 echo dbURL: '"'$INPUT_DBURL'"' > $TARGET
 echo dbPort: '"'$INPUT_DBPORT'"' >> $TARGET
