@@ -102,17 +102,6 @@ node_types:
   tosker.nodes.Software:
     derived_from: tosker.nodes.Root
 
-    attributes:
-        # BEGIN work around for the get_attribute bug in toscaparser
-        ports:
-          type: map
-        # END
-
-    properties:
-      ports:
-        type: map
-        required: false
-
     requirements:
       - connection:
           capability: tosca.capabilities.Endpoint

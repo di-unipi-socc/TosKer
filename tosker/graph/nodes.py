@@ -171,10 +171,6 @@ class Software(Root):
         super(self.__class__, self).__init__(name)
         self.artifacts = []
         self.interfaces = {}
-        self.ports = None
-        self._ATTRIBUTE = {
-            'ports': lambda: self.ports,
-        }
 
         # requirements
         self._host = None
@@ -205,9 +201,6 @@ class Software(Root):
     def add_artifact(self, file):
         assert isinstance(file, File)
         self.artifacts.append(file)
-
-    def add_port(self, name, value):
-        self.ports = _add_to_map(self.ports, name, value)
 
     def get_str_obj(self):
         return '{}, {}'.format(super(self.__class__, self), _str_obj(self))

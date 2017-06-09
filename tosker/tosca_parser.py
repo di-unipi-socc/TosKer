@@ -167,12 +167,6 @@ def _parse_conf(node, repos, base_path):
 
             conf.interfaces = intf
 
-        # get properties
-        if 'properties' in node.entity_tpl:
-            if 'ports' in node.entity_tpl['properties']:
-                values = node.entity_tpl['properties']['ports']
-                conf.ports = _parse_map(values)
-
     else:
         raise Exception(
             'ERROR: node type "{}" not supported!'.format(node.type))
@@ -351,7 +345,6 @@ def _add_pointer(tpl):
 # - add pointer host_container pointer on software
 # - add pointer on host property
 # - add software links to the corrisponding container
-# - copy ports on the software to its container
 def _add_extension(tpl):
     # Add the host_container property
     for node in tpl.software_order:
@@ -377,12 +370,6 @@ def _add_extension(tpl):
                 if isinstance(con.to, Software):
                     con.alias = con.to.name
                     con.to = con.to.host_container
-
-    for node in tpl.software_order:
-        if node.ports is not None:
-            if node.host_container.ports is None:
-                node.host_container.ports = {}
-            node.host_container.ports.update(node.ports)
 
 
 # def _parse_functions(tosca, inputs, base_path):
