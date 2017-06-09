@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd /thoughts-api/
+cd /thoughts-api
 mvn clean

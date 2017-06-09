@@ -1,4 +1,3 @@
 #!/bin/sh
 
-cd thoughts-gui
-node thought-site.js
+node /thoughts-gui/thought-site.js
