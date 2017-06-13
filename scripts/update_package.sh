@@ -1,4 +1,5 @@
 #!/bin/sh
-rm -rf ./dist
+sudo rm -rf ./dist ./build *.egg-info
+
 python setup.py bdist_wheel
 twine upload dist/* --skip-existing
