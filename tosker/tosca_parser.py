@@ -62,7 +62,7 @@ def _get_file(base_path, name, file):
     return File(name, abs_path)
 
 
-def _parse_conf(node, repos, base_path):
+def _parse_conf(tpl, node, repos, base_path):
     def _parse_map(m):
         res = {}
         for key, value in m.items():
@@ -125,9 +125,6 @@ def _parse_conf(node, repos, base_path):
 
     elif node.type == VOLUME:
         conf = Volume(node.name)
-        # if 'properties' in node.entity_tpl:
-        #     properties = node.entity_tpl['properties']
-        #     conf.size = properties.get('size', None)
 
     elif node.type == SOFTWARE:
         conf = Software(node.name)
@@ -190,6 +187,7 @@ def _parse_conf(node, repos, base_path):
                     conf.add_volume(volume['node'], volume['relationship']
                                                           ['properties']
                                                           ['location'])
+    conf.tpl = tpl
     return conf
 
 
@@ -261,7 +259,7 @@ def get_tosca_template(file_path, inputs={}, components=[]):
 
             for node in tosca.nodetemplates:
                 if len(components) == 0 or node.name in components:
-                    tpl.push(_parse_conf(node,
+                    tpl.push(_parse_conf(tpl, node,
                                          repositories,
                                          base_path))
 

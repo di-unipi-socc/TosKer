@@ -25,6 +25,8 @@ class Root(object):
 
     def __init__(self, name):
         self.name = name
+        self.tpl = None
+
         self._ATTRIBUTE = {}
 
         # requirements
@@ -35,6 +37,10 @@ class Root(object):
 
         # need by the topological sorting algorithm
         self._mark = ''
+
+    @property
+    def full_name(self):
+        return '{}.{}'.format(self.tpl.name, self.name)
 
     @property
     def depend(self):
@@ -140,6 +146,7 @@ class Volume(Root):
 
     def __init__(self, name):
         super(self.__class__, self).__init__(name)
+        # attributes
         self.id = None
         self.size = None
         self._ATTRIBUTE = {

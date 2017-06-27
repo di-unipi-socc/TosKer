@@ -19,7 +19,7 @@ def _get_name(func):
             return func(self, *args, **kwds)
         else:
             assert isinstance(args[0], (Container, Volume))
-            return func(self, args[0].name, *args[1:], **kwds)
+            return func(self, args[0].full_name, *args[1:], **kwds)
     return func_wrapper
 
 
@@ -59,7 +59,7 @@ class Docker_interface:
             self._log.debug('container: {}'.format(con.get_str_obj()))
 
             con.id = self._cli.create_container(
-                name=con.name,
+                name=con.full_name,
                 image=img_name,
                 entrypoint=entrypoint,
                 command=cmd if cmd else con.cmd,
@@ -161,7 +161,7 @@ class Docker_interface:
         assert isinstance(volume, Volume)
         self._log.debug('volume opt: {}'.format(volume.get_all_opt()))
         return self._cli.create_volume(
-            volume.name, 'local', volume.get_all_opt()
+            volume.full_name, 'local', volume.get_all_opt()
         )
 
     @_get_name
