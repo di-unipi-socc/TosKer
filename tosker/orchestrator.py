@@ -16,6 +16,7 @@ from .managers.container_manager import Container_manager
 from .managers.volume_manager import Volume_manager
 from .tosca_parser import get_tosca_template
 from .helper import Logger
+from .storage import Storage, Memory
 
 
 class Orchestrator:
@@ -23,10 +24,19 @@ class Orchestrator:
     def __init__(self,
                  log_handler=logging.NullHandler(),
                  quiet=True,
-                 tmp_dir='/tmp/tosker/'):
+                 tmp_dir='/tmp/tosker/',
+                 data_dir='/tmp/tosker'):  # TODO: use /usr/lib/tokser instead
         Logger.set(log_handler, quiet)
         self._log = Logger.get(__name__)
         self._tmp_dir = tmp_dir
+
+        self._data_dir = data_dir
+        try:
+            os.makedirs(data_dir)
+        except os.error as e:
+            self._log.info(e)
+
+        Storage.set_db(data_dir)
 
     def orchestrate(self, file_path, commands, components=[], inputs={}):
         if not self._parse(file_path, components, inputs):
@@ -83,59 +93,79 @@ class Orchestrator:
         for node in self._tpl.deploy_order:
             Logger.print_('  {}'.format(node))
 
-            # try:
-            if isinstance(node, Container):
-                self._container_manager.create(node)
-            elif isinstance(node, Volume):
-                self._volume_manager.create(node)
-            elif isinstance(node, Software):
-                self._software_manager.create(node)
-                self._software_manager.configure(node)
-            # except Exception as e:
-                # TODO: catch this error
+            status = Memory.get_comp_state(node)
+            if Memory.STATE.DELETED == status:
+                if isinstance(node, Container):
+                    self._container_manager.create(node)
+                elif isinstance(node, Volume):
+                    self._volume_manager.create(node)
+                elif isinstance(node, Software):
+                    self._software_manager.create(node)
+                    self._software_manager.configure(node)
 
-            self._print_tick()
+                Memory.update_state(node, Memory.STATE.CREATED)
+
+                self._print_tick()
+            else:
+                self._print_skip()
+                self._log.info('skipped already created')
 
     def _start(self):
         Logger.println('\nSTART')
         for node in self._tpl.deploy_order:
             Logger.print_('  {}'.format(node))
 
-            if isinstance(node, Container):
-                self._container_manager.start(node)
-            elif isinstance(node, Software):
-                self._software_manager.start(node)
-
-            self._print_tick()
+            status = Memory.get_comp_state(node)
+            if Memory.STATE.CREATED == status:
+                if isinstance(node, Container):
+                    self._container_manager.start(node)
+                elif isinstance(node, Software):
+                    self._software_manager.start(node)
+                Memory.update_state(node, Memory.STATE.STARTED)
+                self._print_tick()
+            elif Memory.STATE.STARTED == status:
+                self._print_skip()
+                self._log.info('skipped already started')
+            else:
+                self._print_cross()
+                self._log.info('{} have to be created first'.format(node))
 
     def _stop(self):
         Logger.println('\nSTOP')
         for node in reversed(self._tpl.deploy_order):
             Logger.print_('  {}'.format(node))
 
-            if isinstance(node, Container):
-                self._container_manager.stop(node)
-            elif isinstance(node, Software):
-                self._software_manager.stop(node)
-
-            self._print_tick()
+            status = Memory.get_comp_state(node)
+            if Memory.STATE.STARTED == status:
+                if isinstance(node, Container):
+                    self._container_manager.stop(node)
+                elif isinstance(node, Software):
+                    self._software_manager.stop(node)
+                Memory.update_state(node, Memory.STATE.CREATED)
+                self._print_tick()
+            else:
+                self._print_skip()
+                self._log.info('skipped already stopped')
 
     def _delete(self):
         Logger.println('\nDELETE')
         for node in reversed(self._tpl.deploy_order):
             Logger.print_('  {}'.format(node))
-            # try:
-            if isinstance(node, Container):
-                self._container_manager.delete(node)
-            elif isinstance(node, Software):
-                self._software_manager.delete(node)
-            # except Exception as e:
-            #     self._print_cross()
-            #     Logger.println(e)
-            #     raise e
-            #     # TODO: catch this error
 
-            self._print_tick()
+            status = Memory.get_comp_state(node)
+            if Memory.STATE.CREATED == status:
+                if isinstance(node, Container):
+                    self._container_manager.delete(node)
+                elif isinstance(node, Software):
+                    self._software_manager.delete(node)
+                Memory.update_state(node, Memory.STATE.DELETED)
+                self._print_tick()
+            elif Memory.STATE.STARTED == status:
+                self._print_cross()
+                self._log.info('{} have to be stopped first'.format(node))
+            else:
+                self._print_skip()
+                self._log.info('skipped already deleted')
 
         self._docker.delete_network()
         shutil.rmtree(self._tmp_dir)
@@ -151,6 +181,9 @@ class Orchestrator:
 
     def _print_tick(self):
         Logger.println(' ' + colored(u"\u2714", 'green'))
+
+    def _print_skip(self):
+        Logger.println(' ' + colored(u"\u2714", 'white'))
 
     def _print_cross(self):
         Logger.println(' ' + colored(u"\u274C", 'red'))

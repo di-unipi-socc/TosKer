@@ -265,7 +265,7 @@ def get_tosca_template(file_path, inputs={}, components=[]):
 
             if len(components) > 0:
                 for node in _get_dependency_nodes(tpl, tosca):
-                    tpl.push(_parse_conf(node,
+                    tpl.push(_parse_conf(tpl, node,
                                          repositories,
                                          base_path))
 
