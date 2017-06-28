@@ -3,8 +3,9 @@ import six
 
 class Relationship(object):
 
-    def __init__(self, node):
-        self.to = node
+    def __init__(self, origin, to):
+        self.origin = origin
+        self.to = to
 
     def __str__(self):
         return 'Relationship'
@@ -16,8 +17,8 @@ def _get_str_name(obj):
 
 class ConnectsTo(Relationship):
 
-    def __init__(self, node, alias=None):
-        super(self.__class__, self).__init__(node)
+    def __init__(self, origin, node, alias=None):
+        super(self.__class__, self).__init__(origin, node)
         self.alias = alias
 
     @property
@@ -34,8 +35,8 @@ class ConnectsTo(Relationship):
 
 class HostedOn(Relationship):
 
-    def __init__(self, node):
-        super(self.__class__, self).__init__(node)
+    def __init__(self, origin, node):
+        super(self.__class__, self).__init__(origin, node)
 
     @property
     def format(self):
@@ -47,8 +48,8 @@ class HostedOn(Relationship):
 
 class AttachesTo(Relationship):
 
-    def __init__(self, node, folder=None):
-        super(self.__class__, self).__init__(node)
+    def __init__(self, origin, node, folder=None):
+        super(self.__class__, self).__init__(origin, node)
         self.location = folder
 
     @property
@@ -64,8 +65,8 @@ class AttachesTo(Relationship):
 
 class DependsOn(Relationship):
 
-    def __init__(self, node):
-        super(self.__class__, self).__init__(node)
+    def __init__(self, origin, node):
+        super(self.__class__, self).__init__(origin, node)
 
     @property
     def format(self):

@@ -8,7 +8,7 @@ class Test_Graph(unittest.TestCase):
 
     def _assert_sorting(self, tpl):
         running = set()
-        for c in tpl.deploy_order:
+        for c in tpl.nodes:
             for r in c.relationships:
                 self.assertIn(r.to.name, running)
             running.add(c.name)
@@ -24,8 +24,8 @@ class Test_Graph(unittest.TestCase):
             components=['server1'])
 
         self._assert_sorting(tpl)
-        self.assertEqual(len(tpl.deploy_order), 2)
-        for c in tpl.deploy_order:
+        self.assertEqual(len(tpl.nodes), 2)
+        for c in tpl.nodes:
             self.assertIn(c.name, ('server1', 'nodejs1'))
 
     def test_components_2(self):
@@ -34,8 +34,8 @@ class Test_Graph(unittest.TestCase):
             components=['server2'])
 
         self._assert_sorting(tpl)
-        self.assertEqual(len(tpl.deploy_order), 2)
-        for c in tpl.deploy_order:
+        self.assertEqual(len(tpl.nodes), 2)
+        for c in tpl.nodes:
             self.assertIn(c.name, ('server2', 'nodejs2'))
 
     def test_components_3(self):
@@ -44,8 +44,8 @@ class Test_Graph(unittest.TestCase):
             components=['server3'])
 
         self._assert_sorting(tpl)
-        self.assertEqual(len(tpl.deploy_order), 6)
-        for c in tpl.deploy_order:
+        self.assertEqual(len(tpl.nodes), 6)
+        for c in tpl.nodes:
             self.assertIn(c.name, ('server1', 'nodejs1',
                                    'server2', 'nodejs2',
                                    'server3', 'nodejs3'))
@@ -56,8 +56,8 @@ class Test_Graph(unittest.TestCase):
             components=['server1', 'server2'])
 
         self._assert_sorting(tpl)
-        self.assertEqual(len(tpl.deploy_order), 4)
-        for c in tpl.deploy_order:
+        self.assertEqual(len(tpl.nodes), 4)
+        for c in tpl.nodes:
             self.assertIn(c.name, ('server1', 'nodejs1',
                                    'server2', 'nodejs2'))
 
@@ -66,8 +66,8 @@ class Test_Graph(unittest.TestCase):
             'tosker/tests/TOSCA/software-link/software.yaml',
             components=['server1', 'server3'])
         self._assert_sorting(tpl)
-        self.assertEqual(len(tpl.deploy_order), 6)
-        for c in tpl.deploy_order:
+        self.assertEqual(len(tpl.nodes), 6)
+        for c in tpl.nodes:
             self.assertIn(c.name, ('server1', 'nodejs1',
                                    'server2', 'nodejs2',
                                    'server3', 'nodejs3'))
@@ -78,8 +78,8 @@ class Test_Graph(unittest.TestCase):
             components=['server2', 'server3'])
 
         self._assert_sorting(tpl)
-        self.assertEqual(len(tpl.deploy_order), 6)
-        for c in tpl.deploy_order:
+        self.assertEqual(len(tpl.nodes), 6)
+        for c in tpl.nodes:
             self.assertIn(c.name, ('server1', 'nodejs1',
                                    'server2', 'nodejs2',
                                    'server3', 'nodejs3'))
@@ -90,8 +90,8 @@ class Test_Graph(unittest.TestCase):
             components=['nodejs1'])
 
         self._assert_sorting(tpl)
-        self.assertEqual(len(tpl.deploy_order), 1)
-        for c in tpl.deploy_order:
+        self.assertEqual(len(tpl.nodes), 1)
+        for c in tpl.nodes:
             self.assertIn(c.name, ('nodejs1'))
 
     def test_components_n2(self):
@@ -100,8 +100,8 @@ class Test_Graph(unittest.TestCase):
             components=['nodejs2'])
 
         self._assert_sorting(tpl)
-        self.assertEqual(len(tpl.deploy_order), 1)
-        for c in tpl.deploy_order:
+        self.assertEqual(len(tpl.nodes), 1)
+        for c in tpl.nodes:
             self.assertIn(c.name, ('nodejs2'))
 
     def test_components_n3(self):
@@ -110,6 +110,6 @@ class Test_Graph(unittest.TestCase):
             components=['nodejs3'])
 
         self._assert_sorting(tpl)
-        self.assertEqual(len(tpl.deploy_order), 1)
-        for c in tpl.deploy_order:
+        self.assertEqual(len(tpl.nodes), 1)
+        for c in tpl.nodes:
             self.assertIn(c.name, ('nodejs3'))

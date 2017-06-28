@@ -7,24 +7,26 @@ class Template:
     def __init__(self, name):
         self._nodes = {}
         self.name = name
-        self.deploy_order = []
         self.outputs = []
 
     @property
-    def container_order(self):
-        return (i for i in self.deploy_order if type(i) is Container)
+    def nodes(self):
+        return (v for k, v in self._nodes.items())
 
     @property
-    def volume_order(self):
-        return (i for i in self.deploy_order if type(i) is Volume)
+    def containers(self):
+        return (v for k, v in self._nodes.items() if type(v) is Container)
 
     @property
-    def software_order(self):
-        return (i for i in self.deploy_order if type(i) is Software)
+    def volumes(self):
+        return (v for k, v in self._nodes.items() if type(v) is Volume)
+
+    @property
+    def software(self):
+        return (v for k, v in self._nodes.items() if type(v) is Software)
 
     def push(self, node):
         self._nodes[node.name] = node
-        self.deploy_order.append(node)
 
     def __getitem__(self, name):
         return self._nodes.get(name, None)
@@ -38,4 +40,4 @@ class Template:
             return False
 
     def __str__(self):
-        return ', '.join((i.name for i in self.deploy_order))
+        return ', '.join((i.name for i in self.nodes))

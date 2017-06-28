@@ -38,6 +38,9 @@ class Root(object):
         # need by the topological sorting algorithm
         self._mark = ''
 
+        # reverse requirements
+        self.up_requirements = []
+
     @property
     def full_name(self):
         return '{}.{}'.format(self.tpl.name, self.name)
@@ -60,18 +63,24 @@ class Root(object):
 
     def add_depend(self, item):
         if not isinstance(item, DependsOn):
-            item = DependsOn(item)
+            item = DependsOn(self, item)
         self._depend.append(item)
+        if not isinstance(item.to, str):
+            item.to.up_requirements.append(item)
 
     def add_connection(self, item, alias=None):
         if not isinstance(item, ConnectsTo):
-            item = ConnectsTo(item, alias)
+            item = ConnectsTo(self, item, alias)
         self._connection.append(item)
+        if not isinstance(item.to, str):
+            item.to.up_requirements.append(item)
 
     def add_volume(self, item, location=None):
         if not isinstance(item, AttachesTo):
-            item = AttachesTo(item, location)
+            item = AttachesTo(self, item, location)
         self._volume.append(item)
+        if not isinstance(item.to, str):
+            item.to.up_requirements.append(item)
 
     def add_artifact(self, art):
         assert isinstance(art, Artifact)
@@ -82,6 +91,12 @@ class Root(object):
 
     def __getitem__(self, item):
         return self._ATTRIBUTE.get(item, lambda: None)()
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __hash__(self):
+        return hash(self.name)
 
     def get_str_obj(self):
         _str_obj(self)
@@ -124,7 +139,7 @@ class Container(Root):
 
     def add_overlay(self, item, alias=None):
         if not isinstance(item, ConnectsTo):
-            item = ConnectsTo(item, alias)
+            item = ConnectsTo(self, item, alias)
         self._overlay.append(item)
 
     def add_env(self, name, value):
@@ -185,11 +200,6 @@ class Software(Root):
         # self.depend = None
         # self.connection = None
 
-    # def add_depend(self, item):
-    #     self.depend = _add_to_list(self.depend, item)
-    #
-    # def add_connection(self, item):
-    #     self.connection = _add_to_list(self.connection, item)
     @property
     def relationships(self):
         return super(self.__class__, self).relationships + \
@@ -202,8 +212,10 @@ class Software(Root):
     @host.setter
     def host(self, item):
         if not isinstance(item, HostedOn):
-            item = HostedOn(item)
+            item = HostedOn(self, item)
         self._host = item
+        if not isinstance(item.to, str):
+            item.to.up_requirements.append(item)
 
     def add_artifact(self, file):
         assert isinstance(file, File)

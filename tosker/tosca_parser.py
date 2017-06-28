@@ -191,36 +191,7 @@ def _parse_conf(tpl, node, repos, base_path):
     return conf
 
 
-# def filter_components(tpl, components):
-#     if all(tpl[i] is not None for i in components):
-#         res = Template(tpl.name)
-#         for c in reversed(tpl.deploy_order):
-#             # print(c)
-#             if c.name in components:
-#                 _filter_components_rec(tpl, c, res)
-#         return res
-#
-#
-# def _filter_components_rec(tpl, c, new):
-#     if c not in new:
-#         if hasattr(c, 'volume') and c.volume is not None:
-#             # new.push(c.volume)
-#             for v in c.volume.values():
-#                 _filter_components_rec(tpl, v, new)
-#         if hasattr(c, 'connection') and c.connection is not None:
-#             for con in c.connection:
-#                 _filter_components_rec(tpl, con, new)
-#         if hasattr(c, 'depend') and c.depend is not None:
-#             # new.push(c.depend)
-#             for dep in c.depend:
-#                 _filter_components_rec(tpl, dep, new)
-#         if hasattr(c, 'host') and c.host is not None:
-#             # new.push(c.host)
-#             _filter_components_rec(tpl, c.host, new)
-#         new.push(c)
-
-
-def get_tosca_template(file_path, inputs={}, components=[]):
+def get_tosca_template(file_path, inputs={}):
     global _log
     _log = helper.Logger.get(__name__)
 
@@ -254,90 +225,29 @@ def get_tosca_template(file_path, inputs={}, components=[]):
         if tosca.outputs:
             tpl.outputs = tosca.outputs
         if tosca.nodetemplates:
-            if not _components_exists(tosca.nodetemplates, components):
-                raise Exception('ERROR: a selected component do not exists')
 
             for node in tosca.nodetemplates:
-                if len(components) == 0 or node.name in components:
-                    tpl.push(_parse_conf(tpl, node,
-                                         repositories,
-                                         base_path))
-
-            if len(components) > 0:
-                for node in _get_dependency_nodes(tpl, tosca):
-                    tpl.push(_parse_conf(tpl, node,
-                                         repositories,
-                                         base_path))
+                tpl.push(_parse_conf(tpl, node,
+                                     repositories,
+                                     base_path))
 
             _add_pointer(tpl)
-
-            _sort(tpl)
-
+            _add_back_links(tpl)
             _add_extension(tpl)
-
-            # while len(nodes) > 0:
-            #     for node in nodes:
-            #         if node
-            #     if i >= len(nodes):
-            #         i = 0
-            #     node = nodes[i]
-            #     if node.name in running_container:
-            #         i += 1
-            #         continue
-            #
-            #     if not _check_requirements(node, running_container):
-            #         i += 1
-            #         continue
-            #
-            #     tpl_node = _parse_conf(node, inputs, tosca.tpl.get(
-            #         'repositories', None), base_path)
-            #     tpl.push(tpl_node)
-            #     running_container.add(node.name)
 
     return tpl
 
 
-def _get_dependency_nodes(tpl, tosca):
-    for n in tpl.deploy_order:
-        for r in n.relationships:
-            if r.to not in tpl:
-                tosca_node = next((n for n in tosca.nodetemplates
-                                   if n.name == r.to))
-                yield tosca_node
-
-
-def _components_exists(tosca_tpl, components):
-    for c in components:
-        if not any(c == n.name for n in tosca_tpl):
-            return False
-    return True
-
-
-def _sort(tpl):
-    unmarked = set(tpl.deploy_order)
-    tpl.deploy_order = []
-
-    def visit(n):
-        if n._mark == 'temp':
-            raise Exception('ERROR: the TOSCA file is not a DAG')
-        elif n._mark == '':
-            n._mark = 'temp'
-            if n in unmarked:
-                unmarked.remove(n)
-            for r in n.relationships:
-                visit(r.to)
-            n._mark = 'perm'
-            tpl.deploy_order.append(n)
-
-    while len(unmarked) > 0:
-        n = unmarked.pop()
-        visit(n)
-
-
 def _add_pointer(tpl):
-    for node in tpl.deploy_order:
+    for node in tpl.nodes:
         for rel in node.relationships:
             rel.to = tpl[rel.to]
+
+
+def _add_back_links(tpl):
+    for node in tpl.nodes:
+        for rel in node.relationships:
+            rel.to.up_requirements.append(rel)
 
 
 # - add pointer host_container pointer on software
@@ -345,7 +255,7 @@ def _add_pointer(tpl):
 # - add software links to the corrisponding container
 def _add_extension(tpl):
     # Add the host_container property
-    for node in tpl.software_order:
+    for node in tpl.software:
         if node.host is not None:
             if isinstance(node.host.to, Container):
                 node.host_container = node.host.to
@@ -354,7 +264,7 @@ def _add_extension(tpl):
 
     # Manage the case when a Software is connected
     # to a Container or a Software
-    for node in tpl.software_order:
+    for node in tpl.software:
         for con in node._connection:
             if isinstance(con.to, Container):
                 container = con.to
@@ -363,7 +273,7 @@ def _add_extension(tpl):
             node.host_container.add_overlay(container, con.to.name)
 
     # Manage the case whene a Container is connected to a Software
-    for node in tpl.container_order:
+    for node in tpl.containers:
         for con in node._connection:
                 if isinstance(con.to, Software):
                     con.alias = con.to.name
