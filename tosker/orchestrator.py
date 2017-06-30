@@ -4,6 +4,8 @@ import os
 import shutil
 import six
 import traceback
+import threading
+import time
 from os import path
 
 from termcolor import colored
@@ -21,6 +23,17 @@ from .helper import Logger
 from .storage import Storage, Memory
 
 
+def _filter_components(*comps):
+    def _filter_components_decorator(func):
+        @wraps(func)
+        def func_wrapper(self, *args):
+            filter_componets = [c for c in args[0]
+                                if isinstance(c, comps)]
+            return func(self, filter_componets, *args[1:])
+        return func_wrapper
+    return _filter_components_decorator
+
+
 class Orchestrator:
 
     def __init__(self,
@@ -32,66 +45,16 @@ class Orchestrator:
         self._log = Logger.get(__name__)
         self._tmp_dir = tmp_dir
 
+        # Setup Storage system (folder and class
         self._data_dir = data_dir
         try:
             os.makedirs(data_dir)
         except os.error as e:
             self._log.info(e)
-
         Storage.set_db(data_dir)
 
     def orchestrate(self, file_path, commands, components=[], inputs={}):
-        if not self._parse(file_path, components, inputs):
-            return False
-
-        try:
-            if len(components) != 0:
-                # must calculate the down extension/sorting
-                if any((c in ('create', 'start') for c in commands)):
-                    down_extension = _extend_down(components, self._tpl)
-                    down_deploy = _sort(down_extension, self._tpl)
-
-                # must calculate the up extension/sorting
-                if any((c in ('stop', 'delete') for c in commands)):
-                    up_extension = _extend_up(components, self._tpl)
-                    up_deploy = _sort(up_extension, self._tpl)
-            else:
-                all_deploy = _sort(list(self._tpl.nodes), self._tpl)
-
-            for cmd in commands:
-                if len(components) != 0:
-                    if cmd in ('create', 'start'):
-                        sorted_components = down_deploy
-                    else:
-                        sorted_components = up_deploy
-                else:
-                    sorted_components = all_deploy
-
-                self._log.debug('components {}'.format(','.join((c.name for c in sorted_components))))
-                # TODO: inefficient should sort max 2 times
-                # sorted_components = _sort(to_deploy, self._tpl)
-
-                # Logger.println('Deploy order: \n  ' + '\n  '.join(
-                #     ['{}. {}'.format(i + 1, n)
-                #      for i, n in enumerate(self._tpl.nodes)]
-                # ))
-
-                {
-                  'create': self._create,
-                  'start': self._start,
-                  'stop': self._stop,
-                  'delete': self._delete,
-                }.get(cmd)(sorted_components)
-
-            self._print_outputs()
-        except Exception as e:
-            self._print_cross()
-            Logger.println(e)
-            self._log.debug(traceback.format_exc())
-            return False
-        return True
-
-    def _parse(self, file_path, components=[], inputs={}):
+        # Parse TOSCA file
         try:
             self._tpl = get_tosca_template(file_path, inputs)
         except Exception as e:
@@ -99,15 +62,18 @@ class Orchestrator:
             self._log.debug(traceback.format_exc())
             return False
 
-        if not _components_exists(self._tpl, components):
+        # Check if inputs components exists in the TOSCA file
+        if not self._components_exists(components):
             raise Exception('ERROR: a selected component do not exists')
 
+        # Create temporany directory
         self._tmp_dir = path.join(self._tmp_dir, self._tpl.name)
         try:
             os.makedirs(self._tmp_dir)
         except os.error as e:
             self._log.info(e)
 
+        # Initialize managers
         self._docker = Docker_interface(
             'tosker_{}'.format(self._tpl.name),
             'tosker_{}'.format(self._tpl.name),
@@ -117,14 +83,46 @@ class Orchestrator:
         self._volume_manager = Volume_manager(self._docker)
         self._software_manager = Software_manager(self._docker)
 
+        # Start orchestration
+        try:
+            if len(components) == 0:
+                components = [n.name for n in self._tpl.nodes]
+
+            # must calculate the down extension/sorting
+            if any((c in ('create', 'start') for c in commands)):
+                down_extension = self._extend_down(components)
+                down_deploy = self._sort(down_extension)
+                self._log.debug('down_deploy: {}'.format(', '
+                                ''.join((c.name for c in down_deploy))))
+            # must calculate the up extension/sorting
+            if any((c in ('stop', 'delete') for c in commands)):
+                up_extension = self._extend_up(components)
+                up_deploy = list(reversed(self._sort(up_extension)))
+                self._log.debug('up_deploy: {}'.format(', '
+                                ''.join((c.name for c in up_deploy))))
+
+            for cmd in commands:
+                {
+                  'create': lambda: self._create(down_deploy),
+                  'start': lambda: self._start(down_deploy),
+                  'stop': lambda: self._stop(up_deploy),
+                  'delete': lambda: self._delete(up_deploy),
+                }.get(cmd)()
+
+            self._print_outputs()
+        except Exception as e:
+            self._print_cross(e)
+            # Logger.println(e)
+            self._log.debug(traceback.format_exc())
+            return False
         return True
 
     def _create(self, components):
-        self._log.debug('create operation')
+        self._print_loading_start('Create network... ')
         self._docker.create_network()  # TODO: da rimuovere
-        Logger.println('CREATE')
+        self._print_tick()
         for node in components:
-            Logger.print_('  {}'.format(node))
+            self._print_loading_start('Create {}... '.format(node))
 
             status = Memory.get_comp_state(node)
             if Memory.STATE.DELETED == status:
@@ -143,10 +141,10 @@ class Orchestrator:
                 self._print_skip()
                 self._log.info('skipped already created')
 
+    @_filter_components(Container, Software)
     def _start(self, components):
-        Logger.println('START')
         for node in components:
-            Logger.print_('  {}'.format(node))
+            self._print_loading_start('Start {}... '.format(node))
 
             status = Memory.get_comp_state(node)
             if Memory.STATE.CREATED == status:
@@ -160,13 +158,13 @@ class Orchestrator:
                 self._print_skip()
                 self._log.info('skipped already started')
             else:
-                self._print_cross()
+                self._print_cross('the components must be created first')
                 self._log.info('{} have to be created first'.format(node))
 
+    @_filter_components(Container, Software)
     def _stop(self, components):
-        Logger.println('STOP')
-        for node in reversed(components):
-            Logger.print_('  {}'.format(node))
+        for node in components:
+            self._print_loading_start('Stop {}... '.format(node))
 
             status = Memory.get_comp_state(node)
             if Memory.STATE.STARTED == status:
@@ -180,10 +178,10 @@ class Orchestrator:
                 self._print_skip()
                 self._log.info('skipped already stopped')
 
+    @_filter_components(Container, Software)
     def _delete(self, components):
-        Logger.println('DELETE')
-        for node in reversed(components):
-            Logger.print_('  {}'.format(node))
+        for node in components:
+            self._print_loading_start('Delete {}... '.format(node))
 
             status = Memory.get_comp_state(node)
             if Memory.STATE.CREATED == status:
@@ -194,13 +192,15 @@ class Orchestrator:
                 Memory.update_state(node, Memory.STATE.DELETED)
                 self._print_tick()
             elif Memory.STATE.STARTED == status:
-                self._print_cross()
+                self._print_cross('The component must be stopped first')
                 self._log.info('{} have to be stopped first'.format(node))
             else:
                 self._print_skip()
                 self._log.info('skipped already deleted')
 
+        self._print_loading_start('Delete network... ')
         self._docker.delete_network()
+        self._print_tick()
         shutil.rmtree(self._tmp_dir)
 
     def _print_outputs(self):
@@ -212,85 +212,104 @@ class Orchestrator:
                 else helper.get_attributes(out.value.args, self._tpl)
             Logger.println('  - ' + out.name + ":", value)
 
+    def _components_exists(self, components):
+        for c in components:
+            if not any(c == n.name for n in self._tpl.nodes):
+                return False
+        return True
+
+    def _extend_down(self, components):
+        assert isinstance(components, list)
+
+        def get_down_req(c):
+            for r in c.relationships:
+                if r.to.name not in components:
+                    yield r.to
+                for c in get_down_req(r.to):
+                    yield c
+
+        return self._extend(components, get_down_req)
+
+    def _extend_up(self, components):
+        assert isinstance(components, list)
+
+        def get_up_req(c):
+            for r in c.up_requirements:
+                if r.origin.name not in components:
+                    yield r.origin
+                # python3 alternative
+                # yield from get_up_req(r.origin)
+                for c in get_up_req(r.origin):
+                    yield c
+
+        return self._extend(components, get_up_req)
+
+    def _extend(self, components, extension_gen):
+        assert isinstance(components, list)
+
+        extend_comp = []
+
+        for c in components:
+            extend_comp.append(self._tpl[c])
+            for rc in extension_gen(self._tpl[c]):
+                extend_comp.append(rc)
+
+        return extend_comp
+
+    def _sort(self, components):
+        assert isinstance(components, list)
+
+        for n in self._tpl.nodes:
+            n._mark = ''
+        unmarked = set((c.name for c in components))
+        deploy_order = []
+
+        def visit(n):
+            if n._mark == 'temp':
+                raise Exception('ERROR: the TOSCA file is not a DAG')
+            elif n._mark == '':
+                n._mark = 'temp'
+                if n.name in unmarked:
+                    unmarked.remove(n.name)
+                for r in n.relationships:
+                    if any(r.to == c for c in components):
+                        visit(r.to)
+                n._mark = 'perm'
+                deploy_order.append(n)
+
+        while len(unmarked) > 0:
+            n = unmarked.pop()
+            visit(self._tpl[n])
+
+        return deploy_order
+
     def _print_tick(self):
-        Logger.println(' ' + colored(u"\u2714", 'green'))
+        self._stop_loading()
+        Logger.println('Done')
 
     def _print_skip(self):
-        Logger.println(' ' + colored(u"\u2714", 'white'))
+        self._stop_loading()
+        Logger.println('Skipped')
 
-    def _print_cross(self):
-        Logger.println(' ' + colored(u"\u274C", 'red'))
+    def _print_cross(self, error):
+        self._stop_loading()
+        Logger.println('Error ({})'.format(error))
 
+    def _print_loading_start(self, msg):
+        def loading(msg):
+            t = threading.currentThread()
+            i = 0
+            s = ['/', '-', '\\', '|']
+            while getattr(t, "do_run", True):
+                Logger.print_("\r{} {}".format(msg, s[i % len(s)]))
+                i += 1
+                time.sleep(0.1)
+            Logger.print_("\r{}".format(msg))
 
-def _components_exists(tpl, components):
-    for c in components:
-        if not any(c == n.name for n in tpl.nodes):
-            return False
-    return True
+        self._loading_thread = threading.Thread(target=loading, args=(msg,))
+        self._loading_thread.start()
 
-
-def _extend_down(components, tpl):
-    assert isinstance(components, list) and isinstance(tpl, Template)
-
-    def get_down_req(c):
-        for r in c.relationships:
-            if r.to.name not in components:
-                yield r.to
-            for c in get_down_req(r.to):
-                yield c
-
-    return _extend(components, tpl, get_down_req)
-
-
-def _extend_up(components, tpl):
-    assert isinstance(components, list) and isinstance(tpl, Template)
-
-    def get_up_req(c):
-        for r in c.up_requirements:
-            if r.origin.name not in components:
-                yield r.origin
-            for c in get_up_req(r.origin):
-                yield c
-
-    return _extend(components, tpl, get_up_req)
-
-
-def _extend(components, tpl, extension_gen):
-    assert isinstance(components, list) and isinstance(tpl, Template)
-
-    extend_comp = []
-
-    for c in components:
-        extend_comp.append(tpl[c])
-        for rc in extension_gen(tpl[c]):
-            extend_comp.append(rc)
-
-    return extend_comp
-
-
-def _sort(components, tpl):
-    assert isinstance(components, list) and isinstance(tpl, Template)
-
-    for n in tpl.nodes:
-        n._mark = ''
-    unmarked = set((c.name for c in components))
-    deploy_order = []
-
-    def visit(n):
-        if n._mark == 'temp':
-            raise Exception('ERROR: the TOSCA file is not a DAG')
-        elif n._mark == '':
-            n._mark = 'temp'
-            if n.name in unmarked:
-                unmarked.remove(n.name)
-            for r in n.relationships:
-                if any(r.to == c for c in components):
-                    visit(r.to)
-            n._mark = 'perm'
-            deploy_order.append(n)
-
-    while len(unmarked) > 0:
-        n = unmarked.pop()
-        visit(tpl[n])
-
-    return deploy_order
+    def _stop_loading(self):
+        if hasattr(self, '_loading_thread'):
+            self._loading_thread.do_run = False
+            self._loading_thread.join()
