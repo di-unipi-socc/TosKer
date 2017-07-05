@@ -15,6 +15,10 @@ def _get_str_name(obj):
     return obj if isinstance(obj, six.string_types) else obj.name
 
 
+def _get_str_full_name(obj):
+    return obj if isinstance(obj, six.string_types) else obj.full_name
+
+
 class ConnectsTo(Relationship):
 
     def __init__(self, origin, node, alias=None):
@@ -23,11 +27,11 @@ class ConnectsTo(Relationship):
 
     @property
     def format(self):
-        name = _get_str_name(self.to)
+        full_name = _get_str_full_name(self.to)
         if self.alias is not None:
-            return (name, self.alias)
+            return (full_name, self.alias)
         else:
-            return (name, name)
+            return (full_name, _get_str_name(self.to))
 
     def __str__(self):
         return 'ConnectsTo'
@@ -55,9 +59,9 @@ class AttachesTo(Relationship):
     @property
     def format(self):
         if self.location is not None:
-            return (self.location, _get_str_name(self.to))
+            return (self.location, _get_str_full_name(self.to))
         else:
-            return _get_str_name(self.to)
+            return _get_str_full_name(self.to)
 
     def __str__(self):
         return 'AttachesTo'
