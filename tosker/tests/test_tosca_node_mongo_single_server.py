@@ -7,8 +7,8 @@ class Test_Node_Mongo_Single_Server(Test_Orchestrator):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.orchestrator._parse(
-            'tosker/tests/TOSCA/node-mongo/node-mongo-single-server.yaml')
+        self.file = 'tosker/tests/TOSCA/node-mongo/'\
+                    'node-mongo-single-server.yaml'
 
     def test(self):
         self.create()

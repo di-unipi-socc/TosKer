@@ -1,29 +1,34 @@
 import unittest
 from tosker import helper
 from tosker.orchestrator import Orchestrator
-from tosker.docker_interface import Docker_interface
+from tosker import docker_interface as docker
+from tosker.tosca_parser import get_tosca_template
 
 
 class Test_Orchestrator(unittest.TestCase):
 
     def setUp(self):
-        self._docker = Docker_interface()
-        self._docker.remove_all_containers()
-        self._docker.remove_all_volumes()
+        docker.remove_all_containers()
+        docker.remove_all_volumes()
         self.orchestrator = Orchestrator(
             # log_handler=helper.get_consol_handler()
         )
 
+    def get_tpl(self):
+        if not hasattr(self, 'tpl'):
+            self.tpl = get_tosca_template(self.file)
+        return self.tpl
+
     def create(self):
-        self.orchestrator._create()
-        for c in self.orchestrator._tpl.container_order:
+        self.orchestrator.orchestrate(self.file, ['create'])
+        for c in self.get_tpl().containers:
             self.assertIsNotNone(
-                self._docker.inspect(c.name)
+                docker.inspect_container(c)
             )
 
-        for c in self.orchestrator._tpl.volume_order:
+        for c in self.get_tpl().volumes:
             self.assertIsNotNone(
-                self._docker.inspect(c.name)
+                docker.inspect_volume(c)
             )
 
     def start(self):
@@ -33,39 +38,39 @@ class Test_Orchestrator(unittest.TestCase):
         self._start(check=lambda x: x['State']['ExitCode'] == 0)
 
     def _start(self, check):
-        self.orchestrator._start()
-        for c in self.orchestrator._tpl.container_order:
-            stat = self._docker.inspect_container(c.name)
+        self.orchestrator.orchestrate(self.file, ['start'])
+        for c in self.get_tpl().containers:
+            stat = docker.inspect_containers(c)
             # print('DEBUG: ', stat)
             self.assertIsNotNone(stat)
             self.assertTrue(check(stat))
 
-        for c in self.orchestrator._tpl.volume_order:
+        for c in self.get_tpl().volumes:
             self.assertIsNotNone(
-                self._docker.inspect_volume(c.name)
+                docker.inspect_volume(c)
             )
 
     def stop(self):
-        self.orchestrator._stop()
-        for c in self.orchestrator._tpl.container_order:
-            stat = self._docker.inspect_container(c.name)
+        self.orchestrator.orchestrate(self.file, ['stop'])
+        for c in self.get_tpl().containers:
+            stat = docker.inspect_containers(c)
             # print('DEBUG: ', stat)
             self.assertIsNotNone(stat)
             self.assertFalse(stat['State']['Running'])
 
-        for c in self.orchestrator._tpl.volume_order:
+        for c in self.get_tpl().volumes:
             self.assertIsNotNone(
-                self._docker.inspect_volume(c.name)
+                docker.inspect_volume(c)
             )
 
     def delete(self):
-        self.orchestrator._delete()
-        for c in self.orchestrator._tpl.container_order:
+        self.orchestrator.orchestrate(self.file, ['delete'])
+        for c in self.get_tpl().containers:
             self.assertIsNone(
-                self._docker.inspect(c.name)
+                docker.inspect_container(c)
             )
 
-        for c in self.orchestrator._tpl.volume_order:
+        for c in self.get_tpl().volumes:
             self.assertIsNotNone(
-                self._docker.inspect(c.name)
+                docker.inspect_volume(c)
             )

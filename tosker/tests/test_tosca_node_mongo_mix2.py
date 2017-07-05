@@ -7,8 +7,7 @@ class Test_Node_Mongo_Mix2(Test_Orchestrator):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.orchestrator._parse(
-            'tosker/tests/TOSCA/node-mongo/node-mongo-mix2.yaml')
+        self.file = 'tosker/tests/TOSCA/node-mongo/node-mongo-mix2.yaml'
 
     def test(self):
         self.create()

@@ -6,6 +6,7 @@ from tosker.storage import Storage, Memory
 from tosker.graph.nodes import Container
 from tosker.graph.template import Template
 
+
 class Test_Storage(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -71,9 +72,9 @@ class Test_Storage(unittest.TestCase):
         Memory.update_state(cont3, Memory.STATE.DELETED)
 
         comps = Memory.get_comps()
-        self.assertEqual(len(comps), 2)
+        self.assertEqual(len(comps), 3)
 
-        comps = Memory.get_comps(state=Memory.STATE.CREATED)
+        comps = Memory.get_comps(filters={'state': Memory.STATE.CREATED})
         self.assertEqual(len(comps), 1)
         self.assertEqual(comps[0]['full_name'],
                          'template_test.container_test1')

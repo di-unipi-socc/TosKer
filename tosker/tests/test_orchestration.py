@@ -1,13 +1,15 @@
 import unittest
 from tosker.orchestrator import Orchestrator
-from tosker.docker_interface import Docker_interface
+from tosker import docker_interface as docker
+from tosker import helper
 
 
 class Test_Tosca_Parsing(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self._orchestrator = Orchestrator()
-        self._docker = Docker_interface()
+        self._orchestrator = Orchestrator(
+            # log_handler=helper.get_consol_handler()
+        )
 
     def test_no_dag(self):
         self.assertFalse(
@@ -25,30 +27,6 @@ class Test_Tosca_Parsing(unittest.TestCase):
             self._orchestrator.orchestrate(
                 'tosker/tests/TOSCA/wordpress.yaml', [], ['no_compent'], {})
         )
-
-    def test_orchestraion_error(self):
-        self.assertFalse(
-            self._orchestrator.orchestrate(
-                'tosker/tests/TOSCA/hello.yaml',
-                ['create', 'create'])
-        )
-
-        for c in self._orchestrator._tpl.container_order:
-            self.assertIsNotNone(
-                self._docker.inspect(c.name)
-            )
-
-        self.assertFalse(
-            self._orchestrator.orchestrate(
-                'tosker/tests/TOSCA/hello.yaml',
-                ['delete', 'delete'])
-        )
-
-        for c in self._orchestrator._tpl.container_order:
-            self.assertIsNone(
-                self._docker.inspect(c.name)
-            )
-
 
 if __name__ == '__main__':
     unittest.main()

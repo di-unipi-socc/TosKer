@@ -7,8 +7,8 @@ class Test_Wordpress(Test_Orchestrator):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.orchestrator._parse('tosker/tests/TOSCA/wordpress.yaml',
-                                inputs={'wp_host_port': 9000})
+        self.file = 'tosker/tests/TOSCA/wordpress.yaml'
+        self.inputs = {'wp_host_port': 9000}
 
     def test(self):
         self.create()
