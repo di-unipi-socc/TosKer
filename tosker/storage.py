@@ -2,7 +2,9 @@ import six
 from functools import wraps, reduce
 from enum import Enum
 from tinydb import TinyDB, Query
+
 from .graph.nodes import Root
+from .helper import Logger
 
 
 class Storage:
@@ -63,21 +65,42 @@ class Memory(Storage):
 
     @staticmethod
     def update_state(comp, state):
-        assert isinstance(comp, (dict, Root)) and state in Memory.STATE
-        if isinstance(comp, Root):
-            comp = Memory._comp_to_dict(comp)
+        assert state in Memory.STATE
 
-        if (state == Memory.STATE.DELETED):
-            Memory.remove(Query().full_name == comp['full_name'])
-        else:
-            if len(Memory.update({'state': state.value},
-                                 Query().full_name == comp['full_name'])) < 1:
+        def _update_state(full_name, state):
+            log = Logger.get(__name__)
+            log.debug('update {} to {}'.format(full_name, state))
+            if (state == Memory.STATE.DELETED):
+                return Memory.remove(Query().full_name == full_name)
+            else:
+                return Memory.update({'state': state.value},
+                                     Query().full_name == full_name)
+
+        if isinstance(comp, six.string_types):
+            _update_state(comp, state)
+        elif isinstance(comp, dict):
+            res = _update_state(comp['full_name'], state)
+            if len(res) < 1:
                 # comp not found
                 comp['state'] = state.value
                 Memory.insert(comp)
-            else:
-                # comp updated
-                pass
+        elif isinstance(comp, Root):
+            res = _update_state(comp.full_name, state)
+            if len(res) < 1:
+                # comp not found
+                comp_dict = Memory._comp_to_dict(comp)
+                comp_dict['state'] = state.value
+                Memory.insert(comp_dict)
+        else:
+            raise AssertionError()
+
+    @staticmethod
+    def insert(comp):
+        assert isinstance(comp, (dict, Root))
+        if isinstance(comp, Root):
+            comp = Memory._comp_to_dict(comp)
+
+        return Storage.insert(comp)
 
     @staticmethod
     def get_comp_state(comp):

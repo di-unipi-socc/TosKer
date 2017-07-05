@@ -7,7 +7,7 @@ import traceback
 import threading
 import time
 from os import path
-
+from glob import glob
 from termcolor import colored
 from functools import wraps
 from tabulate import tabulate
@@ -40,7 +40,7 @@ class Orchestrator:
     def __init__(self,
                  log_handler=logging.NullHandler(),
                  quiet=True,
-                 tmp_dir='/tmp/tosker/',
+                 tmp_dir='/tmp/tosker',
                  data_dir='/tmp/tosker'):  # TODO: use /usr/lib/tokser instead
         Logger.set(log_handler, quiet)
         self._log = Logger.get(__name__)
@@ -55,7 +55,7 @@ class Orchestrator:
         Memory.set_db(data_dir)
 
         status, faulty = self._update_state()
-        Logger.println('update memory {}.'.format(
+        Logger.println('update memory {} {}'.format(
             'ok' if status else 'fixed',
             '({})'.format(', '.join(faulty)) if not status else ''))
 
@@ -70,7 +70,8 @@ class Orchestrator:
 
         # Check if inputs components exists in the TOSCA file
         if not self._components_exists(tpl, components):
-            raise Exception('ERROR: a selected component do not exists')
+            Logger.println('ERROR: a selected component do not exists')
+            return False
 
         # Create temporany directory
         tpl.tmp_dir = path.join(self._tmp_dir, tpl.name)
@@ -156,6 +157,7 @@ class Orchestrator:
             else:
                 self._print_cross('the components must be created first')
                 self._log.info('{} have to be created first'.format(node))
+                break
 
     @_filter_components(Container, Software)
     def _stop(self, components, tpl):
@@ -191,14 +193,15 @@ class Orchestrator:
             elif Memory.STATE.STARTED == status:
                 self._print_cross('The component must be stopped first')
                 self._log.info('{} have to be stopped first'.format(node))
+                break
             else:
                 self._print_skip()
                 self._log.info('skipped already deleted')
-
-        self._print_loading_start('Delete network... ')
-        docker_interface.delete_network(tpl.name)
-        self._print_tick()
-        shutil.rmtree(self._tmp_dir)
+        else:
+            self._print_loading_start('Delete network... ')
+            docker_interface.delete_network(tpl.name)
+            self._print_tick()
+            shutil.rmtree(tpl.tmp_dir)
 
     def ls_components(self, app=None, filters={}):
         comps = Memory.get_comps(app, filters)
@@ -230,25 +233,52 @@ class Orchestrator:
             errors.append(comp['full_name'])
             Memory.update_state(comp, state)
 
-        for c in Memory.get_comps():
-            if 'Container' == c['type']:
+        def manage_error_container(comp, state):
+            manage_error(comp, state)
+            path = os.path.join(self._tmp_dir, comp['app_name'], comp['name'])
+
+            software = [(f.name, f.path) for f in os.scandir(path) if f.is_dir()]
+            self._log.debug('path {} found {}'.format(path, software))
+
+            for s, s_path in software:
+                full_name = '{}.{}'.format(comp['app_name'], s)
+                Memory.update_state('{}.{}'.format(comp['app_name'], s), state)
+                # with open(os.path.join(s_path, 'state'), 'w') as f:
+                #     f.write(state.value)
+                try:
+                    os.remove(os.path.join(s_path, 'state'))
+                except FileNotFoundError:
+                    pass
+                errors.append(full_name)
+
+        for c in Memory.get_comps(filters={'type': 'Software'}):
+            state = glob('{}/{}/*/{}/state'.format(self._tmp_dir,
+                                                   c['app_name'],
+                                                   c['name']))
+            self._log.debug('software update {}'.format(state))
+
+            if len(state) == 1:
+                with open(state[0], 'r') as f:
+                    state = f.read().replace('\n', '')
+                if state != c['state']:
+                    manage_error(c, Memory.STATE(state))
+
+        for c in Memory.get_comps(filters={'type': 'Container'}):
                 status = docker_interface.inspect_container(c['full_name'])
                 if status is not None:
                     if c['state'] == Memory.STATE.CREATED.value and \
                        status['State']['Running'] is not False:
-                        manage_error(c, Memory.STATE.STARTED)
+                        manage_error_container(c, Memory.STATE.STARTED)
                     if c['state'] == Memory.STATE.STARTED.value and\
                        status['State']['Running'] is not True:
-                        manage_error(c, Memory.STATE.CREATED)
+                        manage_error_container(c, Memory.STATE.CREATED)
                 else:
-                    manage_error(c, Memory.STATE.DELETED)
-            elif 'Volume' == c['type']:
+                    manage_error_container(c, Memory.STATE.DELETED)
+
+        for c in Memory.get_comps(filters={'type': 'Volume'}):
                 status = docker_interface.inspect_volume(c['full_name'])
                 if status is None:
                     manage_error(c, Memory.STATE.DELETED)
-            elif 'Software' == c['type']:
-                # TODO: find a way to check software status
-                pass
 
         return len(errors) == 0, errors
 
@@ -306,6 +336,7 @@ class Orchestrator:
 
         def visit(n):
             if n._mark == 'temp':
+                self._log.debug('no dag')
                 raise Exception('ERROR: the TOSCA file is not a DAG')
             elif n._mark == '':
                 n._mark = 'temp'
@@ -343,7 +374,7 @@ class Orchestrator:
             while getattr(t, "do_run", True):
                 Logger.print_("\r{} {}".format(msg, s[i % len(s)]))
                 i += 1
-                time.sleep(0.1)
+                # time.sleep(0.1)
             Logger.print_("\r{}".format(msg))
 
         self._loading_thread = threading.Thread(target=loading, args=(msg,))
