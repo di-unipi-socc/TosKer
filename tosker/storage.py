@@ -63,17 +63,18 @@ class Memory(Storage):
 
     @staticmethod
     def update_state(comp, state):
-        assert isinstance(comp, Root) and state in Memory.STATE
+        assert isinstance(comp, (dict, Root)) and state in Memory.STATE
+        if isinstance(comp, Root):
+            comp = Memory._comp_to_dict(comp)
 
         if (state == Memory.STATE.DELETED):
-            Memory.remove(Query().full_name == comp.full_name)
+            Memory.remove(Query().full_name == comp['full_name'])
         else:
             if len(Memory.update({'state': state.value},
-                                 Query().full_name == comp.full_name)) < 1:
+                                 Query().full_name == comp['full_name'])) < 1:
                 # comp not found
-                comp_dict = Memory._comp_to_dict(comp)
-                comp_dict['state'] = state.value
-                Memory.insert(comp_dict)
+                comp['state'] = state.value
+                Memory.insert(comp)
             else:
                 # comp updated
                 pass

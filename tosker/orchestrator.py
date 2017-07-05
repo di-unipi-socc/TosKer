@@ -54,6 +54,11 @@ class Orchestrator:
             self._log.info(e)
         Memory.set_db(data_dir)
 
+        status, faulty = self._update_state()
+        Logger.println('update memory {}.'.format(
+            'ok' if status else 'fixed',
+            '({})'.format(', '.join(faulty)) if not status else ''))
+
     def orchestrate(self, file_path, commands, components=[], inputs={}):
         # Parse TOSCA file
         try:
@@ -217,6 +222,35 @@ class Orchestrator:
             value = out.value if isinstance(out.value, six.string_types) \
                 else helper.get_attributes(out.value.args, tpl)
             Logger.println('  - ' + out.name + ":", value)
+
+    def _update_state(self):
+        errors = []
+
+        def manage_error(comp, state):
+            errors.append(comp['full_name'])
+            Memory.update_state(comp, state)
+
+        for c in Memory.get_comps():
+            if 'Container' == c['type']:
+                status = docker_interface.inspect_container(c['full_name'])
+                if status is not None:
+                    if c['state'] == Memory.STATE.CREATED.value and \
+                       status['State']['Running'] is not False:
+                        manage_error(c, Memory.STATE.STARTED)
+                    if c['state'] == Memory.STATE.STARTED.value and\
+                       status['State']['Running'] is not True:
+                        manage_error(c, Memory.STATE.CREATED)
+                else:
+                    manage_error(c, Memory.STATE.DELETED)
+            elif 'Volume' == c['type']:
+                status = docker_interface.inspect_volume(c['full_name'])
+                if status is None:
+                    manage_error(c, Memory.STATE.DELETED)
+            elif 'Software' == c['type']:
+                # TODO: find a way to check software status
+                pass
+
+        return len(errors) == 0, errors
 
     def _components_exists(self, tpl, components):
         for c in components:
