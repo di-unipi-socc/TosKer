@@ -18,14 +18,14 @@ class Test_Storage(unittest.TestCase):
         os.remove('/tmp/db.json')
 
     def test_storage_insert(self):
-        res = Storage.insert({'name':'hello'})
+        res = Storage.insert({'name': 'hello'})
         res = Storage.search(Query().name == 'hello')
         self.assertEqual(len(res), 1)
 
     def test_storage_update(self):
         self.test_storage_insert()
 
-        res = Storage.update({'name':'hello2'}, Query().name == 'hello')
+        res = Storage.update({'name': 'hello2'}, Query().name == 'hello')
         self.assertEqual(len(res), 1)
 
         res = Storage.search(Query().name == 'hello2')
@@ -36,7 +36,6 @@ class Test_Storage(unittest.TestCase):
 
         res = Storage.all()
         self.assertEqual(len(res), 1)
-
 
     def test_memory_update_state(self):
         cont = Container('container_test')
@@ -76,8 +75,10 @@ class Test_Storage(unittest.TestCase):
 
         comps = Memory.get_comps(state=Memory.STATE.CREATED)
         self.assertEqual(len(comps), 1)
-        self.assertEqual(comps[0]['full_name'], 'template_test.container_test1')
+        self.assertEqual(comps[0]['full_name'],
+                         'template_test.container_test1')
 
         comps = Memory.get_comps(state=Memory.STATE.STARTED)
         self.assertEqual(len(comps), 1)
-        self.assertEqual(comps[0]['full_name'], 'template_test.container_test2')
+        self.assertEqual(comps[0]['full_name'],
+                         'template_test.container_test2')

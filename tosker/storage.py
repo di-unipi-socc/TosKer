@@ -1,4 +1,5 @@
-from functools import wraps
+import six
+from functools import wraps, reduce
 from enum import Enum
 from tinydb import TinyDB, Query
 from .graph.nodes import Root
@@ -8,8 +9,10 @@ class Storage:
     def _singleton(func):
         @wraps(func)
         def func_wrapper(*args, **kwds):
-            assert Storage.db is not None
-            return func(*args, **kwds)
+            if Storage.db is not None:
+                return func(*args, **kwds)
+            else:
+                raise Exception('First call "set_db" method')
         return func_wrapper
 
     @staticmethod
@@ -42,12 +45,13 @@ class Storage:
         return Storage.db.all()
 
 
-class Memory:
+class Memory(Storage):
     class STATE(Enum):
         DELETED = 'deleted'
         CREATED = 'created'
         STARTED = 'started'
 
+    @staticmethod
     def _comp_to_dict(comp):
         return {
             'name': comp.name,
@@ -62,14 +66,14 @@ class Memory:
         assert isinstance(comp, Root) and state in Memory.STATE
 
         if (state == Memory.STATE.DELETED):
-            Storage.remove(Query().full_name == comp.full_name)
+            Memory.remove(Query().full_name == comp.full_name)
         else:
-            if len(Storage.update({'state': state.value},
-                                  Query().full_name == comp.full_name)) < 1:
+            if len(Memory.update({'state': state.value},
+                                 Query().full_name == comp.full_name)) < 1:
                 # comp not found
                 comp_dict = Memory._comp_to_dict(comp)
                 comp_dict['state'] = state.value
-                Storage.insert(comp_dict)
+                Memory.insert(comp_dict)
             else:
                 # comp updated
                 pass
@@ -77,14 +81,21 @@ class Memory:
     @staticmethod
     def get_comp_state(comp):
         assert isinstance(comp, Root)
-        res = Storage.search(Query().full_name == comp.full_name)
+        res = Memory.search(Query().full_name == comp.full_name)
         return Memory.STATE(res[0]['state']) \
             if len(res) == 1 else Memory.STATE.DELETED
 
     @staticmethod
-    def get_comps(state=None):
-        if state is None:
-            return Storage.all()
+    def get_comps(app_name=None, filters={}):
+        queries = []
+        for k, v in filters.items():
+            queries.append(Query()[k] == v)
+
+        if app_name is not None:
+            queries.append(Query()['app_name'] == app_name)
+
+        if len(queries) > 0:
+            cond = reduce(lambda a, b: a & b, queries)
+            return Memory.search(cond)
         else:
-            assert state in Memory.STATE
-            return Storage.search(Query().state == state.value)
+            return Memory.all()

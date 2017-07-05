@@ -7,6 +7,7 @@ from sys import argv
 
 from six import print_
 
+from .storage import Memory
 from .orchestrator import Orchestrator
 from .helper import Logger
 from . import helper
@@ -16,6 +17,7 @@ from . import __version__
 def _usage():
     return '''
 Usage: tosker FILE [COMPONENTS...] COMMANDS...  [OPTIONS] [INPUTS]
+       tosker ls [APPLICATION] [FILTES]
        tosker -h|--help
        tosker -v|--version
 Orchestrate TOSCA applications on top of Docker.
@@ -38,16 +40,22 @@ OPTIONS:
 
 INPUTS: provide TOSCA inputs (syntax: --NAME VALUE)
 
-Examples:
-  tosker hello.yaml create --name mario
-  tosker hello.yaml start -q
-  tosker hello.yaml stop --debuug
-  tosker hello.yaml delete
+FILTER:
+  --name <name>    filter by the component name
+  --state <state>  filter by the state (created, started, deleted)
+  --type <type>    filter by the type (Container, Volume, Software)
 
+APPLICATION: the application name (CSAR or YAML file without the extension)
+
+Examples:
   tosker hello.yaml create start --name mario
   tosker hello.yaml stop delete -q
 
   tosker hello.yaml database api create start
+
+  tosker ls
+  tosker ls hello
+  tosker ls hello --type Software --state started
 '''
 
 
@@ -70,6 +78,7 @@ def _parse_unix_input(args):
     comps = []
     flags = {}
     file = ''
+    mod = ''
     error = None
     p1 = re.compile('--.*')
     p2 = re.compile('-.?')
@@ -91,20 +100,26 @@ def _parse_unix_input(args):
                 flags[_FLAG[args[i]]] = True
             else:
                 error = 'known parameter.'
-        elif args[i] and file:
-            if args[i] in _CMD:
-                cmds.append(args[i])
-            elif len(cmds) == 0:
-                comps.append(args[i])
-            else:
-                error = '{} is not a valid command.'.format(args[i])
+        elif mod == 'deploy':
+                if args[i] in _CMD:
+                    cmds.append(args[i])
+                elif len(cmds) == 0:
+                    comps.append(args[i])
+                else:
+                    error = '{} is not a valid command.'.format(args[i])
+        elif mod == 'ls':
+            comps.append(args[i])
         elif i == 0:
             file = _check_file(args[i])
-            if file is None:
+            if file is not None:
+                mod = 'deploy'
+            elif args[i] == 'ls':
+                mod = 'ls'
+            else:
                 error = ('first argument must be a TOSCA yaml file, a CSAR or '
                          'a ZIP archive.')
         i += 1
-    return error, file, cmds, comps, flags, inputs
+    return error, mod, file, cmds, comps, flags, inputs
 
 
 def _check_file(file):
@@ -124,7 +139,8 @@ def run():
     if len(argv) < 2:
         _error('few arguments.', '\n', _usage())
 
-    error, file, cmds, comps, flags, inputs = _parse_unix_input(argv[1:])
+    error, mod, file, cmds, comps, flags, inputs = _parse_unix_input(argv[1:])
+
     if error is not None:
         _error(error)
 
@@ -140,4 +156,13 @@ def run():
                                     quiet=False)
     else:
         orchestrator = Orchestrator(quiet=flags.get('quiet', False))
-    orchestrator.orchestrate(file, cmds, comps, inputs)
+
+    if mod == 'deploy':
+        orchestrator.orchestrate(file, cmds, comps, inputs)
+    elif mod == 'ls':
+        if len(comps) > 1:
+            _error('too many arguments, ls take an "application name"'
+                   'and a "state"')
+        else:
+            app = comps[0] if len(comps) != 0 else None
+            orchestrator.ls_components(app, inputs)
