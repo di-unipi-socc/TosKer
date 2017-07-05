@@ -11,8 +11,6 @@ from .graph.nodes import Container, Volume, Root
 from .graph.artifacts import Dockerfile
 from .helper import Logger
 
-
-_log = Logger.get(__name__)
 _cli = None
 
 
@@ -59,6 +57,8 @@ def create_container(_cli,
                      entrypoint=None,
                      from_saved=False,
                      force=False):
+    _log = Logger.get(__name__)
+
     def create():
         tmp_dir = _get_tmp_dir(con)
         try:
@@ -73,7 +73,7 @@ def create_container(_cli,
             if inspect_image(saved_image):
                 img_name = saved_image
 
-        _log.debug('container: {}'.format(con.get_str_obj()))
+        # _log.debug('container: {}'.format(con.get_str_obj()))
 
         con.id = _cli.create_container(
             name=con.full_name,
@@ -113,11 +113,11 @@ def create_container(_cli,
     try:
         create()
     except errors.APIError as e:
-        _log.debug(e)
         if force:
             delete_container(con)
             create()
         else:
+            _log.debug(e)
             raise e
 
 
@@ -129,6 +129,7 @@ def create_container(_cli,
 @_get_name
 @_inject_docker_cli
 def stop_container(_cli, name):
+    _log = Logger.get(__name__)
     try:
         _cli.stop(name)
     except errors.NotFound as e:
@@ -139,6 +140,7 @@ def stop_container(_cli, name):
 @_get_name
 @_inject_docker_cli
 def start_container(_cli, name, wait=False):
+    _log = Logger.get(__name__)
     try:
         _cli.start(name)
         if wait:
@@ -148,6 +150,7 @@ def start_container(_cli, name, wait=False):
                 _cli.logs(name, stream=True),
                 _log.debug
             )
+            _log.debug('end wait container..')
     except errors.NotFound as e:
         _log.error(e)
         raise e
@@ -156,6 +159,7 @@ def start_container(_cli, name, wait=False):
 @_get_name
 @_inject_docker_cli
 def delete_container(_cli, name):
+    _log = Logger.get(__name__)
     try:
         _cli.remove_container(name, v=True)
     except (errors.NotFound, errors.APIError) as e:
@@ -166,6 +170,7 @@ def delete_container(_cli, name):
 @_get_name
 @_inject_docker_cli
 def exec_cmd(_cli, name, cmd):
+    _log = Logger.get(__name__)
     if not is_running(name):
         raise e
     try:
@@ -201,6 +206,7 @@ def build_image(_cli, node):
 @_inject_docker_cli
 def create_volume(_cli, volume):
     assert isinstance(volume, Volume)
+    _log = Logger.get(__name__)
     _log.debug('volume opt: {}'.format(volume.get_all_opt()))
     return _cli.create_volume(
         volume.full_name, 'local', volume.get_all_opt()
@@ -270,6 +276,7 @@ def remove_all_volumes():
 
 @_inject_docker_cli
 def create_network(_cli, name, subnet='172.25.0.0/16'):
+    _log = Logger.get(__name__)
     # docker network create -d bridge --subnet 172.25.0.0/16 isolated_nw
     # self.delete_network(name)
     try:
@@ -284,6 +291,7 @@ def create_network(_cli, name, subnet='172.25.0.0/16'):
 @_inject_docker_cli
 def delete_network(_cli, name):
     assert isinstance(name, six.string_types)
+    _log = Logger.get(__name__)
     try:
         _cli.remove_network(_get_app_name(name))
     except errors.APIError:
@@ -333,6 +341,7 @@ def update_container(_cli, node, cmd):
 
 
 def is_running(container):
+    _log = Logger.get(__name__)
     stat = inspect_container(container)
     stat = stat is not None and stat['State']['Running'] is True
     _log.debug('State: {}'.format(stat))

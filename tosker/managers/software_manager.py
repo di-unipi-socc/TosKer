@@ -6,6 +6,7 @@ from functools import wraps
 from ..graph.nodes import Software
 from ..graph.artifacts import File
 from ..helper import Logger
+from ..storage import Memory
 from .. import docker_interface
 
 
@@ -22,11 +23,6 @@ def _get_cmd(interface, force_exec=False):
 
 class Software_manager:
 
-    _log = Logger.get(__name__)
-    # def __init__(self):
-    #     self._log = Logger.get(__name__)
-    #     # docker_interface = docker
-
     @staticmethod
     @_get_cmd('create', force_exec=True)
     def create(cmd, node):
@@ -42,10 +38,11 @@ class Software_manager:
     @staticmethod
     @_get_cmd('start')
     def start(cmd, node):
+        _log = Logger.get(__name__)
         try:
             docker_interface.exec_cmd(node.host_container, cmd)
         except Exception as e:
-            Software_manager._log.debug('is not running!')
+            _log.debug('is not running!')
             # docker_interface.delete_container(node.host_container)
             docker_interface.create_container(node.host_container,
                                               cmd=cmd,
@@ -57,14 +54,16 @@ class Software_manager:
     @staticmethod
     @_get_cmd('stop')
     def stop(cmd, node):
+        _log = Logger.get(__name__)
         if docker_interface.is_running(node.host_container):
-            Software_manager._log.debug('exec stop command!')
+            _log.debug('exec stop command!')
             docker_interface.exec_cmd(node.host_container, cmd)
 
     @staticmethod
     @_get_cmd('delete')
     def delete(cmd, node):
-        Software_manager._log.debug('exec delete command!')
+        _log = Logger.get(__name__)
+        _log.debug('exec delete command!')
         docker_interface.update_container(node.host_container, cmd)
 
     @staticmethod
@@ -90,35 +89,68 @@ class Software_manager:
 
     @staticmethod
     def _get_cmd_args(node, interface):
-        def _get_inside_path(p):
-            return path.join('/tmp/dt/', node.name, p.file)
+        _log = Logger.get(__name__)
+
+        def get_inside_path(p):
+            if isinstance(p, File):
+                p = p.file
+            return path.join('/tmp/dt/', node.name, p)
+
+        def get_cmd():
+            def get_echo(string, where):
+                return 'echo {} > {}'.format(string, where)
+
+            def set_in_state():
+                if interface == 'start':
+                    return get_echo(Memory.STATE.STARTED.value,
+                                    get_inside_path('state')) + ';'
+                return ''
+
+            def set_out_state():
+                if interface == 'create':
+                    return ';' + get_echo(Memory.STATE.CREATED.value,
+                                          get_inside_path('state'))
+                elif interface == 'start':
+                    return ';' + get_echo(Memory.STATE.CREATED.value,
+                                          get_inside_path('state'))
+                elif interface == 'stop':
+                    return ';' + get_echo(Memory.STATE.CREATED.value,
+                                          get_inside_path('state'))
+                elif interface == 'delete':
+                    return ';' + get_echo(Memory.STATE.DELETED.value,
+                                          get_inside_path('state'))
+                return ''
+
+            return '{}sh {}{}'.format(
+                set_in_state(),
+                get_inside_path(node.interfaces[interface]['cmd']),
+                set_out_state()
+            )
 
         if interface not in node.interfaces:
             return None
-        Software_manager._log.debug('interface: {}'
-                                    ''.format(node.interfaces[interface]))
+        _log.debug('interface: {}'
+                   ''.format(node.interfaces[interface]))
         args = []
         args_env = []
         res = None
         if 'inputs' in node.interfaces[interface]:
             for key, value in node.interfaces[interface]['inputs'].items():
                 if isinstance(value, File):
-                    value = _get_inside_path(value)
+                    value = get_inside_path(value)
                 args.append('--{} {}'.format(key, value))
                 args_env.append(
                     'export INPUT_{}={}'.format(key.upper(), value))
 
-            res = 'sh -c \'{};sh {} {}\''.format(
+            res = "sh -c '{};{}'".format(
                 ';'.join(args_env),
-                _get_inside_path(node.interfaces[interface]['cmd']),
-                ' '.join(args)
+                get_cmd()  # ,
+                # ' '.join(args)
             )
         else:
-            res = 'sh {}'.format(
-                _get_inside_path(node.interfaces[interface]['cmd']),
-            )
+            res = "sh -c '{}'".format(get_cmd())
 
-        Software_manager._log.debug('{} command ({}) on container {}'
-                                    ''.format(interface, res,
-                                              node.host_container))
+        _log.debug('{} command ({}) on container {}'
+                   ''.format(interface, res,
+                             node.host_container))
         return res

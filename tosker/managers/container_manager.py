@@ -6,12 +6,6 @@ from .. import docker_interface
 
 class Container_manager:
 
-    # def __init__(self):
-    #     self._log = Logger.get(__name__)
-        # docker_interface = docker
-
-    _log = Logger.get(__name__)
-
     @staticmethod
     def create(node):
         assert isinstance(node, Container)
