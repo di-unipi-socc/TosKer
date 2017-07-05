@@ -8,6 +8,7 @@ class Template:
         self._nodes = {}
         self.name = name
         self.outputs = []
+        self.tmp_dir = None
 
     @property
     def nodes(self):

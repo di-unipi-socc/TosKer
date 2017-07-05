@@ -6,63 +6,71 @@ from functools import wraps
 from ..graph.nodes import Software
 from ..graph.artifacts import File
 from ..helper import Logger
+from .. import docker_interface
 
 
 def _get_cmd(interface, force_exec=False):
     def _get_cmd_decorator(func):
         @wraps(func)
-        def func_wrapper(self, *args):
+        def func_wrapper(*args):
             assert isinstance(args[0], Software)
-            cmd = self._get_cmd_args(args[0], interface)
-            return func(self, cmd, *args) if cmd or force_exec else None
+            cmd = Software_manager._get_cmd_args(args[0], interface)
+            return func(cmd, *args) if cmd or force_exec else None
         return func_wrapper
     return _get_cmd_decorator
 
 
 class Software_manager:
 
-    def __init__(self, docker):
-        self._log = Logger.get(__name__)
-        self._docker = docker
+    _log = Logger.get(__name__)
+    # def __init__(self):
+    #     self._log = Logger.get(__name__)
+    #     # docker_interface = docker
 
+    @staticmethod
     @_get_cmd('create', force_exec=True)
-    def create(self, cmd, node):
-        self._copy_files(node)
+    def create(cmd, node):
+        Software_manager._copy_files(node)
         if cmd is not None:
-            self._docker.update_container(node.host_container, cmd)
+            docker_interface.update_container(node.host_container, cmd)
 
+    @staticmethod
     @_get_cmd('configure')
-    def configure(self, cmd, node):
-        self._docker.update_container(node.host_container, cmd)
+    def configure(cmd, node):
+        docker_interface.update_container(node.host_container, cmd)
 
+    @staticmethod
     @_get_cmd('start')
-    def start(self, cmd, node):
+    def start(cmd, node):
         try:
-            self._docker.exec_cmd(node.host_container, cmd)
+            docker_interface.exec_cmd(node.host_container, cmd)
         except Exception as e:
-            self._log.debug('is not running!')
-            # self._docker.delete_container(node.host_container)
-            self._docker.create_container(node.host_container,
-                                          cmd=cmd,
-                                          entrypoint='',
-                                          from_saved=True,
-                                          force=True)
-            self._docker.start_container(node.host_container)
+            Software_manager._log.debug('is not running!')
+            # docker_interface.delete_container(node.host_container)
+            docker_interface.create_container(node.host_container,
+                                              cmd=cmd,
+                                              entrypoint='',
+                                              from_saved=True,
+                                              force=True)
+            docker_interface.start_container(node.host_container)
 
+    @staticmethod
     @_get_cmd('stop')
-    def stop(self, cmd, node):
-        if self._docker.is_running(node.host_container):
-            self._log.debug('exec stop command!')
-            self._docker.exec_cmd(node.host_container, cmd)
+    def stop(cmd, node):
+        if docker_interface.is_running(node.host_container):
+            Software_manager._log.debug('exec stop command!')
+            docker_interface.exec_cmd(node.host_container, cmd)
 
+    @staticmethod
     @_get_cmd('delete')
-    def delete(self, cmd, node):
-        self._log.debug('exec delete command!')
-        self._docker.update_container(node.host_container, cmd)
+    def delete(cmd, node):
+        Software_manager._log.debug('exec delete command!')
+        docker_interface.update_container(node.host_container, cmd)
 
-    def _copy_files(self, node):
+    @staticmethod
+    def _copy_files(node):
         # generate path for the tmp folder
-        tmp = path.join(self._docker.tmp_dir,
+        tmp = path.join(node.tpl.tmp_dir,
                         node.host_container.name,
                         node.name)
 
@@ -80,13 +88,15 @@ class Software_manager:
         for art in node.artifacts:
             copy(art.file_path, tmp)
 
-    def _get_cmd_args(self, node, interface):
+    @staticmethod
+    def _get_cmd_args(node, interface):
         def _get_inside_path(p):
             return path.join('/tmp/dt/', node.name, p.file)
 
         if interface not in node.interfaces:
             return None
-        self._log.debug('interface: {}'.format(node.interfaces[interface]))
+        Software_manager._log.debug('interface: {}'
+                                    ''.format(node.interfaces[interface]))
         args = []
         args_env = []
         res = None
@@ -108,6 +118,7 @@ class Software_manager:
                 _get_inside_path(node.interfaces[interface]['cmd']),
             )
 
-        self._log.debug('{} command ({}) on container {}'
-                        .format(interface, res, node.host_container))
+        Software_manager._log.debug('{} command ({}) on container {}'
+                                    ''.format(interface, res,
+                                              node.host_container))
         return res

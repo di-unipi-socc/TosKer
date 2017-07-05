@@ -1,17 +1,21 @@
 from ..helper import Logger
 from ..graph.nodes import Volume
+from .. import docker_interface
 
 
 class Volume_manager:
 
-    def __init__(self, docker):
-        self._log = Logger.get(__name__)
-        self._docker = docker
+    _log = Logger.get(__name__)
+    # def __init__(self):
+    #     self._log = Logger.get(__name__)
+    #     # self._docker = docker
 
-    def create(self, node):
+    @staticmethod
+    def create(node):
         assert isinstance(node, Volume)
-        self._docker.create_volume(node)
+        docker_interface.create_volume(node)
 
+    # @staticmethod
     # def delete(self, node):
     #     assert isinstance(node, Volume)
-    #     self._docker.delete_volume(node)
+    #     docker_interface.delete_volume(node)

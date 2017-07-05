@@ -1,40 +1,47 @@
 from ..helper import Logger
 from ..graph.nodes import Container
 from ..graph.artifacts import Dockerfile
+from .. import docker_interface
 
 
 class Container_manager:
 
-    def __init__(self, docker):
-        self._log = Logger.get(__name__)
-        self._docker = docker
+    # def __init__(self):
+    #     self._log = Logger.get(__name__)
+        # docker_interface = docker
 
-    def create(self, node):
+    _log = Logger.get(__name__)
+
+    @staticmethod
+    def create(node):
         assert isinstance(node, Container)
         # if node.executable:
-        self._docker.create_container(node)
+        docker_interface.create_container(node)
         # else:
         #     if isinstance(node.image, Dockerfile):
-        #         self._docker.build_image(node)
+        #         docker_interface.build_image(node)
         #     else:
-        #         self._docker.pull_image(node.image.format)
+        #         docker_interface.pull_image(node.image.format)
 
-    def start(self, node):
+    @staticmethod
+    def start(node):
         assert isinstance(node, Container)
         if not node.executable:
             return
-        stat = self._docker.inspect_container(node)
+        stat = docker_interface.inspect_container(node)
         if stat is not None:
             node.id = stat['Id']
-            self._docker.start_container(node)
+            docker_interface.start_container(node)
 
-    def stop(self, node):
+    @staticmethod
+    def stop(node):
         assert isinstance(node, Container)
-        self._docker.stop_container(node)
-        # self._docker.delete_container(node)
-        self._docker.create_container(node, from_saved=True, force=True)
+        docker_interface.stop_container(node)
+        # docker_interface.delete_container(node)
+        docker_interface.create_container(node, from_saved=True, force=True)
 
-    def delete(self, node):
+    @staticmethod
+    def delete(node):
         assert isinstance(node, Container)
-        self._docker.delete_container(node)
-        self._docker.delete_image(self._docker.get_saved_image(node))
+        docker_interface.delete_container(node)
+        docker_interface.delete_image(docker_interface.get_saved_image(node))
