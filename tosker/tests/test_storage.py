@@ -79,7 +79,7 @@ class Test_Storage(unittest.TestCase):
         self.assertEqual(comps[0]['full_name'],
                          'template_test.container_test1')
 
-        comps = Memory.get_comps(state=Memory.STATE.STARTED)
+        comps = Memory.get_comps(filters={'state': Memory.STATE.STARTED})
         self.assertEqual(len(comps), 1)
         self.assertEqual(comps[0]['full_name'],
                          'template_test.container_test2')

@@ -40,7 +40,7 @@ class Test_Orchestrator(unittest.TestCase):
     def _start(self, check):
         self.orchestrator.orchestrate(self.file, ['start'])
         for c in self.get_tpl().containers:
-            stat = docker.inspect_containers(c)
+            stat = docker.inspect_container(c)
             # print('DEBUG: ', stat)
             self.assertIsNotNone(stat)
             self.assertTrue(check(stat))
@@ -53,7 +53,7 @@ class Test_Orchestrator(unittest.TestCase):
     def stop(self):
         self.orchestrator.orchestrate(self.file, ['stop'])
         for c in self.get_tpl().containers:
-            stat = docker.inspect_containers(c)
+            stat = docker.inspect_container(c)
             # print('DEBUG: ', stat)
             self.assertIsNotNone(stat)
             self.assertFalse(stat['State']['Running'])

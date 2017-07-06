@@ -113,6 +113,8 @@ class Memory(Storage):
     def get_comps(app_name=None, filters={}):
         queries = []
         for k, v in filters.items():
+            if isinstance(v, Memory.STATE):
+                v = v.value
             queries.append(Query()[k] == v)
 
         if app_name is not None:

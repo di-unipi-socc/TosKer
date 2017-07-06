@@ -1,6 +1,5 @@
 import unittest
 from tosker.orchestrator import Orchestrator
-from tosker import docker_interface as docker
 from tosker import helper
 
 
@@ -13,7 +12,8 @@ class Test_Tosca_Parsing(unittest.TestCase):
 
     def test_no_dag(self):
         self.assertFalse(
-            self._orchestrator.orchestrate('tosker/tests/TOSCA/nodag.yaml', [])
+            self._orchestrator.orchestrate('tosker/tests/TOSCA/nodag.yaml',
+                                           ['create'])
         )
 
     def test_wrong_type(self):
@@ -27,6 +27,7 @@ class Test_Tosca_Parsing(unittest.TestCase):
             self._orchestrator.orchestrate(
                 'tosker/tests/TOSCA/wordpress.yaml', [], ['no_compent'], {})
         )
+
 
 if __name__ == '__main__':
     unittest.main()
