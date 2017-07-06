@@ -374,7 +374,7 @@ class Orchestrator:
             while getattr(t, "do_run", True):
                 Logger.print_("\r{} {}".format(msg, s[i % len(s)]))
                 i += 1
-                # time.sleep(0.1)
+                time.sleep(0.1)
             Logger.print_("\r{}".format(msg))
 
         self._loading_thread = threading.Thread(target=loading, args=(msg,))

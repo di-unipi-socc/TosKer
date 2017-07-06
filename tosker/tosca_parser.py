@@ -256,11 +256,20 @@ def _add_back_links(tpl):
 def _add_extension(tpl):
     # Add the host_container property
     for node in tpl.software:
-        if node.host is not None:
-            if isinstance(node.host.to, Container):
-                node.host_container = node.host.to
-            elif isinstance(node.host.to, Software):
-                node.host_container = node.host.to.host_container
+        def find_container(node):
+            if isinstance(node, Container):
+                return node
+            elif node.host_container is not None:
+                return node.host_container
+            elif node.host is None:
+                raise Exception('Software component must have the "host"'
+                                'requirements')
+            else:
+                return find_container(node.host.to)
+
+        node.host_container = find_container(node)
+        _log.debug('{} .host {}, .host_container {}'
+                   ''.format(node, node.host.to, node.host_container))
 
     # Manage the case when a Software is connected
     # to a Container or a Software
@@ -270,6 +279,7 @@ def _add_extension(tpl):
                 container = con.to
             if isinstance(con.to, Software):
                 container = con.to.host_container
+            _log.debug('mange connection of {} to {}'.format(node, container))
             node.host_container.add_overlay(container, con.to.name)
 
     # Manage the case whene a Container is connected to a Software

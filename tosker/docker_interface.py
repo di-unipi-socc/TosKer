@@ -290,7 +290,6 @@ def create_network(_cli, name, subnet='172.25.0.0/16'):
 
 @_inject_docker_cli
 def delete_network(_cli, name):
-    assert isinstance(name, six.string_types)
     _log = Logger.get(__name__)
     try:
         _cli.remove_network(_get_app_name(name))
