@@ -35,6 +35,17 @@ def _filter_components(*comps):
     return _filter_components_decorator
 
 
+def _filter_interface(interface):
+    def _filter_interface_decorator(func):
+        @wraps(func)
+        def func_wrapper(self, *args):
+            filter_componets = [c for c in args[0]
+                                if interface in c.interfaces]
+            return func(self, filter_componets, *args[1:])
+        return func_wrapper
+    return _filter_interface_decorator
+
+
 class Orchestrator:
 
     def __init__(self,
@@ -114,6 +125,7 @@ class Orchestrator:
             return False
         return True
 
+    @_filter_interface('create')
     def _create(self, components, tpl):
         self._print_loading_start('Create network... ')
         docker_interface.create_network(tpl.name)  # TODO: da rimuovere
@@ -138,7 +150,7 @@ class Orchestrator:
                 self._print_skip()
                 self._log.info('skipped already created')
 
-    @_filter_components(Container, Software)
+    @_filter_interface('start')
     def _start(self, components, tpl):
         for node in components:
             self._print_loading_start('Start {}... '.format(node))
@@ -159,7 +171,7 @@ class Orchestrator:
                 self._log.info('{} have to be created first'.format(node))
                 break
 
-    @_filter_components(Container, Software)
+    @_filter_interface('stop')
     def _stop(self, components, tpl):
         for node in components:
             self._print_loading_start('Stop {}... '.format(node))
@@ -176,7 +188,7 @@ class Orchestrator:
                 self._print_skip()
                 self._log.info('skipped already stopped')
 
-    @_filter_components(Container, Software)
+    @_filter_interface('start')
     def _delete(self, components, tpl):
         self._log.debug('start delete')
         for node in components:

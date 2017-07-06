@@ -119,6 +119,8 @@ class Container(Root):
         }
         self._overlay = []
 
+        self.interfaces = {'create', 'start', 'stop', 'delete'}
+
     @property
     def image(self):
         return self.artifacts[0]
@@ -168,6 +170,10 @@ class Volume(Root):
             'id': lambda: self.id,
             'size': lambda: self.size
         }
+
+        self.interfaces = {'create'
+                           # , 'delete' TODO: add this interface
+                           }
 
         self.driver_opt = None
 

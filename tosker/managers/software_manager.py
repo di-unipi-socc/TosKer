@@ -16,7 +16,8 @@ def _get_cmd(interface, force_exec=False):
         def func_wrapper(*args):
             assert isinstance(args[0], Software)
             cmd = Software_manager._get_cmd_args(args[0], interface)
-            return func(cmd, *args) if cmd or force_exec else None
+            if cmd or force_exec:
+                return func(cmd, *args)
         return func_wrapper
     return _get_cmd_decorator
 

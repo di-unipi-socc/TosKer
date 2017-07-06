@@ -31,6 +31,13 @@ topology_template:
             implementation: scripts/app/start.sh
             inputs:
               port: 80
+          stop:
+            implementation: scripts/app/stop.sh
+          delete:
+            implementation: scripts/app/delete.sh
+            inputs:
+              package: { get_artifact: [ SELF, package ] }
+              main: { get_artifact: [ SELF, code ] }
 
     db:
       type: tosker.nodes.Software
@@ -42,6 +49,10 @@ topology_template:
             implementation: scripts/mongo/install.sh
           start:
             implementation: scripts/mongo/start.sh
+          stop:
+            implementation: scripts/mongo/stop.sh
+          delete:
+            implementation: scripts/mongo/delete.sh
 
     node:
       type: tosker.nodes.Software
