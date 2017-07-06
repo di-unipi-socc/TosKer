@@ -30,20 +30,21 @@ class Test_Hello(Test_Orchestrator):
             self.start_check_exit()
             self.stop()
             self.start_check_exit()
-            self.stop()
-            con_id = docker.inspect_container('hello_container')['Id']
-            self.delete()
 
         # verify output
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
-            self.orchestrator._print_outputs()
-        output = temp_stdout.getvalue().strip()
+            self.stop()
 
+        con_id = docker.inspect_container('hello.hello_container')['Id']
+        output = temp_stdout.getvalue().strip()
         verified = '''OUTPUTS:
   - container_id: {}
   - env_variable: Luca'''.format(con_id)
         self.assertTrue(output.endswith(verified))
+
+        with redirect_stdout(StringIO()):
+            self.delete()
 
 
 if __name__ == '__main__':
