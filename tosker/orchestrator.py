@@ -369,9 +369,10 @@ class Orchestrator:
     def _print_loading_start(self, msg):
         def loading(msg):
             t = threading.currentThread()
+            t.run = True
             i = 0
             s = ['/', '-', '\\', '|']
-            while getattr(t, "do_run", True):
+            while t.run:
                 Logger.print_("\r{} {}".format(msg, s[i % len(s)]))
                 i += 1
                 time.sleep(0.1)
@@ -382,5 +383,5 @@ class Orchestrator:
 
     def _stop_loading(self):
         if hasattr(self, '_loading_thread'):
-            self._loading_thread.do_run = False
+            self._loading_thread.run = False
             self._loading_thread.join()
