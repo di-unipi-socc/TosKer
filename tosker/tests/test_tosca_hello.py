@@ -3,6 +3,7 @@ import unittest
 from contextlib import contextmanager
 from six import StringIO
 from tosker.orchestrator import Orchestrator
+from tosker import docker_interface as docker
 from .test_tosca_base import Test_Orchestrator
 
 
@@ -30,7 +31,7 @@ class Test_Hello(Test_Orchestrator):
             self.stop()
             self.start_check_exit()
             self.stop()
-            con_id = self._docker.inspect_container('hello_container')['Id']
+            con_id = docker.inspect_container('hello_container')['Id']
             self.delete()
 
         # verify output
