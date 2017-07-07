@@ -30,6 +30,10 @@ topology_template:
             inputs:
               main: { get_artifact: [ SELF, code ] }
               port: 80
+          stop:
+            implementation: scripts/stop.sh
+          delete:
+            implementation: scripts/delete.sh
 
     server2:
       type: tosker.nodes.Software
@@ -49,6 +53,10 @@ topology_template:
             inputs:
               main: { get_artifact: [ SELF, code ] }
               port: 80
+          stop:
+            implementation: scripts/stop.sh
+          delete:
+            implementation: scripts/delete.sh
 
     server3:
       type: tosker.nodes.Software
@@ -70,6 +78,10 @@ topology_template:
             inputs:
               main: { get_artifact: [ SELF, code ] }
               port: 80
+          stop:
+            implementation: scripts/stop.sh
+          delete:
+            implementation: scripts/delete.sh
 
     nodejs1:
       type: tosker.nodes.Container
