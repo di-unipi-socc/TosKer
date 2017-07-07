@@ -27,7 +27,7 @@ if [ $# == 0 ] || [ $1 == "python3" ]; then
   echo "\nTEST PYTHON3 and COVERAGE" >> $TEST_LOG
   . ./venv3/bin/activate
   pip install -r requirements.txt &> /dev/null
-  coverage run --source tosker -W ignore -m unittest discover -v 2> $TEST_LOG
+  coverage run --source tosker -W ignore -m unittest discover -v 2>> $TEST_LOG
   coverage report -m --omit 'tosker/tests/*,tosker/graph/*,tosker/helper.py,*__init__.py' >> $TEST_LOG
   coverage html --omit 'tosker/tests/*,tosker/graph/*,tosker/helper.py,*__init__.py'
   deactivate
