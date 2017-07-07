@@ -86,7 +86,7 @@ class Orchestrator:
             return False
 
         # Create temporany directory
-        tpl.tmp_dir = path.join(self._tmp_dir, tpl.name)
+        tpl.tmp_dir = os.path.join(self._tmp_dir, tpl.name)
         try:
             os.makedirs(tpl.tmp_dir)
         except os.error as e:
