@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import shutil
@@ -6,16 +5,18 @@ import six
 import traceback
 import threading
 import time
-from os import path
 from glob import glob
 from termcolor import colored
 from functools import wraps
 from tabulate import tabulate
+try:
+    from os import scandir
+except ImportError:
+    from scandir import scandir
 
 from . import helper
 from . import docker_interface
 from .graph.nodes import Container, Software, Volume
-from .graph.template import Template
 from .managers.software_manager import Software_manager
 from .managers.container_manager import Container_manager
 from .managers.volume_manager import Volume_manager
@@ -249,7 +250,7 @@ class Orchestrator:
             manage_error(comp, state)
             path = os.path.join(self._tmp_dir, comp['app_name'], comp['name'])
 
-            software = [(f.name, f.path) for f in os.scandir(path) if f.is_dir()]
+            software = [(f.name, f.path) for f in scandir(path) if f.is_dir()]
             self._log.debug('path {} found {}'.format(path, software))
 
             for s, s_path in software:
