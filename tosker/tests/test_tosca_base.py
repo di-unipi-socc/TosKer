@@ -1,18 +1,26 @@
 import unittest
+import os
+from six import print_
 from tosker import helper
 from tosker.orchestrator import Orchestrator
 from tosker import docker_interface as docker
+from tosker.storage import Memory
 from tosker.tosca_parser import get_tosca_template
 
 
 class Test_Orchestrator(unittest.TestCase):
+    @staticmethod
+    def setUpClass():
+        pass
 
     def setUp(self):
         docker.remove_all_containers()
         docker.remove_all_volumes()
+
         self.orchestrator = Orchestrator(
             # log_handler=helper.get_consol_handler()
         )
+        Memory.purge()
 
     def get_tpl(self):
         if not hasattr(self, 'tpl'):
@@ -41,14 +49,9 @@ class Test_Orchestrator(unittest.TestCase):
         self.orchestrator.orchestrate(self.file, ['start'])
         for c in self.get_tpl().containers:
             stat = docker.inspect_container(c)
-            # print('DEBUG: ', stat)
+            # print_('DEBUG: container {} in status {}'.format(c, stat["State"]))
             self.assertIsNotNone(stat)
             self.assertTrue(check(stat))
-
-        for c in self.get_tpl().volumes:
-            self.assertIsNotNone(
-                docker.inspect_volume(c)
-            )
 
     def stop(self):
         self.orchestrator.orchestrate(self.file, ['stop'])

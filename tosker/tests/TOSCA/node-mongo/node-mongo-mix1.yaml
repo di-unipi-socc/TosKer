@@ -31,6 +31,13 @@ topology_template:
             implementation: app/start.sh
             inputs:
               port: 80
+          stop:
+            implementation: app/stop.sh
+          delete:
+            implementation: app/delete.sh
+            inputs:
+              package: { get_artifact: [ SELF, package ] }
+              main: { get_artifact: [ SELF, code ] }
 
     db:
       type: tosker.nodes.Container

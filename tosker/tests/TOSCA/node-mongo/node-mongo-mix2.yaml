@@ -22,6 +22,10 @@ topology_template:
             implementation: mongo/install.sh
           start:
             implementation: mongo/start.sh
+          stop:
+            implementation: mongo/stop.sh
+          delete:
+            implementation: mongo/delete.sh
 
     app_container:
       type: tosker.nodes.Container

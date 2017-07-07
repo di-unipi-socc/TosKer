@@ -23,6 +23,11 @@ class Storage:
 
     @staticmethod
     @_singleton
+    def purge():
+        return Storage.db.purge_tables()
+
+    @staticmethod
+    @_singleton
     def insert(obj):
         return Storage.db.insert(obj)
 
