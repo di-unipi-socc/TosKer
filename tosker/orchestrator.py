@@ -126,7 +126,7 @@ class Orchestrator:
             return False
         return True
 
-    @_filter_interface('create')
+    # @_filter_interface('create')
     def _create(self, components, tpl):
         self._print_loading_start('Create network... ')
         docker_interface.create_network(tpl.name)  # TODO: da rimuovere
@@ -157,16 +157,17 @@ class Orchestrator:
             self._print_loading_start('Start {}... '.format(node))
 
             status = Memory.get_comp_state(node)
-            if Memory.STATE.CREATED == status:
+            if Memory.STATE.STARTED == status:
+                self._print_skip()
+                self._log.info('skipped already started')
+            elif Memory.STATE.CREATED == status or\
+                    'create' not in node.interfaces:
                 if isinstance(node, Container):
                     Container_manager.start(node)
                 elif isinstance(node, Software):
                     Software_manager.start(node)
                 Memory.update_state(node, Memory.STATE.STARTED)
                 self._print_tick()
-            elif Memory.STATE.STARTED == status:
-                self._print_skip()
-                self._log.info('skipped already started')
             else:
                 self._print_cross('the components must be created first')
                 self._log.info('{} have to be created first'.format(node))
