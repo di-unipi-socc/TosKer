@@ -1,10 +1,9 @@
 import unittest
-from tosker import helper
 from tosker import docker_interface as docker
 from tosker.graph.nodes import Container
 from tosker.graph.template import Template
 from tosker.graph.artifacts import DockerImageExecutable
-from tosker.helper import Logger
+# from tosker.helper import Logger
 
 
 class Test_DockerInterface(unittest.TestCase):

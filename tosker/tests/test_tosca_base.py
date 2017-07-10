@@ -1,7 +1,5 @@
 import unittest
-import os
-from six import print_
-from tosker import helper
+# from tosker import helper
 from tosker.orchestrator import Orchestrator
 from tosker import docker_interface as docker
 from tosker.storage import Memory
@@ -49,7 +47,6 @@ class Test_Orchestrator(unittest.TestCase):
         self.orchestrator.orchestrate(self.file, ['start'])
         for c in self.get_tpl().containers:
             stat = docker.inspect_container(c)
-            # print_('DEBUG: container {} in status {}'.format(c, stat["State"]))
             self.assertIsNotNone(stat)
             self.assertTrue(check(stat))
 

@@ -6,7 +6,7 @@ import traceback
 import threading
 import time
 from glob import glob
-from termcolor import colored
+# from termcolor import colored
 from functools import wraps
 from tabulate import tabulate
 try:

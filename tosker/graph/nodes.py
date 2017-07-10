@@ -1,5 +1,5 @@
 from .relationships import HostedOn, ConnectsTo, AttachesTo, DependsOn
-from .artifacts import File, DockerImage, DockerImageExecutable, \
+from .artifacts import Artifact, File, DockerImage, DockerImageExecutable,\
                        DockerfileExecutable, Dockerfile
 
 
@@ -10,11 +10,11 @@ def _add_to_map(d, k, v):
     return d
 
 
-def _add_to_list(l, i):
-    if l is None:
-        l = []
-    l.append(i)
-    return l
+def _add_to_list(l_name, i):
+    if l_name is None:
+        l_name = []
+    l_name.append(i)
+    return l_name
 
 
 def _str_obj(o):

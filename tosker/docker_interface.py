@@ -1,7 +1,6 @@
 import os
 from os import path
 
-import requests.exceptions
 import six
 from functools import wraps
 from docker import APIClient, errors
@@ -33,16 +32,6 @@ def _inject_docker_cli(func):
             _cli = APIClient(base_url=os.environ.get('DOCKER_HOST'))
         return func(_cli, *args, **kwds)
     return func_wrapper
-
-# class Docker_interface:
-    # def __init__(self,
-    #              # repo=None,
-    #              # net_name=None,
-    #              # tmp_dir=None,
-    #              socket='unix://var/run/docker.sock'):
-    #     self._log = Logger.get(__name__)
-    #     # self._tmp_dir = tmp_dir
-    #     self._cli = APIClient(base_url=os.environ.get('DOCKER_HOST') or socket)
 
 
 def _get_tmp_dir(node):
@@ -172,7 +161,7 @@ def delete_container(_cli, name):
 def exec_cmd(_cli, name, cmd):
     _log = Logger.get(__name__)
     if not is_running(name):
-        raise e
+        raise Exception('{} is not running'.format(name))
     try:
         exec_id = _cli.exec_create(name, cmd,
                                    stdout=False,

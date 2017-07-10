@@ -1,11 +1,9 @@
-import json
 import re
 from os import path
 
 import toscaparser
 from toscaparser.tosca_template import ToscaTemplate
 from toscaparser.prereq.csar import CSAR
-from toscaparser.common.exception import ValidationError
 
 from . import helper
 from .graph.nodes import Container, Software, Volume
@@ -193,7 +191,7 @@ def _parse_conf(tpl, node, repos, base_path):
 
 def get_tosca_template(file_path, inputs={}):
     global _log
-    _log = helper.Logger.get(__name__)
+    _log = Logger.get(__name__)
 
     # Work around bug validation csar of toscaparser
     if file_path.endswith(('.zip', '.csar')):
@@ -314,7 +312,8 @@ def _add_extension(tpl):
 #             elif type(v) is dict:
 #                 # Found a get_property function
 #                 if 'get_property' == v:
-#                     node[k] = execute_function('properties', v['get_property'])
+#                     node[k] = execute_function('properties',
+#                                                v['get_property'])
 #                 # Found a get_artifact function
 #                 if 'get_artifact' == v:
 #                     art = execute_function('artifacts', v['get_artifact'])

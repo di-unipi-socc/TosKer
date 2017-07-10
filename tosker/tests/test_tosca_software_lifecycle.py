@@ -1,5 +1,4 @@
 import unittest
-from tosker.orchestrator import Orchestrator
 from .test_tosca_base import Test_Orchestrator
 
 

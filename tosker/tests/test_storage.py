@@ -1,7 +1,6 @@
 import unittest
 import os
 from tinydb import Query
-from six import print_
 from tosker.storage import Storage, Memory
 from tosker.graph.nodes import Container
 from tosker.graph.template import Template

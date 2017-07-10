@@ -16,7 +16,8 @@ class Test_Ui(unittest.TestCase):
 
     def test_args_flags(self):
         args = ['--help', '--debug', '--quiet', '--version']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNone(error)
         self.assertTrue(flags.get('help', False))
         self.assertTrue(flags.get('debug', False))
@@ -24,24 +25,28 @@ class Test_Ui(unittest.TestCase):
         self.assertTrue(flags.get('version', False))
 
         args = ['-v', '-h', '-q']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNone(error)
         self.assertTrue(flags.get('quiet', False))
         self.assertTrue(flags.get('help', False))
         self.assertTrue(flags.get('version', False))
 
         args = ['--test']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNotNone(error)
 
         args = ['-t']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNotNone(error)
 
     def test_args_command(self):
         args = ['tosker/tests/TOSCA/hello.yaml',
                 'create', 'start', 'stop', 'delete']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNone(error)
         self.assertEqual('tosker/tests/TOSCA/hello.yaml', file)
         self.assertListEqual(['create', 'start', 'stop', 'delete'], cmds)
@@ -49,7 +54,8 @@ class Test_Ui(unittest.TestCase):
         args = ['tosker/tests/TOSCA/hello.yaml',
                 'comp1', 'comp2', 'comp3',
                 'create', 'start', 'stop', 'delete']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNone(error)
         self.assertEqual('tosker/tests/TOSCA/hello.yaml', file)
         self.assertListEqual(['create', 'start', 'stop', 'delete'], cmds)
@@ -57,41 +63,42 @@ class Test_Ui(unittest.TestCase):
 
         args = ['tosker/tests/TOSCA/hello.yaml',
                 'create', 'test', 'start', 'stop', 'delete']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNotNone(error)
 
         args = ['asd',
                 'comp1', 'comp2', 'comp3',
                 'create', 'start', 'stop', 'delete']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNotNone(error)
 
     def test_args_inputs(self):
         args = ['--input1', 'value1', '--input2', 'value2']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNone(error)
         self.assertEqual(inputs.get('input1'), 'value1')
         self.assertEqual(inputs.get('input2'), 'value2')
 
         args = ['--input1', '--input2', 'value2']
-        error, mod, file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
+        error, mod,\
+            file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNotNone(error)
 
     def test_check_file(self):
         self.assertIsNotNone(
             ui._check_file('tosker/tests/TOSCA/hello.yaml')
         )
-
         self.assertIsNotNone(
             ui._check_file(
                 'tosker/tests/TOSCA/node-mongo-csar/node-mongo.csar')
         )
-
         self.assertIsNone(
             ui._check_file(
                 'tosker/tests/TOSCA/node-mongo-csar')
         )
-
         self.assertIsNone(
             ui._check_file(
                 'tosker/tests/TOSCA/node-mongo-csar/'

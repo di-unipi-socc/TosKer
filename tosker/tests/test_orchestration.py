@@ -1,6 +1,6 @@
 import unittest
 from tosker.orchestrator import Orchestrator
-from tosker import helper
+# from tosker import helper
 
 
 class Test_Tosca_Parsing(unittest.TestCase):
