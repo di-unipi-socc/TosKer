@@ -44,25 +44,25 @@ class Test_Ui(unittest.TestCase):
         self.assertIsNotNone(error)
 
     def test_args_command(self):
-        args = ['tosker/tests/TOSCA/hello.yaml',
+        args = ['data/examples/hello.yaml',
                 'create', 'start', 'stop', 'delete']
         error, mod,\
             file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNone(error)
-        self.assertEqual('tosker/tests/TOSCA/hello.yaml', file)
+        self.assertEqual('data/examples/hello.yaml', file)
         self.assertListEqual(['create', 'start', 'stop', 'delete'], cmds)
 
-        args = ['tosker/tests/TOSCA/hello.yaml',
+        args = ['data/examples/hello.yaml',
                 'comp1', 'comp2', 'comp3',
                 'create', 'start', 'stop', 'delete']
         error, mod,\
             file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
         self.assertIsNone(error)
-        self.assertEqual('tosker/tests/TOSCA/hello.yaml', file)
+        self.assertEqual('data/examples/hello.yaml', file)
         self.assertListEqual(['create', 'start', 'stop', 'delete'], cmds)
         self.assertListEqual(['comp1', 'comp2', 'comp3'], comps)
 
-        args = ['tosker/tests/TOSCA/hello.yaml',
+        args = ['data/examples/hello.yaml',
                 'create', 'test', 'start', 'stop', 'delete']
         error, mod,\
             file, cmds, comps, flags, inputs = ui._parse_unix_input(args)
@@ -90,7 +90,7 @@ class Test_Ui(unittest.TestCase):
 
     def test_check_file(self):
         self.assertIsNotNone(
-            ui._check_file('tosker/tests/TOSCA/hello.yaml')
+            ui._check_file('data/examples/hello.yaml')
         )
         self.assertIsNotNone(
             ui._check_file(
