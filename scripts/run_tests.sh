@@ -34,7 +34,7 @@ fi
 # coverage
 if [ $# == 0 ] || [ $1 == "coverage" ]; then
   echo 'run coverage...'
-  echo "\n COVERAGE" >> $TEST_LOG
+  echo "\nCOVERAGE" >> $TEST_LOG
   . ./venv3/bin/activate
   pip install -r requirements.txt &> /dev/null
   coverage run --source tosker -m unittest discover -v 2> /dev/null
