@@ -1,6 +1,6 @@
-from .relationships import HostedOn, ConnectsTo, AttachesTo, DependsOn
-from .artifacts import Artifact, File, DockerImage, DockerImageExecutable,\
-                       DockerfileExecutable, Dockerfile
+from .artifacts import (Artifact, Dockerfile, DockerfileExecutable,
+                        DockerImage, DockerImageExecutable, File)
+from .relationships import AttachesTo, ConnectsTo, DependsOn, HostedOn
 
 
 def _add_to_map(d, k, v):

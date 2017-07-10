@@ -1,13 +1,13 @@
 import os
+from functools import wraps
 from os import path
 
 import six
-from functools import wraps
 from docker import APIClient, errors
 
 from . import helper
-from .graph.nodes import Container, Volume, Root
 from .graph.artifacts import Dockerfile
+from .graph.nodes import Container, Root, Volume
 from .helper import Logger
 
 _cli = None

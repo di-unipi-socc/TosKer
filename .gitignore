@@ -22,5 +22,6 @@ lib64
 # Test and Coverage
 .coverage
 htmlcov/
+.tox
 
 node_modules/

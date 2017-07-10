@@ -2,13 +2,13 @@ import re
 from os import path
 
 import toscaparser
-from toscaparser.tosca_template import ToscaTemplate
 from toscaparser.prereq.csar import CSAR
+from toscaparser.tosca_template import ToscaTemplate
 
 from . import helper
+from .graph.artifacts import (Dockerfile, DockerfileExecutable, DockerImage,
+                              DockerImageExecutable, File)
 from .graph.nodes import Container, Software, Volume
-from .graph.artifacts import DockerImage, DockerImageExecutable, File, \
-                             Dockerfile, DockerfileExecutable
 from .graph.template import Template
 from .helper import Logger
 

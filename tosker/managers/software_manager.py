@@ -1,13 +1,13 @@
 import os
+from functools import wraps
 from os import path
 from shutil import copy
-from functools import wraps
 
-from ..graph.nodes import Software
+from .. import docker_interface
 from ..graph.artifacts import File
+from ..graph.nodes import Software
 from ..helper import Logger
 from ..storage import Memory
-from .. import docker_interface
 
 
 def _get_cmd(interface, force_exec=False):

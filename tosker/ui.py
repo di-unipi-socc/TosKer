@@ -4,9 +4,8 @@ from sys import argv
 
 from six import print_
 
+from . import __version__, helper
 from .orchestrator import Orchestrator
-from . import helper
-from . import __version__
 
 
 def _usage():

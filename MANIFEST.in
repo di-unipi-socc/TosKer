@@ -1,4 +1,14 @@
-# Include the license file
-include LICENSE.md
-include tosker/*.yaml
-recursive-include tosker/tests/TOSCA *
+include AUTHORS.rst
+include CONTRIBUTING.rst
+include HISTORY.rst
+include LICENSE
+include DESCRIPTION.rst
+
+recursive-include tests *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+
+recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
+
+# include tosker/*.yaml
+# recursive-include tosker/tests/TOSCA *

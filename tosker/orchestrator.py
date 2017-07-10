@@ -1,28 +1,30 @@
 import logging
 import os
 import shutil
-import six
-import traceback
 import threading
 import time
-from glob import glob
+import traceback
 # from termcolor import colored
 from functools import wraps
+from glob import glob
+
+import six
 from tabulate import tabulate
+
+from . import docker_interface, helper
+from .graph.nodes import Container, Software, Volume
+from .helper import Logger
+from .managers.container_manager import Container_manager
+from .managers.software_manager import Software_manager
+from .managers.volume_manager import Volume_manager
+from .storage import Memory
+from .tosca_parser import get_tosca_template
+
 try:
     from os import scandir
 except ImportError:
     from scandir import scandir
 
-from . import helper
-from . import docker_interface
-from .graph.nodes import Container, Software, Volume
-from .managers.software_manager import Software_manager
-from .managers.container_manager import Container_manager
-from .managers.volume_manager import Volume_manager
-from .tosca_parser import get_tosca_template
-from .helper import Logger
-from .storage import Memory
 
 
 def _filter_components(*comps):

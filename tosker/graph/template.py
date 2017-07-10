@@ -1,5 +1,6 @@
 import six
-from .nodes import Root, Container, Software, Volume
+
+from .nodes import Container, Root, Software, Volume
 
 
 class Template:

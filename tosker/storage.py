@@ -1,7 +1,8 @@
-import six
-from functools import wraps, reduce
 from enum import Enum
-from tinydb import TinyDB, Query
+from functools import reduce, wraps
+
+import six
+from tinydb import Query, TinyDB
 
 from .graph.nodes import Root
 from .helper import Logger
