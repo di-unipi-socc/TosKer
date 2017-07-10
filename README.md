@@ -1,6 +1,5 @@
 # TosKer
 [![image](https://img.shields.io/pypi/v/tosker.svg)](https://pypi.python.org/pypi/tosker)
-[![image](https://img.shields.io/travis/lucarin91/tosker.svg)](https://travis-ci.org/lucarin91/tosker)
 [![Build Status](https://travis-ci.org/di-unipi-socc/TosKer.svg?branch=master)](https://travis-ci.org/di-unipi-socc/TosKer)
 [![Documentation Status](https://readthedocs.org/projects/tosker/badge/?version=latest)](https://tosker.readthedocs.io/en/latest/?badge=latest)
 [![Updates](https://pyup.io/repos/github/lucarin91/tosker/shield.svg)](https://pyup.io/repos/github/lucarin91/tosker/)
