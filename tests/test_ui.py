@@ -94,14 +94,14 @@ class Test_Ui(unittest.TestCase):
         )
         self.assertIsNotNone(
             ui._check_file(
-                'tosker/tests/TOSCA/node-mongo-csar/node-mongo.csar')
+                'data/examples/node-mongo-csar/node-mongo.csar')
         )
         self.assertIsNone(
             ui._check_file(
-                'tosker/tests/TOSCA/node-mongo-csar')
+                'data/examples/node-mongo-csar')
         )
         self.assertIsNone(
             ui._check_file(
-                'tosker/tests/TOSCA/node-mongo-csar/'
+                'data/examples/node-mongo-csar/'
                 'node-mongo/scripts/install_node.sh')
         )
