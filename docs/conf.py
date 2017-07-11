@@ -55,8 +55,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'new TosKer'
-copyright = u"2017, luca"
+project = u'TosKer'
+copyright = u"2017, lucarin91"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -209,7 +209,7 @@ latex_elements = {
 # [howto/manual]).
 latex_documents = [
     ('index', 'tosker.tex',
-     u'new TosKer Documentation',
+     u'TosKer Documentation',
      u'luca', 'manual'),
 ]
 
@@ -240,7 +240,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'tosker',
-     u'new TosKer Documentation',
+     u'TosKer Documentation',
      [u'luca'], 1)
 ]
 
@@ -255,7 +255,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'tosker',
-     u'new TosKer Documentation',
+     u'TosKer Documentation',
      u'luca',
      'tosker',
      'One line description of project.',

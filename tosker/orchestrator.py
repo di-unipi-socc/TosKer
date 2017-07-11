@@ -26,7 +26,6 @@ except ImportError:
     from scandir import scandir
 
 
-
 def _filter_components(*comps):
     def _filter_components_decorator(func):
         @wraps(func)

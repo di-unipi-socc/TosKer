@@ -36,7 +36,7 @@ setup(
     author="lucarin91",
     author_email='to@lucar.in',
     url='https://github.com/di-unipi-socc/TosKer',
-    packages=find_packages(include=['tosker']),
+    packages=find_packages(exclude=['tests']),
     entry_points={
         'console_scripts': [
             'tosker=tosker.ui:run'
