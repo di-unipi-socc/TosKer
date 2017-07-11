@@ -13,8 +13,8 @@ with open('HISTORY.rst') as history_file:
 
 exec(open('tosker/__init__.py').read())
 
-requirements = [
-    'Click>=6.0', 'docker', 'tosca-parser', 'termcolor', 'six', 'enum34',
+requirements = [  # 'Click>=6.0',
+    'docker', 'tosca-parser', 'termcolor', 'six', 'enum34',
     'tabulate', 'tinydb', 'scandir'
 ]
 

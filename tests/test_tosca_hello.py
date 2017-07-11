@@ -40,11 +40,10 @@ class Test_Hello(Test_Orchestrator):
             self.stop()
 
         con_id = docker.inspect_container('hello.hello_container')['Id']
+
         output = temp_stdout.getvalue().strip()
-        verified = '''OUTPUTS:
-  - container_id: {}
-  - env_variable: Luca'''.format(con_id)
-        self.assertTrue(output.endswith(verified))
+        self.assertIn('- container_id: {}'.format(con_id), output)
+        self.assertIn('- env_variable: Luca', output)
 
         with redirect_stdout(StringIO()):
             self.delete()
