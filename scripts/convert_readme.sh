@@ -1,2 +1,2 @@
 #!/bin/sh
-pandoc --output=README.rst README.md
+pandoc -o DESCRIPTION.rst README.md

@@ -1,4 +1,4 @@
-Welcome to new TosKer's documentation!
+Welcome to TosKer's documentation!
 ======================================
 
 Contents:
@@ -9,7 +9,6 @@ Contents:
    readme
    installation
    usage
-   modules
    contributing
    authors
    history

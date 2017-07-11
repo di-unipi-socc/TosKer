@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* luca <luca@luca>
+* lucarin91 <to@lucar.in>
 
 Contributors
 ------------
