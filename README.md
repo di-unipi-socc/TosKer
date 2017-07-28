@@ -4,21 +4,23 @@
 [![docs](https://readthedocs.org/projects/tosker/badge/)](http://tosker.readthedocs.io/en/latest)
 <!-- [![Updates](https://pyup.io/repos/github/lucarin91/tosker/shield.svg)](https://pyup.io/repos/github/lucarin91/tosker/) -->
 
-TosKer is an orchestrator engine capable of automatically deploying and managing multi-component applications specifies in [OASIS TOSCA](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=tosca), by exploiting [Docker](https://www.docker.com) as a lightweight virtualization framework.
+TosKer is an orchestrator engine capable of automatically deploying and managing multi-component applications specified in [OASIS TOSCA](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=tosca), by exploiting [Docker](https://www.docker.com) as a lightweight virtualization framework.
 The novelty of TosKer is to decouple the application-specific components, from the containers used to build their infrastructure.
 This permits to improve the orchestration of the components and to ease the change of the containers underneath.
 
 - [Documentation](https://tosker.readthedocs.io)
-- [Presentation Slids](https://github.com/lucarin91/TosKer-slides)
+- [Presentation Slides](https://github.com/lucarin91/TosKer-slides)
 
-## Installation
+## Quick Guide
+
+### Installation
 TosKer requires having [Docker](https://www.docker.com) installed and configured on the machine. In is possible to install TosKer by using pip:
 ```
 # pip install tosker
 ```
 The minimum Python version supported is 2.7. It is possible to find other installation methods on the documentation.
 
-## Quick Guide
+### Example of usage
 After the installation it is possible to found in `/usr/share/tosker/examples` the CSAR of two example application, `node-mongo.casr` and `thoughts.csar`.
 
 To `create` and `start` the thoughts application run the command:
