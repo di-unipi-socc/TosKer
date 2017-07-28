@@ -5,11 +5,7 @@
 <!-- [![Updates](https://pyup.io/repos/github/lucarin91/tosker/shield.svg)](https://pyup.io/repos/github/lucarin91/tosker/) -->
 
 TosKer is an orchestrator engine capable of automatically deploying and managing multi-component applications specified in [OASIS TOSCA](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=tosca), by exploiting [Docker](https://www.docker.com) as a lightweight virtualization framework.
-
-The documentation of TosKer can be found [here](https://tosker.readthedocs.io).
-
-## About
-TosKer was first presented in 
+It was first presented in 
 > _A. Brogi, L. Rinaldi, J. Soldani <br>
 > **TosKer: Orchestrating applications with TOSCA and Docker.** <br>
 > Submitted for publication_ 
@@ -22,6 +18,8 @@ If you wish to reuse the tool or the sources contained in this repository, pleas
   note = {{\em [Submitted for publication]}}
 }
 ```
+
+The documentation of TosKer can be found [here](https://tosker.readthedocs.io).
 
 ## Quick Guide
 
