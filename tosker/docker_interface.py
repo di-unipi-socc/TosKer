@@ -67,6 +67,7 @@ def create_container(_cli,
         con.id = _cli.create_container(
             name=con.full_name,
             image=img_name,
+            user='root',
             entrypoint=entrypoint,
             command=cmd if cmd else con.cmd,
             environment=con.env,
