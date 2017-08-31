@@ -15,11 +15,11 @@ app = tk.Software('app')
     .connection(db)
 
 create = tk.Interface('create', () => {
-    tk.npm('install')
+    tk.exec('npm install')
 })
 start = tk.Interface('start', () => {
     tk.export('PORT', 80)
-    tk.node('main.js')
+    tk.exec('node main.js')
 })
 stop = tk.Interface('stop', start.revert())
 del = tk.Interface('delete', create.revert())

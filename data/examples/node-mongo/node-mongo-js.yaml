@@ -25,13 +25,13 @@ topology_template:
           create:
             implementation: >
               () => {
-                  tk.npm('install')
+                  tk.exec('npm install')
               }
           start:
             implementation: >
               () => {
                   tk.export('PORT', 80)
-                  tk.node('main.js')
+                  tk.exec('node main.js')
               }
           stop:
             implementation: >
