@@ -16,7 +16,10 @@ If you wish to reuse the tool or the sources contained in this repository, pleas
 @misc{TosKer,
   author = {Antonio Brogi and Luca Rinaldi and Jacopo Soldani},
   title = {{TosKer}: Orchestrating applications with {TOSCA} and {D}ocker},
-  note = {{\em [Submitted for publication]}}
+  editor={Zoltán Ádám Mann, Volker Stolz},
+  bookTitle={Advances in Service-Oriented and Cloud Computing: Workshops of ESOCC 2017},
+  publisher={Springer},
+  note={{\em [In press]}}
 }
 ```
 
