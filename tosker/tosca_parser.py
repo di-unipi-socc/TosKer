@@ -209,7 +209,7 @@ def get_tosca_template(file_path, inputs={}):
 
     tosca = ToscaTemplate(file_path, inputs)
 
-    base_path = '/'.join(tosca.path.split('/')[:-1]) + '/'
+    base_path = '/'.join(tosca.path.split('/')[:-1])
     _log.debug('base_path: {}'.format(base_path))
     _parse_functions(tosca, inputs, base_path)
     # print(helper.print_TOSCA(tosca))
