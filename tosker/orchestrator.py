@@ -380,8 +380,8 @@ class Orchestrator:
         self._loading_thread.info(self._loading_thread.text + 'Skipped')
 
     def _print_cross(self, error):
-        self._loading_thread.error(self._loading_thread.text +
-                                   'Error ({})'.format(error))
+        self._loading_thread.fail(self._loading_thread.text +
+                                  'Error ({})'.format(error))
 
     def _print_loading_start(self, msg):
         self._loading_thread = Halo(text=msg, spinner='dots')
