@@ -1,7 +1,8 @@
 import json
 import logging
+import sys
 
-from six import print_
+from six import StringIO, print_
 
 
 class Logger:
@@ -12,6 +13,8 @@ class Logger:
     def set(ch, quiet):
         Logger.ch = ch
         Logger.quiet = quiet
+        if Logger.quiet:
+            sys.stdout = StringIO()
 
     @staticmethod
     def get(name_class, level=logging.DEBUG):
