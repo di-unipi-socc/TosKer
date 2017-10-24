@@ -1,15 +1,14 @@
 import logging
 import os
 import shutil
-import threading
-import time
 import traceback
-# from termcolor import colored
 from functools import wraps
 from glob import glob
 
 import six
+from halo import Halo
 from tabulate import tabulate
+from termcolor import colored
 
 from . import docker_interface, helper
 from .graph.nodes import Container, Software, Volume
@@ -221,11 +220,16 @@ class Orchestrator:
     def ls_components(self, app=None, filters={}):
         comps = Memory.get_comps(app, filters)
 
+        def get_state(state):
+            return colored(state, {
+                Memory.STATE.CREATED.value: None,
+                Memory.STATE.STARTED.value: 'green'}.get(state))
+
         def format_row(comp):
             return [comp['app_name'],
                     comp['name'],
                     comp['type'],
-                    comp['state']]
+                    get_state(comp['state'])]
 
         table = [format_row(c) for c in comps]
         table_str = tabulate(table, headers=['Application', 'Component',
@@ -370,33 +374,15 @@ class Orchestrator:
         return deploy_order
 
     def _print_tick(self):
-        self._stop_loading()
-        Logger.println('Done')
+        self._loading_thread.succeed(self._loading_thread.text + 'Done')
 
     def _print_skip(self):
-        self._stop_loading()
-        Logger.println('Skipped')
+        self._loading_thread.info(self._loading_thread.text + 'Skipped')
 
     def _print_cross(self, error):
-        self._stop_loading()
-        Logger.println('Error ({})'.format(error))
+        self._loading_thread.error(self._loading_thread.text +
+                                   'Error ({})'.format(error))
 
     def _print_loading_start(self, msg):
-        def loading(msg):
-            t = threading.currentThread()
-            t._is_running = True
-            i = 0
-            s = ['/', '-', '\\', '|']
-            while t._is_running:
-                Logger.print_("\r{} {}".format(msg, s[i % len(s)]))
-                i += 1
-                time.sleep(0.1)
-            Logger.print_("\r{}".format(msg))
-
-        self._loading_thread = threading.Thread(target=loading, args=(msg,))
+        self._loading_thread = Halo(text=msg, spinner='dots')
         self._loading_thread.start()
-
-    def _stop_loading(self):
-        if hasattr(self, '_loading_thread'):
-            self._loading_thread._is_running = False
-            self._loading_thread.join()

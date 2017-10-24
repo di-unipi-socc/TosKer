@@ -15,7 +15,7 @@ exec(open('tosker/__init__.py').read())
 
 requirements = [  # 'Click>=6.0',
     'docker', 'tosca-parser', 'termcolor', 'six', 'enum34',
-    'tabulate', 'tinydb', 'scandir'
+    'tabulate', 'tinydb', 'scandir', 'halo'
 ]
 
 # put setup requirements (distutils extensions, etc.) here
