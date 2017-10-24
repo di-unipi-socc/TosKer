@@ -136,10 +136,10 @@ def start_container(_cli, name, wait=False):
         if wait:
             _log.debug('wait container..')
             _cli.wait(name)
-            helper.print_byte(
-                _cli.logs(name, stream=True),
-                _log.debug
-            )
+            # helper.print_byte(
+            #     _cli.logs(name, stream=True),
+            #     _log.debug
+            # )
             _log.debug('end wait container..')
     except errors.NotFound as e:
         _log.error(e)

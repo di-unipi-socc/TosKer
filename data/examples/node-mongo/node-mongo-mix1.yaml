@@ -55,6 +55,8 @@ topology_template:
         Standard:
           create:
             implementation: install_node.sh
+          delete:
+            implementation: uninstall_node.sh
 
     server1:
       type: tosker.nodes.Container

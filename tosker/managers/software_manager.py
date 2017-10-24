@@ -122,16 +122,17 @@ class Software_manager:
                                           get_inside_path('state'))
                 return ''
 
-            return '{}sh {}{}'.format(
+            return '{}sh -x {} >> {} 2>&1{}'.format(
                 set_in_state(),
                 get_inside_path(node.interfaces[interface]['cmd']),
+                get_inside_path('{}.log'.format(interface)),
                 set_out_state()
             )
 
         if interface not in node.interfaces:
             return None
-        _log.debug('interface: {}'
-                   ''.format(node.interfaces[interface]))
+        # _log.debug('interface: {}'
+        #            ''.format(node.interfaces[interface]))
         args = []
         args_env = []
         res = None

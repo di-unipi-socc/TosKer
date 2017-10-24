@@ -191,7 +191,7 @@ class Orchestrator:
                 self._print_skip()
                 self._log.info('skipped already stopped')
 
-    @_filter_interface('start')
+    @_filter_interface('delete')
     def _delete(self, components, tpl):
         self._log.debug('start delete')
         for node in components:
