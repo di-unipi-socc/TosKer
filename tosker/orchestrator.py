@@ -256,7 +256,11 @@ class Orchestrator:
             manage_error(comp, state)
             path = os.path.join(self._tmp_dir, comp['app_name'], comp['name'])
 
-            software = [(f.name, f.path) for f in scandir(path) if f.is_dir()]
+            try:
+                software = [(f.name, f.path) for f in scandir(path)
+                            if f.is_dir()]
+            except FileNotFoundError as e:
+                software = []
             self._log.debug('path {} found {}'.format(path, software))
 
             for s, s_path in software:
