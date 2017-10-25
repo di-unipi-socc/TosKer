@@ -32,3 +32,36 @@ All services communicate using REST over HTTP. This was chosen due to the simpli
 ## architecture requiremetns
 
 - *front-end*: require `npm:2.15.11` `mode:4.8.x`
+
+
+## user
+
+``` $ /user -h
+Usage of /user:
+  -database string
+    	Database to use, Mongodb or ... (default "mongodb")
+  -link-domain string
+    	HATEAOS link domain (default "user")
+  -mongo-host string
+    	Mongo host (default "user-db")
+  -mongo-password string
+    	Mongo password
+  -mongo-user string
+    	Mongo user
+  -port string
+    	Port on which to run (default "8084")
+  -zipkin string
+    	Zipkin address
+```
+
+## orders
+
+`java.sh` script launched inside the `weaveworksdemos/msd-java:8u131` for running the `orders` Software.
+
+``` /usr/local/bin # cat java.sh
+#!/bin/sh
+
+if [ -z "$JAVA_OPTS" ]; then
+  JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -XX:UseG1GC"
+fi
+```

@@ -2,6 +2,10 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 
 description: Definition of the custom types of TosKer.
 
+group_types:
+  tosker.groups.DeploymentUnit:
+    derived_from: tosca.groups.Root
+
 node_types:
   tosker.nodes.Root:
     derived_from: tosca.nodes.Root
@@ -24,6 +28,14 @@ node_types:
         type: map
       command:
         type: string
+      supported_sw:
+        type: map
+        required: false
+        # entry_schema:
+        #   type: string
+      os_distribution:
+        type: string
+        required: false
       # END
 
     properties:
@@ -34,6 +46,14 @@ node_types:
         type: map
         required: false
       command:
+        type: string
+        required: false
+      supported_sw:
+        type: map
+        required: false
+        # entry_schema:
+        #   type: string
+      os_distribution:
         type: string
         required: false
 
