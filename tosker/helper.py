@@ -2,6 +2,7 @@ import json
 import logging
 import sys
 
+from termcolor import colored
 from six import StringIO, print_
 
 
@@ -29,6 +30,11 @@ class Logger:
     def print_(*args):
         if not Logger.quiet:
             print_(*args, end='', flush=True)
+
+    @staticmethod
+    def print_error(*args):
+        if not Logger.quiet:
+            print_(colored('ERROR: ' + ' '.join(args), 'red'))
 
     @staticmethod
     def println(*args):

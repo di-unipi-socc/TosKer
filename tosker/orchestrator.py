@@ -9,6 +9,8 @@ import six
 from halo import Halo
 from tabulate import tabulate
 from termcolor import colored
+from yaml.scanner import ScannerError
+from toscaparser.common.exception import ValidationError
 
 from . import docker_interface, helper
 from .graph.nodes import Container, Software, Volume
@@ -63,7 +65,7 @@ class Orchestrator:
         try:
             os.makedirs(data_dir)
         except os.error as e:
-            self._log.info(e)
+            pass
         Memory.set_db(data_dir)
 
         status, faulty = self._update_state()
@@ -75,14 +77,24 @@ class Orchestrator:
         # Parse TOSCA file
         try:
             tpl = get_tosca_template(file_path, inputs)
+        except ScannerError as e:
+            Logger.print_error('YAML parse error\n    {}'.format(e))
+            return False
+        except ValidationError as e:
+            Logger.print_error('TOSCA validation error\n    {}'.format(e))
+            return False
+        except ValueError as e:
+            Logger.print_error('TosKer validation error\n    {}'.format(e))
+            return False
         except Exception as e:
-            Logger.println(e.args[0])
-            self._log.debug(traceback.format_exc())
+            Logger.print_error('Internal error\n    {}'.format(e))
+            self._log.debug('Exception type: {}'.format(type(e)))
+            self._log.debug(colored(traceback.format_exc(), 'red'))
             return False
 
         # Check if inputs components exists in the TOSCA file
         if not self._components_exists(tpl, components):
-            Logger.println('ERROR: a selected component do not exists')
+            Logger.print_error('a selected component do not exists')
             return False
 
         # Create temporany directory
@@ -120,9 +132,9 @@ class Orchestrator:
 
             self._print_outputs(tpl)
         except Exception as e:
-            self._print_cross(e)
-            # Logger.println(e)
+            self._log.debug('Exception type: {}'.format(type(e)))
             self._log.debug(traceback.format_exc())
+            self._print_cross(e)
             return False
         return True
 
@@ -360,7 +372,7 @@ class Orchestrator:
         def visit(n):
             if n._mark == 'temp':
                 self._log.debug('no dag')
-                raise Exception('ERROR: the TOSCA file is not a DAG')
+                raise ValueError('the TOSCA file is not a DAG')
             elif n._mark == '':
                 n._mark = 'temp'
                 if n.name in unmarked:

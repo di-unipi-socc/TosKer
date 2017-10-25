@@ -163,28 +163,29 @@ def _parse_conf(tpl, node, repos, base_path):
             conf.interfaces = intf
 
     else:
-        raise Exception(
-            'ERROR: node type "{}" not supported!'.format(node.type))
+        raise ValueError(
+            'node type "{}" not supported!'.format(node.type))
 
     # get requirements
     if 'requirements' in node.entity_tpl:
         requirements = node.entity_tpl['requirements']
-        for value in requirements:
-            if CONNECT in value:
-                conf.add_connection(value[CONNECT])
-            if DEPEND in value:
-                conf.add_depend(value[DEPEND])
-            if HOST in value:
-                if isinstance(value[HOST], dict):
-                    conf.host = value[HOST]['node']
-                else:
-                    conf.host = value[HOST]
-            if ATTACH in value:
-                volume = value[ATTACH]
-                if isinstance(volume, dict):
-                    conf.add_volume(volume['node'], volume['relationship']
-                                                          ['properties']
-                                                          ['location'])
+        if requirements is not None:
+            for value in requirements:
+                if CONNECT in value:
+                    conf.add_connection(value[CONNECT])
+                if DEPEND in value:
+                    conf.add_depend(value[DEPEND])
+                if HOST in value:
+                    if isinstance(value[HOST], dict):
+                        conf.host = value[HOST]['node']
+                    else:
+                        conf.host = value[HOST]
+                if ATTACH in value:
+                    volume = value[ATTACH]
+                    if isinstance(volume, dict):
+                        conf.add_volume(volume['node'], volume['relationship']
+                                                              ['properties']
+                                                              ['location'])
     conf.tpl = tpl
     return conf
 
@@ -260,7 +261,7 @@ def _add_extension(tpl):
             elif node.host_container is not None:
                 return node.host_container
             elif node.host is None:
-                raise Exception('Software component must have the "host"'
+                raise ValueError('Software component must have the "host"'
                                 'requirements')
             else:
                 return find_container(node.host.to)
