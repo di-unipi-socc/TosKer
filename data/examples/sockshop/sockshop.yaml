@@ -46,6 +46,7 @@ topology_template:
         # TODO: pass the endpoint in in env_variable (http://carts/ is the default)
         # https://github.com/microservices-demo/front-end/blob/master/api/endpoints.js)
         - connection: orders
+        - connection: payment
       interfaces:
         Standard:
           create:
@@ -119,11 +120,18 @@ topology_template:
           delete:
             implementation: scripts/carts/uninstall.sh
 
+   # TODO: error in java connection to dataase (not always)
+   # INFORMATION: Closed connection [connectionId{localValue:42, serverValue:248}] to localhost:27017 because the pool has been closed.
     orders:
       type: tosker.nodes.Software
       requirements:
         - host: orders-java
         - connection: orders-db
+        - connection: zipkin
+        - connection: shipping
+        - connection: carts
+        - connection: user
+        - connection: payment
       artifacts:
         ordersjar: ./artifacts/orders.jar
       interfaces:
@@ -149,8 +157,85 @@ topology_template:
           type: tosker.artifacts.Image
           repository: docker_hub
 
+
+    payment:
+      type: tosker.nodes.Software
+      requirements:
+        - host: payment-go
+      interfaces:
+        Standard:
+          configure:
+            implementation: scripts/payment/configure.sh
+          create:
+            implementation: scripts/payment/install.sh
+          start:
+            implementation: scripts/payment/start.sh
+            inputs:
+              port: 80
+          stop:
+            implementation: scripts/payment/stop.sh
+          delete:
+            implementation: scripts/payment/uninstall.sh
+
+
+    # POST /orders return 500 error if shipping is not running
+    shipping:
+      type: tosker.nodes.Software
+      requirements:
+        - connection: rabbitmq
+        - connection: zipkin
+        - host: shipping-java
+      artifacts:
+        shippingjar: ./artifacts/shipping.jar
+      interfaces:
+        Standard:
+          configure:
+            implementation: scripts/shipping/configure.sh
+          create:
+            implementation: scripts/shipping/install.sh
+          start:
+            implementation: scripts/shipping/start.sh
+            inputs:
+              port: 80
+              jar: { get_artifact: [SELF, shippingjar] }
+          stop:
+            implementation: scripts/shipping/stop.sh
+          delete:
+            implementation: scripts/shipping/uninstall.sh
+
+
+    shipping-java:
+      type: tosker.nodes.Container
+      properties:
+        env_variable:
+          JAVA_OPTS: -Djava.security.egd=file:/dev/urandom"
+      artifacts:
+        my_image:
+          file: weaveworksdemos/msd-java:latest
+          type: tosker.artifacts.Image
+          repository: docker_hub
+
+
+    rabbitmq:
+      type: tosker.nodes.Container
+      artifacts:
+       my_image:
+        file:  rabbitmq:3.6.8
+        type: tosker.artifacts.Image.Service
+        repository: docker_hub
+
+    payment-go:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: golang:1.7
+          type: tosker.artifacts.Image
+          repository: docker_hub
     user-go:
       type: tosker.nodes.Container
+      properties:
+        env_variable:
+          HATEAOS: user
       artifacts:
         my_image:
           file: golang:1.7
@@ -218,7 +303,17 @@ topology_template:
           type: tosker.artifacts.Image
           repository: docker_hub
 
-      #
+    # other images
+    zipkin:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: openzipkin/zipkin
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+      properties:
+        ports:
+          9411: 9411
 
     #
     # dbvolume:
