@@ -121,6 +121,10 @@ def _parse_conf(tpl, node, repos, base_path):
                 values = node.entity_tpl['properties']['ports']
                 conf.ports = _parse_map(values)
 
+            if 'share_data' in node.entity_tpl['properties']:
+                values = node.entity_tpl['properties']['share_data']
+                conf.share_data = _parse_map(values)
+
     elif node.type == VOLUME:
         conf = Volume(node.name)
 

@@ -111,11 +111,14 @@ class Container(Root):
         self.env = None
         self.cmd = None
         self.ports = None
+        self.share_data = {}
+
         self._ATTRIBUTE = {
             'id': lambda: self.id,
             'ports': lambda: self.ports,
             'env_variable': lambda: self.env,
-            'command': lambda: self.cmd
+            'command': lambda: self.cmd,
+            'share_data': lambda: self.share_data
         }
         self._overlay = []
 
@@ -149,6 +152,9 @@ class Container(Root):
 
     def add_port(self, name, value):
         self.ports = _add_to_map(self.ports, name, value)
+    
+    def add_share_data(self, name, value):
+        self.share_data = _add_to_map(self.share_data, name, value)
 
     def get_str_obj(self):
         return '{}, {}'.format(

@@ -75,15 +75,17 @@ def create_container(_cli,
             # stdin_open=True,
             ports=[key for key in con.ports.keys()]
             if con.ports else None,
-            volumes=['/tmp/dt'] + ([k for k, v in con.volume]),
+            volumes=['/tmp/dt'] + [k for k, v in con.volume] +\
+                    [k for k in con.share_data.keys()],
             networking_config=_cli.create_networking_config({
                 _get_app_name(con): _cli.create_endpoint_config(
                     links=con.connection
                 )}),
             host_config=_cli.create_host_config(
                 port_bindings=con.ports,
-                binds=[tmp_dir + ':/tmp/dt'] +
-                ([v + ':' + k for k, v in con.volume]),
+                binds=[tmp_dir + ':/tmp/dt'] +\
+                      [v + ':' + k for k, v in con.volume] +\
+                      ['{}:{}'.format(v, k) for k, v in con.share_data.items()],
             )
         ).get('Id')
 

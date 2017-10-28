@@ -1,0 +1,37 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: >
+  TOSCA simple hello world
+
+repositories:
+  docker_hub: https://registry.hub.docker.com/
+
+imports:
+  # - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
+  - tosker: ../tosker-types.yaml
+
+topology_template:
+  node_templates:
+    hello_docker:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: docker
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+      properties:
+        share_data:
+          /var/run/docker.sock: /var/run/docker.sock
+        command: docker run hello-world
+
+    hello_share_folder:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: docker
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+      properties:
+        share_data:
+          /tmp_inside: /tmp
+        command: sh -c "echo 123hello123 > /tmp_inside/test_share_tosker.log"
