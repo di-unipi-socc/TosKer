@@ -1,3 +1,6 @@
+'''
+Relationships module
+'''
 import six
 
 

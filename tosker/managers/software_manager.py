@@ -1,3 +1,6 @@
+'''
+Software manager module
+'''
 import os
 from functools import wraps
 from os import path

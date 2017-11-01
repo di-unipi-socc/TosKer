@@ -1,3 +1,6 @@
+'''
+Orchestrator module
+'''
 import logging
 import os
 import shutil
@@ -241,12 +244,37 @@ class Orchestrator:
             return [comp['app_name'],
                     comp['name'],
                     comp['type'],
-                    get_state(comp['state'])]
+                    get_state(comp['state']),
+                    '{}.{}'.format(comp['app_name'], comp['name'])]
 
         table = [format_row(c) for c in comps]
         table_str = tabulate(table, headers=['Application', 'Component',
-                                             'Type', 'State'])
+                                             'Type', 'State', 'Full name'])
         Logger.println(table_str)
+
+    def log(self, component, interface):
+        # TODO: add logs also for Docker container
+        try:
+            app, name = component.split('.')
+        except ValueError:
+            Logger.print_error('First argument must be a component full name (i.e my_app.my_component)')
+            return
+        
+        self._log.debug('app: {}, name: {}, interface: {}'.format(app, name, interface))
+
+        log_file_name = '{}/{}/*/{}/{}.log'.format(self._tmp_dir,
+                                               app, name, interface)
+
+        log_file = glob(log_file_name)
+
+        if len(log_file) != 1:
+            Logger.print_error('Component or interface log not found')
+            return
+
+        with open(log_file[0]) as f:
+            for line in f.readlines():
+                line = colored(line, 'green') if line.startswith('+ ') else line
+                Logger.print_(line)
 
     def _print_outputs(self, tpl):
         if len(tpl.outputs) != 0:

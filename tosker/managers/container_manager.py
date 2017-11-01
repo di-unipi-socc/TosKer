@@ -1,3 +1,6 @@
+'''
+Container manager module
+'''
 # from ..helper import Logger
 # from ..graph.artifacts import Dockerfile
 from .. import docker_interface

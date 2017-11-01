@@ -1,3 +1,6 @@
+'''
+Volume manager module
+'''
 # from ..helper import Logger
 from .. import docker_interface
 from ..graph.nodes import Volume

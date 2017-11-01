@@ -1,3 +1,6 @@
+'''
+Storage module
+'''
 from enum import Enum
 from functools import reduce, wraps
 

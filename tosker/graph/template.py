@@ -1,3 +1,6 @@
+'''
+Template module
+'''
 import six
 
 from .nodes import Container, Root, Software, Volume

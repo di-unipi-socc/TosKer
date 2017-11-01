@@ -1,3 +1,6 @@
+'''
+Tosca parser module
+'''
 import re
 from os import path
 

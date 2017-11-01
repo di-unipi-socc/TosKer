@@ -1,3 +1,7 @@
+'''
+Artifacts module
+'''
+
 class Artifact(object):
 
     def __init__(self, name):

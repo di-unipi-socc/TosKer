@@ -1,3 +1,6 @@
+'''
+UI module
+'''
 import re
 from os import path
 from sys import argv
@@ -10,15 +13,16 @@ from .orchestrator import Orchestrator
 
 def _usage():
     return '''
-Usage: tosker FILE [COMPONENTS...] COMMANDS...  [OPTIONS] [INPUTS]
+Usage: tosker FILE [COMPONENTS...] COMMAND...  [OPTIONS] [INPUTS]
        tosker ls [APPLICATION] [FILTES]
+       tosker log COMPONET COMMAND
        tosker -h|--help
        tosker -v|--version
 Orchestrate TOSCA applications on top of Docker.
 
 FILE: TOSCA YAML file or CSAR file
 
-COMMANDS:
+COMMAND:
   create   Create application components
   start    Start applications components
   stop     Stop application components
@@ -34,22 +38,25 @@ OPTIONS:
 
 INPUTS: provide TOSCA inputs (syntax: --NAME VALUE)
 
+APPLICATION: the application name (CSAR or YAML file without the extension)
+
 FILTER:
   --name <name>    filter by the component name
   --state <state>  filter by the state (created, started, deleted)
   --type <type>    filter by the type (Container, Volume, Software)
 
-APPLICATION: the application name (CSAR or YAML file without the extension)
+COMPONENT: the component fullname (i.e. my_app.my_component)
 
 Examples:
   tosker hello.yaml create start --name mario
   tosker hello.yaml stop delete -q
-
   tosker hello.yaml database api create start
 
   tosker ls
   tosker ls hello
   tosker ls hello --type Software --state started
+
+  tosker log my_app.my_component create
 '''
 
 
@@ -95,13 +102,13 @@ def _parse_unix_input(args):
             else:
                 error = 'known parameter.'
         elif mod == 'deploy':
-                if args[i] in _CMD:
-                    cmds.append(args[i])
-                elif len(cmds) == 0:
-                    comps.append(args[i])
-                else:
-                    error = '{} is not a valid command.'.format(args[i])
-        elif mod == 'ls':
+            if args[i] in _CMD:
+                cmds.append(args[i])
+            elif len(cmds) == 0:
+                comps.append(args[i])
+            else:
+                error = '{} is not a valid command.'.format(args[i])
+        elif mod == 'ls' or mod == 'log':
             comps.append(args[i])
         elif i == 0:
             file = _check_file(args[i])
@@ -109,6 +116,8 @@ def _parse_unix_input(args):
                 mod = 'deploy'
             elif args[i] == 'ls':
                 mod = 'ls'
+            elif args[i] == 'log':
+                mod = 'log'
             else:
                 error = ('first argument must be a TOSCA yaml file, a CSAR or '
                          'a ZIP archive.')
@@ -160,3 +169,9 @@ def run():
         else:
             app = comps[0] if len(comps) != 0 else None
             orchestrator.ls_components(app, inputs)
+    elif mod == 'log':
+        if len(comps) != 2:
+            _error('log take a component full name and a interface name')
+            return
+        comp, interface = comps
+        orchestrator.log(comp, interface)

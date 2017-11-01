@@ -1,3 +1,6 @@
+'''
+Helper module
+'''
 import json
 import logging
 import sys
