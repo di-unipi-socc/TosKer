@@ -6,7 +6,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  # - tosker: https://di-unipi-socc.github.io/tosker-types/0.0.6/tosker.yaml
+  # - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
   - tosker: tosker-types.yaml
 
 topology_template:
