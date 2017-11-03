@@ -215,7 +215,6 @@ topology_template:
           type: tosker.artifacts.Image
           repository: docker_hub
 
-
     rabbitmq:
       type: tosker.nodes.Container
       artifacts:
@@ -224,7 +223,6 @@ topology_template:
         type: tosker.artifacts.Image.Service
         repository: docker_hub
 
-    payment-go:
       type: tosker.nodes.Container
       artifacts:
         my_image:

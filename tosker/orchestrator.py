@@ -77,8 +77,8 @@ class Orchestrator:
         try:
             tpl = get_tosca_template(file_path, inputs)
         except Exception as e:
-            Logger.println(e.args[0])
             self._log.debug(traceback.format_exc())
+            Logger.println('{}\n{}'.format(e, e.args[0]))
             return False
 
         # Check if inputs components exists in the TOSCA file

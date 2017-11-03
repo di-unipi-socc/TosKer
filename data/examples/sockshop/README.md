@@ -12,14 +12,17 @@ It is intended to aid the demonstration and testing of microservice and cloud na
 ## Architecture
 
 Sockshop is built using:
-    - Spring Boot,
-    - [Go kit](http://gokit.io/): A toolkit for microservices
+    - Spring Boot.
+    - ![Go kit](http://gokit.io/): A toolkit for microservices
     - Node.js
 
 and is packaged in Docker containers.
 
-![Architecture diagram](Architecture.png)
+<!-- ![Architecture diagram](/docs/img/Architecture.png) -->
 
+<div style="text-align:center">
+  <img src="/docs/img/Architecture.png" alt="Drawing" style="width: 400px" />
+</div>
 The architecture of the demo microserivces application was intentionally designed to provide as many microservices as possible. If you are considering your own design, we would recommend the iterative approach, whereby you only define new microservices when you see issues (performance/testing/coupling) developing in your application.
 
 Furthermore, it is intentionally polyglot to exercise a number of different technologies. Again, we'd recommend that you only consider new technologies based upon a need.
@@ -111,7 +114,9 @@ API.
 
 Load-test with locust.py (and web interface):
 
-`locust --host=http://127.0.0.1 -f  locustfile.py --clients=5 --hatch-rate=5 `
+`locust --host=http://127.0.0.1 -f  locustfile.py `
+
+Got to `http://127.0.0.1:8089/` insert the number of users and the hatch rate(The rate per second in which clients are spawned.).
 
 
 Load-test  with locust Locust:
