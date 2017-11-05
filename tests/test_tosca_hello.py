@@ -7,7 +7,7 @@ from six import StringIO
 from tosker import docker_interface as docker
 from tosker.orchestrator import Orchestrator
 
-from .test_tosca_base import Test_Orchestrator
+from .test_tosca_base import TestOrchestrator
 
 
 @contextmanager
@@ -19,10 +19,10 @@ def redirect_stdout(new_target):
         sys.stdout = old_target  # restore to the previous value
 
 
-class Test_Hello(Test_Orchestrator):
+class TestHello(TestOrchestrator):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(TestHello, self).setUp()
         with redirect_stdout(StringIO()):
             self.orchestrator = Orchestrator(quiet=False)
         self.file = 'data/examples/hello.yaml'

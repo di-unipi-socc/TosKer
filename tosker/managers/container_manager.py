@@ -7,7 +7,7 @@ from .. import docker_interface
 from ..graph.nodes import Container
 
 
-class Container_manager:
+class ContainerManager:
 
     @staticmethod
     def create(node):

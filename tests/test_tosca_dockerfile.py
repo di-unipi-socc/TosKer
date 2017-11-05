@@ -1,12 +1,12 @@
 import unittest
 
-from .test_tosca_base import Test_Orchestrator
+from .test_tosca_base import TestOrchestrator
 
 
-class Test_Dockerfile(Test_Orchestrator):
+class TestDockerfile(TestOrchestrator):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(TestDockerfile, self).setUp()
         self.file = 'data/examples/dockerfile/hello-dockerfile.yaml'
 
     def test(self):

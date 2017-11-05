@@ -5,7 +5,7 @@ from tosker.orchestrator import Orchestrator
 # from tosker import helper
 
 
-class Test_Tosca_Parsing(unittest.TestCase):
+class TestToscaParsing(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self._orchestrator = Orchestrator(

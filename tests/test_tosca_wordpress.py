@@ -1,12 +1,12 @@
 import unittest
 
-from .test_tosca_base import Test_Orchestrator
+from .test_tosca_base import TestOrchestrator
 
 
-class Test_Wordpress(Test_Orchestrator):
+class TestWordpress(TestOrchestrator):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(TestWordpress, self).setUp()
         self.file = 'data/examples/wordpress.yaml'
         self.inputs = {'wp_host_port': 9000}
 

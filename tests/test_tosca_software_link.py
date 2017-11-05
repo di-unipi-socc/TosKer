@@ -1,12 +1,12 @@
 import unittest
 
-from .test_tosca_base import Test_Orchestrator
+from .test_tosca_base import TestOrchestrator
 
 
-class Test_Software_Link(Test_Orchestrator):
+class TestSoftwareLink(TestOrchestrator):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(TestSoftwareLink, self).setUp()
         self.file = 'data/examples/software-link/software.yaml'
 
     def test(self):

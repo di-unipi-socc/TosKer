@@ -68,17 +68,17 @@ def print_TOSCA(tosca, indent=2):
     space = ' ' * indent
 
     def _rec_print(item, tab, res):
-        if type(item) is dict:
+        if isinstance(item, dict):
             for key, value in item.items():
-                if type(value) is str or \
-                   (type(value) is dict and 'get_input' in value):
+                if isinstance(value, str) or \
+                   (isinstance(value, dict) and 'get_input' in value):
                     return res + tab + str(key) + ': ' + str(value)
                 else:
                     res += tab + str(key) + ':\n'
                     return _rec_print(value, tab + space, res)
-        elif type(item) is list:
+        elif isinstance(item, list):
             for value in item:
-                if type(value) is str:
+                if isinstance(value, str):
                     return res + tab + '- ' + value + '\n'
                 else:
                     key, value = list(value.items())[0]

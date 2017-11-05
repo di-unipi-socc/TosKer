@@ -25,7 +25,7 @@ def _get_str_full_name(obj):
 class ConnectsTo(Relationship):
 
     def __init__(self, origin, node, alias=None):
-        super(self.__class__, self).__init__(origin, node)
+        super(ConnectsTo, self).__init__(origin, node)
         self.alias = alias
 
     @property
@@ -42,9 +42,6 @@ class ConnectsTo(Relationship):
 
 class HostedOn(Relationship):
 
-    def __init__(self, origin, node):
-        super(self.__class__, self).__init__(origin, node)
-
     @property
     def format(self):
         return _get_str_name(self.to)
@@ -56,7 +53,7 @@ class HostedOn(Relationship):
 class AttachesTo(Relationship):
 
     def __init__(self, origin, node, folder=None):
-        super(self.__class__, self).__init__(origin, node)
+        super(AttachesTo, self).__init__(origin, node)
         self.location = folder
 
     @property
@@ -71,9 +68,6 @@ class AttachesTo(Relationship):
 
 
 class DependsOn(Relationship):
-
-    def __init__(self, origin, node):
-        super(self.__class__, self).__init__(origin, node)
 
     @property
     def format(self):

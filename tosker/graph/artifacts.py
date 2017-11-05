@@ -18,7 +18,7 @@ class Artifact(object):
 class File(Artifact):
 
     def __init__(self, name, abs_path):
-        super(self.__class__, self).__init__(name)
+        super(File, self).__init__(name)
         split_path = abs_path.split('/')
         self.path = '/'.join(split_path[:-1])
         self.file = split_path[-1]
@@ -52,9 +52,6 @@ class DockerImage(Artifact):
 
 class DockerImageExecutable(DockerImage):
 
-    def __init__(self, name):
-        super(DockerImageExecutable, self).__init__(name)
-
     def __str__(self):
         return 'DockerImageExecutable'
 
@@ -76,9 +73,6 @@ class Dockerfile(Artifact):
 
 
 class DockerfileExecutable(Dockerfile):
-
-    def __init__(self, name, dockerfile):
-        super(DockerfileExecutable, self).__init__(name, dockerfile)
 
     def __str__(self):
         return 'DockerfileExecutable'

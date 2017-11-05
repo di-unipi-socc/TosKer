@@ -12,6 +12,7 @@ from .helper import Logger
 
 
 class Storage:
+    @staticmethod
     def _singleton(func):
         @wraps(func)
         def func_wrapper(*args, **kwds):
@@ -78,8 +79,8 @@ class Memory(Storage):
 
         def _update_state(full_name, state):
             log = Logger.get(__name__)
-            log.debug('update {} to {}'.format(full_name, state))
-            if (state == Memory.STATE.DELETED):
+            log.debug('update %s to %s', full_name, state)
+            if state == Memory.STATE.DELETED:
                 return Memory.remove(Query().full_name == full_name)
             else:
                 return Memory.update({'state': state.value},
@@ -104,12 +105,12 @@ class Memory(Storage):
             raise AssertionError()
 
     @staticmethod
-    def insert(comp):
-        assert isinstance(comp, (dict, Root))
-        if isinstance(comp, Root):
-            comp = Memory._comp_to_dict(comp)
+    def insert(obj):
+        assert isinstance(obj, (dict, Root))
+        if isinstance(obj, Root):
+            obj = Memory._comp_to_dict(obj)
 
-        return Storage.insert(comp)
+        return Storage.insert(obj)
 
     @staticmethod
     def get_comp_state(comp):
@@ -119,17 +120,19 @@ class Memory(Storage):
             if len(res) == 1 else Memory.STATE.DELETED
 
     @staticmethod
-    def get_comps(app_name=None, filters={}):
+    def get_comps(app_name=None, filters=None):
         queries = []
-        for k, v in filters.items():
-            if isinstance(v, Memory.STATE):
-                v = v.value
-            queries.append(Query()[k] == v)
+        if filters is not None:
+            assert isinstance(filter, dict)
+            for k, v in filters.items():
+                if isinstance(v, Memory.STATE):
+                    v = v.value
+                queries.append(Query()[k] == v)
 
         if app_name is not None:
             queries.append(Query()['app_name'] == app_name)
 
-        if len(queries) > 0:
+        if queries:
             cond = reduce(lambda a, b: a & b, queries)
             return Memory.search(cond)
         else:

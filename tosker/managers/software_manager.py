@@ -13,24 +13,24 @@ from ..helper import Logger
 from ..storage import Memory
 
 
-def _get_cmd(interface, force_exec=False):
-    def _get_cmd_decorator(func):
-        @wraps(func)
-        def func_wrapper(*args):
-            assert isinstance(args[0], Software)
-            cmd = Software_manager._get_cmd_args(args[0], interface)
-            if cmd or force_exec:
-                return func(cmd, *args)
-        return func_wrapper
-    return _get_cmd_decorator
+class SoftwareManager:
 
-
-class Software_manager:
+    @staticmethod
+    def _get_cmd(interface, force_exec=False):
+        def _get_cmd_decorator(func):
+            @wraps(func)
+            def func_wrapper(*args):
+                assert isinstance(args[0], Software)
+                cmd = SoftwareManager._get_cmd_args(args[0], interface)
+                if cmd or force_exec:
+                    return func(cmd, *args)
+            return func_wrapper
+        return _get_cmd_decorator
 
     @staticmethod
     @_get_cmd('create', force_exec=True)
     def create(cmd, node):
-        Software_manager._copy_files(node)
+        SoftwareManager._copy_files(node)
         if cmd is not None:
             docker_interface.update_container(node.host_container, cmd)
 
@@ -45,7 +45,7 @@ class Software_manager:
         _log = Logger.get(__name__)
         try:
             docker_interface.exec_cmd(node.host_container, cmd)
-        except Exception as e:
+        except Exception:
             _log.debug('is not running!')
             # docker_interface.delete_container(node.host_container)
             docker_interface.create_container(node.host_container,
@@ -84,7 +84,7 @@ class Software_manager:
             pass
 
         # copy all the interfaces scripts
-        for key, value in node.interfaces.items():
+        for _, value in node.interfaces.items():
             copy(value['cmd'].file_path, tmp)
 
         # if present copy all the artifacts
@@ -134,8 +134,7 @@ class Software_manager:
 
         if interface not in node.interfaces:
             return None
-        # _log.debug('interface: {}'
-        #            ''.format(node.interfaces[interface]))
+
         args = []
         args_env = []
         res = None
@@ -155,7 +154,6 @@ class Software_manager:
         else:
             res = "sh -c '{}'".format(get_cmd())
 
-        _log.debug('{} command ({}) on container {}'
-                   ''.format(interface, res,
-                             node.host_container))
+        _log.debug('%s command (%s) on container %s', interface,
+                   res, node.host_container)
         return res
