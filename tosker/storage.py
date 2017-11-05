@@ -12,7 +12,7 @@ from .helper import Logger
 
 
 class Storage:
-    @staticmethod
+
     def _singleton(func):
         @wraps(func)
         def func_wrapper(*args, **kwds):
@@ -123,7 +123,7 @@ class Memory(Storage):
     def get_comps(app_name=None, filters=None):
         queries = []
         if filters is not None:
-            assert isinstance(filter, dict)
+            assert isinstance(filters, dict)
             for k, v in filters.items():
                 if isinstance(v, Memory.STATE):
                     v = v.value

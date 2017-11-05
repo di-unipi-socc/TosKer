@@ -15,7 +15,6 @@ from ..storage import Memory
 
 class SoftwareManager:
 
-    @staticmethod
     def _get_cmd(interface, force_exec=False):
         def _get_cmd_decorator(func):
             @wraps(func)
