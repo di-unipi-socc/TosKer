@@ -36,19 +36,25 @@ Main characteristic of the `SockShop` application:
  - _Deployemnt_: it is used to demostrate the deployemnt on different technologies (e.g. `Docker Swarm`, `Docker Compose`,` 	kubernetes`, `Mesos`, `aws-ecs`, etc )
  - _Testing_: it is equipped with a load testing ([`Locust.io`](https://locust.io/)), a  tracing tool ([`Zipkin`](http://zipkin.io/))
 
- ## Run sockshop application with `tosKer`
- After having installed `tosKer` (`pip install tosker`, `sockshop` can be run with submitting the command:
+## Run sockshop application with `tosKer`
+The guide assume that `tosKer` is installed locally (`pip install tosker`).
 
+1. Build the `jar` files for the `Order`, `Cart`, `Shipping` microservice.
+```
+cd  TosKer/data/examples/sockshop
+./build-jars.sh
+```
+2. Create and start all the component with `TosKer`
  ```
  tosker sockshop.yml create start
  ```
-`tosKer` create and start all the components of the application. In orde to check
-the running component:
+
+3. Check if all the components are running:
  ```
  tosker sockshop.yml ls
  ```
 
-Access the `http://localhost` in order to access the web-based interface of `sockshop`.
+4. Access the `http://localhost` in order view the `sockshop` web-based interface.
 
 <div style="text-align:center">
   <img src="docs/img/sockshop.png" alt="Drawing" style="width: 600px" />
@@ -56,7 +62,7 @@ Access the `http://localhost` in order to access the web-based interface of `soc
 
 
 
- ## Testing the application
+ ## Sockshop testing
 In order to test the `Sockshop` application, the `locust.io` tool can be exploited.
 
 `Locust` is a load testing tool that runs a certain amount of users that generate traffic to the application and test if the application is resilient to the load.
