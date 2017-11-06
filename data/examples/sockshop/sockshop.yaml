@@ -39,7 +39,7 @@ topology_template:
     front-end:
       type: tosker.nodes.Software
       requirements:
-        - host: node
+        - host: front-end-node
         - connection: catalogue
         - connection: user
         - connection: carts
@@ -64,7 +64,7 @@ topology_template:
     catalogue:
       type: tosker.nodes.Software
       requirements:
-        - host: go
+        - host: catalogue-go
         - connection: catalogue-db
       interfaces:
         Standard:
@@ -298,7 +298,7 @@ topology_template:
           MYSQL_ALLOW_EMPTY_PASSWORD: true
           MYSQL_DATABASE: socksdb
 
-    node:
+    front-end-node:
       type: tosker.nodes.Container
       artifacts:
         my_image:
@@ -306,7 +306,7 @@ topology_template:
           type: tosker.artifacts.Image
           repository: docker_hub
 
-    go:
+    catalogue-go:
       type: tosker.nodes.Container
       artifacts:
         my_image:
