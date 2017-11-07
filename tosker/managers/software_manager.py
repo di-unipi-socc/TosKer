@@ -69,7 +69,6 @@ class Software_manager:
 
     @staticmethod
     def _copy_files(node):
-        _log = Logger.get(__name__)
         # generate path for the tmp folder
         tmp = path.join(node.tpl.tmp_dir,
                         node.host_container.name,
@@ -83,7 +82,6 @@ class Software_manager:
 
         # copy all the interfaces scripts
         for key, value in node.interfaces.items():
-            _log.debug(value['cmd'].file_path)
             copy(value['cmd'].file_path, tmp)
 
         # if present copy all the artifacts
