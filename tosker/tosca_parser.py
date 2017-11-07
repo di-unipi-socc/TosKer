@@ -158,8 +158,14 @@ def _parse_conf(tpl, node, repos, base_path):
                         #     'path': '/'.join(path_split[:-1]),
                         #     'file_path': abs_path
                         # }
+<<<<<<< HEAD
                         _log.debug('path: %s file: %s', intf[key]['cmd'].path,
                                    intf[key]['cmd'].file)
+=======
+                        _log.debug('path: {} file: {}'
+                                .format(intf[key]['cmd'].path,
+                                        intf[key]['cmd'].file))
+>>>>>>> add support of subtyping, custom interface
                     if 'inputs' in value:
                         intf[key]['inputs'] = value['inputs']
                         # intf[key]['inputs'] = _parse_map(value['inputs'])
