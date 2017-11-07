@@ -77,6 +77,7 @@ class Orchestrator:
         try:
             tpl = get_tosca_template(file_path, inputs)
         except Exception as e:
+            Logger.println(e.args[0])
             self._log.debug(traceback.format_exc())
             return False
 
