@@ -29,10 +29,10 @@ DOCKERFILE_EXE = 'tosker.artifacts.Dockerfile.Service'
 # DOCKERFILE2 = 'tosca.artifacts.File'
 
 # REQUIREMENTS
-CONNECT = 'connection'
-DEPEND = 'dependency'
-ATTACH = 'storage'
-HOST = 'host'
+CONNECT = 'tosca.relationships.ConnectsTo'
+DEPEND = 'tosca.relationships.DependsOn'
+ATTACH = 'tosca.relationships.AttachesTo'
+HOST = 'tosca.relationships.HostedOn'
 
 
 # def _check_requirements(node, running):
@@ -68,7 +68,7 @@ def _parse_conf(tpl, node, repos, base_path):
         return res
 
     conf = None
-    if node.type == CONTAINER:
+    if node.is_derived_from(CONTAINER):
         conf = Container(node.name)
 
         def parse_dockerfile(name, file, executable=False):
@@ -125,10 +125,10 @@ def _parse_conf(tpl, node, repos, base_path):
                 values = node.entity_tpl['properties']['share_data']
                 conf.share_data = _parse_map(values)
 
-    elif node.type == VOLUME:
+    elif node.is_derived_from(VOLUME):
         conf = Volume(node.name)
 
-    elif node.type == SOFTWARE:
+    elif node.is_derived_from(SOFTWARE):
         conf = Software(node.name)
         if 'artifacts' in node.entity_tpl:
             artifacts = node.entity_tpl['artifacts']
@@ -139,30 +139,29 @@ def _parse_conf(tpl, node, repos, base_path):
                 _log.debug('artifacts: {}'.format(conf.artifacts))
 
         # get interfaces
-        if 'interfaces' in node.entity_tpl and \
-                'Standard' in node.entity_tpl['interfaces']:
-            interfaces = node.entity_tpl['interfaces']['Standard']
+        if 'interfaces' in node.entity_tpl:
             intf = {}
-            for key, value in interfaces.items():
-                intf[key] = {}
-                if 'implementation' in value:
-                    abs_path = path.abspath(
-                        path.join(base_path, value['implementation'])
-                    )
-                    # path_split = abs_path.split('/')
+            for int_type, interface in node.entity_tpl['interfaces'].items():
+                for key, value in interface.items():
+                    intf[key] = {}
+                    if 'implementation' in value:
+                        abs_path = path.abspath(
+                            path.join(base_path, value['implementation'])
+                        )
+                        # path_split = abs_path.split('/')
 
-                    intf[key]['cmd'] = File(None, abs_path)
-                    # {
-                    #     'file': path_split[-1],
-                    #     'path': '/'.join(path_split[:-1]),
-                    #     'file_path': abs_path
-                    # }
-                    _log.debug('path: {} file: {}'
-                               .format(intf[key]['cmd'].path,
-                                       intf[key]['cmd'].file))
-                if 'inputs' in value:
-                    intf[key]['inputs'] = value['inputs']
-                    # intf[key]['inputs'] = _parse_map(value['inputs'])
+                        intf[key]['cmd'] = File(None, abs_path)
+                        # {
+                        #     'file': path_split[-1],
+                        #     'path': '/'.join(path_split[:-1]),
+                        #     'file_path': abs_path
+                        # }
+                        _log.debug('path: {} file: {}'
+                                .format(intf[key]['cmd'].path,
+                                        intf[key]['cmd'].file))
+                    if 'inputs' in value:
+                        intf[key]['inputs'] = value['inputs']
+                        # intf[key]['inputs'] = _parse_map(value['inputs'])
 
             conf.interfaces = intf
 
@@ -170,26 +169,28 @@ def _parse_conf(tpl, node, repos, base_path):
         raise ValueError(
             'node type "{}" not supported!'.format(node.type))
 
+    def get_req_type(req):
+        return next((n[req] for n in node.type_definition.requirements if req in n))['relationship']
+
     # get requirements
-    if 'requirements' in node.entity_tpl:
-        requirements = node.entity_tpl['requirements']
-        if requirements is not None:
-            for value in requirements:
-                if CONNECT in value:
-                    conf.add_connection(value[CONNECT])
-                if DEPEND in value:
-                    conf.add_depend(value[DEPEND])
-                if HOST in value:
-                    if isinstance(value[HOST], dict):
-                        conf.host = value[HOST]['node']
-                    else:
-                        conf.host = value[HOST]
-                if ATTACH in value:
-                    volume = value[ATTACH]
-                    if isinstance(volume, dict):
-                        conf.add_volume(volume['node'], volume['relationship']
-                                                              ['properties']
-                                                              ['location'])
+    for req in node.requirements:
+        name, value = list(req.items())[0]
+        target = value['node'] if isinstance(value, dict) else value
+
+        req_type = get_req_type(name)
+        _log.debug('%s %s', target, req_type)
+
+        if req_type == CONNECT:
+            conf.add_connection(target)
+        if req_type == DEPEND:
+            conf.add_depend(target)
+        if req_type == HOST:
+            conf.host = target
+        if req_type == ATTACH:
+            location = value['relationship']['properties']['location']
+            _log.debug('location: %s', location)
+            conf.add_volume(target, location)
+
     conf.tpl = tpl
     return conf
 
