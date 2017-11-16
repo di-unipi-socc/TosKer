@@ -255,7 +255,9 @@ class Orchestrator:
     def log(self, component, interface):
         # TODO: add logs also for Docker container
         try:
-            app, name = component.split('.')
+            split_list = component.split('.')
+            app = '.'.join(split_list[:-1])
+            name = split_list[-1]
         except ValueError:
             Logger.print_error('First argument must be a component full name (i.e my_app.my_component)')
             return
