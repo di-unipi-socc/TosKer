@@ -1,0 +1,298 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: SockShop microservice-based demo application
+
+repositories:
+  docker_hub: https://registry.hub.docker.com/
+
+imports:
+  - tosker: tosker-types.yaml
+
+topology_template:
+  inputs:
+    port:
+      type: integer
+      default: 80
+      description: Application external port
+    payment_endpoint:
+      type: string
+      default: payment
+    catalogue_endpoint:
+      type: string
+      default: catalogue
+    user_endpoint:
+      type: string
+      default: user
+    carts_endpoint:
+      type: string
+      default: carts
+    orders_endpoint:
+      type: string
+      default: orders
+    shipping_endpoint:
+      type: string
+      default: shipping
+
+  node_templates:
+# Software
+    front-end:
+      type: tosker.nodes.Software
+      requirements:
+        - host: front-end-node
+        - connection: catalogue
+        - connection: user
+        - connection: carts
+        - connection: orders
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/front-end/install.sh
+            inputs:
+              repo: https://github.com/microservices-demo/front-end.git
+          configure:
+            implementation: scripts/front-end/configure.sh
+            inputs:
+              catalogue: { get_input: catalogue_endpoint }
+              carts: { get_input: carts_endpoint }
+              user: { get_input: user_endpoint }
+              orders: { get_input: orders_endpoint }
+          start:
+            implementation: scripts/front-end/start.sh
+          stop:
+            implementation: scripts/front-end/stop.sh
+          delete:
+            implementation: scripts/front-end/uninstall.sh
+
+    catalogue:
+      type: tosker.nodes.Software
+      requirements:
+        - host: catalogue-go
+        - connection: catalogue-db
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/catalogue/install.sh
+          start:
+            implementation: scripts/catalogue/start.sh
+            inputs:
+              port: 80
+          stop:
+            implementation: scripts/catalogue/stop.sh
+          delete:
+            implementation: scripts/catalogue/uninstall.sh
+
+    user:
+      type: tosker.nodes.Software
+      requirements:
+        - host: user-go
+        - connection: user-db
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/user/install.sh
+          start:
+            implementation: scripts/user/start.sh
+            inputs:
+              database: mongodb
+              mongohost: user-db
+              port: 80
+          stop:
+            implementation: scripts/user/stop.sh
+          delete:
+            implementation: scripts/user/uninstall.sh
+
+    carts:
+      type: tosker.nodes.Software
+      requirements:
+        - host: carts-java
+        - connection: carts-db
+      artifacts:
+        jar: artifacts/carts.jar
+      interfaces:
+        Standard:
+          start:
+            implementation: scripts/carts/start.sh
+            inputs:
+              port: 80
+              jar: { get_artifact: [ SELF, jar ] }
+          stop:
+            implementation: scripts/carts/stop.sh
+
+    orders:
+      type: tosker.nodes.Software
+      requirements:
+        - host: orders-java
+        - connection: orders-db
+        - connection: shipping
+        - connection: payment
+        - connection: carts
+        - connection: user
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/orders/install.sh
+            inputs:
+              payment: { get_input: payment_endpoint }
+              shipping: { get_input: shipping_endpoint }
+          start:
+            implementation: scripts/orders/start.sh
+            inputs:
+              port: 80
+          stop:
+            implementation: scripts/orders/stop.sh
+          delete:
+            implementation: scripts/orders/uninstall.sh
+
+    payment:
+      type: tosker.nodes.Software
+      requirements:
+        - host: payment-go
+      interfaces:
+        Standard:
+          create:
+            implementation: scripts/payment/install.sh
+          start:
+            implementation: scripts/payment/start.sh
+            inputs:
+              port: 80
+          stop:
+            implementation: scripts/payment/stop.sh
+          delete:
+            implementation: scripts/payment/uninstall.sh
+
+    shipping:
+      type: tosker.nodes.Software
+      requirements:
+        - host: shipping-java
+        - connection: rabbitmq
+      artifacts:
+        jar: artifacts/shipping.jar
+      interfaces:
+        Standard:
+          start:
+            implementation: scripts/shipping/start.sh
+            inputs:
+              port: 80
+              jar: { get_artifact: [ SELF, jar ] }
+          stop:
+            implementation: scripts/shipping/stop.sh
+
+
+# Environments
+    front-end-node:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: node:4.8
+          type: tosker.artifacts.Image
+          repository: docker_hub
+
+    payment-go:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: golang:1.7
+          type: tosker.artifacts.Image
+          repository: docker_hub
+
+    catalogue-go:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: golang:1.7
+          type: tosker.artifacts.Image
+          repository: docker_hub
+
+    user-go:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: golang:1.7
+          type: tosker.artifacts.Image
+          repository: docker_hub
+
+    orders-java:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: maven:3.2-jdk-8
+          type: tosker.artifacts.Image
+          repository: docker_hub
+
+    carts-java:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: maven:3.2-jdk-8
+          type: tosker.artifacts.Image
+          repository: docker_hub
+
+    shipping-java:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: maven:3.2-jdk-8
+          type: tosker.artifacts.Image
+          repository: docker_hub
+
+
+# Databases
+    orders-db:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: mongo
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+
+    carts-db:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: mongo
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+
+    user-db:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: weaveworksdemos/user-db
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+
+    catalogue-db:
+      type: tosker.nodes.Container
+      properties:
+        env_variable:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ALLOW_EMPTY_PASSWORD: true
+          MYSQL_DATABASE: socksdb
+      artifacts:
+        my_image:
+          file: weaveworksdemos/catalogue-db
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+
+
+# Other images
+    edge-router:
+      type: tosker.nodes.Container
+      requirements:
+        - connection: front-end
+      properties:
+        ports:
+          80: { get_input: port }
+      artifacts:
+        my_image:
+          file: weaveworksdemos/edge-router:latest
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+
+    rabbitmq:
+      type: tosker.nodes.Container
+      artifacts:
+       my_image:
+        file:  rabbitmq:3.6.8
+        type: tosker.artifacts.Image.Service
+        repository: docker_hub
