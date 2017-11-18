@@ -18,9 +18,9 @@ from toscaparser.common.exception import ValidationError
 from . import docker_interface, helper
 from .graph.nodes import Container, Software, Volume
 from .helper import Logger
-from .managers.container_manager import Container_manager
-from .managers.software_manager import Software_manager
-from .managers.volume_manager import Volume_manager
+from .managers.container_manager import ContainerManager
+from .managers.software_manager import SoftwareManager
+from .managers.volume_manager import VolumeManager
 from .storage import Memory
 from .tosca_parser import get_tosca_template
 
@@ -67,7 +67,7 @@ class Orchestrator:
         self._data_dir = data_dir
         try:
             os.makedirs(data_dir)
-        except os.error as e:
+        except os.error:
             pass
         Memory.set_db(data_dir)
 
@@ -91,7 +91,7 @@ class Orchestrator:
             return False
         except Exception as e:
             Logger.print_error('Internal error\n    {}'.format(e))
-            self._log.debug('Exception type: {}'.format(type(e)))
+            self._log.debug('Exception type: %s', type(e))
             self._log.debug(colored(traceback.format_exc(), 'red'))
             return False
 
@@ -116,14 +116,14 @@ class Orchestrator:
             if any((c in ('create', 'start') for c in commands)):
                 down_extension = self._extend_down(tpl, components)
                 down_deploy = self._sort(tpl, down_extension)
-                self._log.debug('down_deploy: {}'.format(', '
-                                ''.join((c.name for c in down_deploy))))
+                self._log.debug('down_deploy: %s', ', '.join(
+                                (c.name for c in down_deploy)))
             # must calculate the up extension/sorting
             if any((c in ('stop', 'delete') for c in commands)):
                 up_extension = self._extend_up(tpl, components)
                 up_deploy = list(reversed(self._sort(tpl, up_extension)))
-                self._log.debug('up_deploy: {}'.format(', '
-                                ''.join((c.name for c in up_deploy))))
+                self._log.debug('up_deploy: %s', ', '.join(
+                                (c.name for c in up_deploy)))
 
             for cmd in commands:
                 {
@@ -135,7 +135,7 @@ class Orchestrator:
 
             self._print_outputs(tpl)
         except Exception as e:
-            self._log.debug('Exception type: {}'.format(type(e)))
+            self._log.debug('Exception type: %s', type(e))
             self._log.debug(traceback.format_exc())
             self._print_cross(e)
             return False
@@ -152,12 +152,12 @@ class Orchestrator:
             status = Memory.get_comp_state(node)
             if Memory.STATE.DELETED == status:
                 if isinstance(node, Container):
-                    Container_manager.create(node)
+                    ContainerManager.create(node)
                 elif isinstance(node, Volume):
-                    Volume_manager.create(node)
+                    VolumeManager.create(node)
                 elif isinstance(node, Software):
-                    Software_manager.create(node)
-                    Software_manager.configure(node)
+                    SoftwareManager.create(node)
+                    SoftwareManager.configure(node)
 
                 Memory.update_state(node, Memory.STATE.CREATED)
 
@@ -178,14 +178,14 @@ class Orchestrator:
             elif Memory.STATE.CREATED == status or\
                     'create' not in node.interfaces:
                 if isinstance(node, Container):
-                    Container_manager.start(node)
+                    ContainerManager.start(node)
                 elif isinstance(node, Software):
-                    Software_manager.start(node)
+                    SoftwareManager.start(node)
                 Memory.update_state(node, Memory.STATE.STARTED)
                 self._print_tick()
             else:
                 self._print_cross('the components must be created first')
-                self._log.info('{} have to be created first'.format(node))
+                self._log.info('%s have to be created first', node)
                 break
 
     @_filter_interface('stop')
@@ -196,9 +196,9 @@ class Orchestrator:
             status = Memory.get_comp_state(node)
             if Memory.STATE.STARTED == status:
                 if isinstance(node, Container):
-                    Container_manager.stop(node)
+                    ContainerManager.stop(node)
                 elif isinstance(node, Software):
-                    Software_manager.stop(node)
+                    SoftwareManager.stop(node)
                 Memory.update_state(node, Memory.STATE.CREATED)
                 self._print_tick()
             else:
@@ -214,14 +214,14 @@ class Orchestrator:
             status = Memory.get_comp_state(node)
             if Memory.STATE.CREATED == status:
                 if isinstance(node, Container):
-                    Container_manager.delete(node)
+                    ContainerManager.delete(node)
                 elif isinstance(node, Software):
-                    Software_manager.delete(node)
+                    SoftwareManager.delete(node)
                 Memory.update_state(node, Memory.STATE.DELETED)
                 self._print_tick()
             elif Memory.STATE.STARTED == status:
                 self._print_cross('The component must be stopped first')
-                self._log.info('{} have to be stopped first'.format(node))
+                self._log.info('%s have to be stopped first', node)
                 break
             else:
                 self._print_skip()
@@ -262,7 +262,7 @@ class Orchestrator:
             Logger.print_error('First argument must be a component full name (i.e my_app.my_component)')
             return
         
-        self._log.debug('app: {}, name: {}, interface: {}'.format(app, name, interface))
+        self._log.debug('app: %s, name: %s, interface: %s', app, name, interface)
 
         log_file_name = '{}/{}/*/{}/{}.log'.format(self._tmp_dir,
                                                app, name, interface)
@@ -282,7 +282,7 @@ class Orchestrator:
         if len(tpl.outputs) != 0:
             Logger.println('\nOUTPUTS:')
         for out in tpl.outputs:
-            self._log.debug('value: {}'.format(out.value))
+            self._log.debug('value: %s', out.value)
             value = out.value if isinstance(out.value, six.string_types) \
                 else helper.get_attributes(out.value.args, tpl)
             Logger.println('  - ' + out.name + ":", value)
@@ -303,7 +303,7 @@ class Orchestrator:
                             if f.is_dir()]
             except FileNotFoundError as e:
                 software = []
-            self._log.debug('path {} found {}'.format(path, software))
+            self._log.debug('path %s found %s', path, software)
 
             for s, s_path in software:
                 full_name = '{}.{}'.format(comp['app_name'], s)
@@ -320,7 +320,7 @@ class Orchestrator:
             state = glob('{}/{}/*/{}/state'.format(self._tmp_dir,
                                                    c['app_name'],
                                                    c['name']))
-            self._log.debug('software update {}'.format(state))
+            self._log.debug('software update %s', state)
 
             if len(state) == 1:
                 with open(state[0], 'r') as f:

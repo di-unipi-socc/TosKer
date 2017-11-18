@@ -104,7 +104,7 @@ def _parse_unix_input(args):
         elif mod == 'deploy':
             if args[i] in _CMD:
                 cmds.append(args[i])
-            elif len(cmds) == 0:
+            elif not cmds:
                 comps.append(args[i])
             else:
                 error = '{} is not a valid command.'.format(args[i])
@@ -167,7 +167,7 @@ def run():
             _error('too many arguments, ls take an "application name"'
                    'and a "state"')
         else:
-            app = comps[0] if len(comps) != 0 else None
+            app = comps[0] if comps else None
             orchestrator.ls_components(app, inputs)
     elif mod == 'log':
         if len(comps) != 2:

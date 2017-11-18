@@ -3,7 +3,7 @@ import unittest
 from tosker import ui
 
 
-class Test_Ui(unittest.TestCase):
+class TestUi(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):

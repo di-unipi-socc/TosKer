@@ -5,7 +5,7 @@ import unittest
 # from tosker.tosca_parser import get_tosca_template
 
 
-class Test_Graph(unittest.TestCase):
+class TestGraph(unittest.TestCase):
     pass
     # TODO: the test must target the orchestrator
 

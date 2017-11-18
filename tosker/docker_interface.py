@@ -8,7 +8,6 @@ from os import path
 import six
 from docker import APIClient, errors
 
-from . import helper
 from .graph.artifacts import Dockerfile
 from .graph.nodes import Container, Root, Volume
 from .helper import Logger
@@ -58,14 +57,12 @@ def create_container(_cli,
         except Exception:
             pass
         img_name = con.image.format
-        _log.debug('image_name: {}'.format(img_name))
+        _log.debug('image_name: %s', img_name)
 
         if from_saved:
             saved_image = get_saved_image(con)
             if inspect_image(saved_image):
                 img_name = saved_image
-
-        # _log.debug('container: {}'.format(con.get_str_obj()))
 
         con.id = _cli.create_container(
             name=con.full_name,
@@ -99,7 +96,7 @@ def create_container(_cli,
         build_image(con)
         _log.debug('stop building..')
     elif not from_saved:
-        _log.debug('start pulling.. {}'.format(con.image))
+        _log.debug('start pulling.. %s', con.image)
         # helper.print_json(
         _cli.pull(con.image.format)
         # , _log.debug)
@@ -176,7 +173,7 @@ def exec_cmd(_cli, name, cmd):
         _log.debug(status)
 
         check = 'rpc error:' != status[:10].decode("utf-8")
-        _log.debug('check: {}'.format(check))
+        _log.debug('check: %s', check)
         if not check:
             raise errors.APIError
     except errors.APIError as e:
@@ -202,7 +199,7 @@ def build_image(_cli, node):
 def create_volume(_cli, volume):
     assert isinstance(volume, Volume)
     _log = Logger.get(__name__)
-    _log.debug('volume opt: {}'.format(volume.get_all_opt()))
+    _log.debug('volume opt: %s', volume.get_all_opt())
     return _cli.create_volume(
         volume.full_name, 'local', volume.get_all_opt()
     )
@@ -338,7 +335,7 @@ def is_running(container):
     _log = Logger.get(__name__)
     stat = inspect_container(container)
     stat = stat is not None and stat['State']['Running'] is True
-    _log.debug('State: {}'.format(stat))
+    _log.debug('State: %s', stat)
     return stat
 
 

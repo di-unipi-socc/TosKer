@@ -8,7 +8,7 @@ from tosker.graph.template import Template
 from tosker.storage import Memory, Storage
 
 
-class Test_Storage(unittest.TestCase):
+class TestStorage(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         pass

@@ -1,12 +1,12 @@
 import unittest
 
-from .test_tosca_base import Test_Orchestrator
+from .test_tosca_base import TestOrchestrator
 
 
-class Test_Node_Mongo_Mix2(Test_Orchestrator):
+class TestNodeMongoMix2(TestOrchestrator):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(TestNodeMongoMix2, self).setUp()
         self.file = 'data/examples/node-mongo/node-mongo-mix2.yaml'
 
     def test(self):

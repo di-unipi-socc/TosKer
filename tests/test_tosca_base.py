@@ -7,7 +7,7 @@ from tosker.storage import Memory
 from tosker.tosca_parser import get_tosca_template
 
 
-class Test_Orchestrator(unittest.TestCase):
+class TestOrchestrator(unittest.TestCase):
     @staticmethod
     def setUpClass():
         pass

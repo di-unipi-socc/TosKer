@@ -8,7 +8,7 @@ from tosker.graph.template import Template
 # from tosker.helper import Logger
 
 
-class Test_DockerInterface(unittest.TestCase):
+class TestDockerInterface(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         # Logger.set(helper.get_consol_handler(), False)

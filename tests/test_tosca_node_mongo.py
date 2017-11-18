@@ -1,12 +1,12 @@
 import unittest
 
-from .test_tosca_base import Test_Orchestrator
+from .test_tosca_base import TestOrchestrator
 
 
-class Test_Node_Mongo(Test_Orchestrator):
+class TestNodeMongo(TestOrchestrator):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(TestNodeMongo, self).setUp()
         self.file = 'data/examples/node-mongo-csar/node-mongo.csar'
 
     def test(self):

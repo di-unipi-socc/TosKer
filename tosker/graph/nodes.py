@@ -108,7 +108,7 @@ class Root(object):
 class Container(Root):
 
     def __init__(self, name):
-        super(self.__class__, self).__init__(name)
+        super(Container, self).__init__(name)
         # attributes
         self.id = None
         self.env = None
@@ -155,13 +155,13 @@ class Container(Root):
 
     def add_port(self, name, value):
         self.ports = _add_to_map(self.ports, name, value)
-    
+
     def add_share_data(self, name, value):
         self.share_data = _add_to_map(self.share_data, name, value)
 
     def get_str_obj(self):
         return '{}, {}'.format(
-            super(self.__class__, self).__str__(), _str_obj(self)
+            super(Container, self).__str__(), _str_obj(self)
         )
 
     def __str__(self):
@@ -171,7 +171,7 @@ class Container(Root):
 class Volume(Root):
 
     def __init__(self, name):
-        super(self.__class__, self).__init__(name)
+        super(Volume, self).__init__(name)
         # attributes
         self.id = None
         self.size = None
@@ -199,13 +199,13 @@ class Volume(Root):
         return '{} ({})'.format(self.name, 'volume')
 
     def get_str_obj(self):
-        return '{}, {}'.format(super(self.__class__, self), _str_obj(self))
+        return '{}, {}'.format(super(Volume, self), _str_obj(self))
 
 
 class Software(Root):
 
     def __init__(self, name):
-        super(self.__class__, self).__init__(name)
+        super(Software, self).__init__(name)
         self.artifacts = []
         self.interfaces = {}
 
@@ -217,7 +217,7 @@ class Software(Root):
 
     @property
     def relationships(self):
-        return super(self.__class__, self).relationships + \
+        return super(Software, self).relationships + \
                ([self._host] if self._host is not None else [])
 
     @property
@@ -232,12 +232,12 @@ class Software(Root):
         if not isinstance(item.to, str):
             item.to.up_requirements.append(item)
 
-    def add_artifact(self, file):
-        assert isinstance(file, File)
-        self.artifacts.append(file)
+    def add_artifact(self, art):
+        assert isinstance(art, File)
+        self.artifacts.append(art)
 
     def get_str_obj(self):
-        return '{}, {}'.format(super(self.__class__, self), _str_obj(self))
+        return '{}, {}'.format(super(Software, self), _str_obj(self))
 
     def __str__(self):
         return '{} ({})'.format(self.name, 'software')

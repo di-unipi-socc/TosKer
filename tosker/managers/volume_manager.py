@@ -6,7 +6,7 @@ from .. import docker_interface
 from ..graph.nodes import Volume
 
 
-class Volume_manager:
+class VolumeManager:
 
     @staticmethod
     def create(node):

@@ -1,12 +1,12 @@
 import unittest
 
-from .test_tosca_base import Test_Orchestrator
+from .test_tosca_base import TestOrchestrator
 
 
-class Test_Thoughts(Test_Orchestrator):
+class TestThoughts(TestOrchestrator):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(TestThoughts, self).setUp()
         self.file = 'data/examples/thoughts-app/thoughts.csar'
 
     def test(self):

@@ -64,6 +64,7 @@ def _get_file(base_path, name, file):
 
 
 def _parse_conf(tpl, node, repos, base_path):
+    # TODO: split this method too may branches and to many variable
     def _parse_map(m):
         res = {}
         for key, value in m.items():
@@ -99,10 +100,8 @@ def _parse_conf(tpl, node, repos, base_path):
                 repo = value.get('repository', None)
 
                 if art_type == DOCKERFILE or art_type == DOCKERFILE_EXE:
-                    dockerfile = path.abspath(
-                                    path.join(base_path, name)
-                                 )
-                    _log.debug('dockerfile: {}'.format(dockerfile))
+                    dockerfile = path.abspath(path.join(base_path, name))
+                    _log.debug('dockerfile: %s', dockerfile)
                     # if path.isfile(dockerfile) and repo is None:
                     _log.debug('Find a Dockerfile')
                     parse_dockerfile(key, dockerfile,  # .strip('/Dockerfile'),
@@ -136,10 +135,10 @@ def _parse_conf(tpl, node, repos, base_path):
         if 'artifacts' in node.entity_tpl:
             artifacts = node.entity_tpl['artifacts']
             for key, value in artifacts.items():
-                _log.debug('artifacts: {}'.format(value))
+                _log.debug('artifacts: %s', value)
                 conf.add_artifact(_get_file(base_path, key, value))
                 # TODO: parse also dictionary artifacts
-                _log.debug('artifacts: {}'.format(conf.artifacts))
+                _log.debug('artifacts: %s', conf.artifacts)
 
         # get interfaces
         if 'interfaces' in node.entity_tpl and \
@@ -160,9 +159,8 @@ def _parse_conf(tpl, node, repos, base_path):
                     #     'path': '/'.join(path_split[:-1]),
                     #     'file_path': abs_path
                     # }
-                    _log.debug('path: {} file: {}'
-                               .format(intf[key]['cmd'].path,
-                                       intf[key]['cmd'].file))
+                    _log.debug('path: %s file: %s', intf[key]['cmd'].path,
+                               intf[key]['cmd'].file)
                 if 'inputs' in value:
                     intf[key]['inputs'] = value['inputs']
                     # intf[key]['inputs'] = _parse_map(value['inputs'])
@@ -197,7 +195,9 @@ def _parse_conf(tpl, node, repos, base_path):
     return conf
 
 
-def get_tosca_template(file_path, inputs={}):
+def get_tosca_template(file_path, inputs=None):
+    if inputs is None:
+        inputs = {}
     global _log
     _log = Logger.get(__name__)
 
@@ -218,7 +218,7 @@ def get_tosca_template(file_path, inputs={}):
     tosca = ToscaTemplate(file_path, inputs)
 
     base_path = '/'.join(tosca.path.split('/')[:-1])
-    _log.debug('base_path: {}'.format(base_path))
+    _log.debug('base_path: %s', base_path)
     _parse_functions(tosca, inputs, base_path)
     # print(helper.print_TOSCA(tosca))
 
@@ -274,8 +274,8 @@ def _add_extension(tpl):
                 return find_container(node.host.to)
 
         node.host_container = find_container(node)
-        _log.debug('{} .host {}, .host_container {}'
-                   ''.format(node, node.host.to, node.host_container))
+        _log.debug('%s .host %s, .host_container %s', node, node.host.to,
+                   node.host_container)
 
     # Manage the case when a Software is connected
     # to a Container or a Software
@@ -285,15 +285,15 @@ def _add_extension(tpl):
                 container = con.to
             if isinstance(con.to, Software):
                 container = con.to.host_container
-            _log.debug('mange connection of {} to {}'.format(node, container))
+            _log.debug('mange connection of %s to %s', node, container)
             node.host_container.add_overlay(container, con.to.name)
 
     # Manage the case whene a Container is connected to a Software
     for node in tpl.containers:
         for con in node._connection:
-                if isinstance(con.to, Software):
-                    con.alias = con.to.name
-                    con.to = con.to.host_container
+            if isinstance(con.to, Software):
+                con.alias = con.to.name
+                con.to = con.to.host_container
 
 
 # def _parse_functions(tosca, inputs, base_path):

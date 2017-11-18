@@ -1,12 +1,12 @@
 import unittest
 
-from .test_tosca_base import Test_Orchestrator
+from .test_tosca_base import TestOrchestrator
 
 
-class Test_Node_Mongo_Single_Server(Test_Orchestrator):
+class TestNodeMongoSingleServer(TestOrchestrator):
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(TestNodeMongoSingleServer, self).setUp()
         self.file = 'data/examples/node-mongo/node-mongo-single-server.yaml'
 
     def test(self):
