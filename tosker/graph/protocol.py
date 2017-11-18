@@ -13,8 +13,8 @@ class Protocol():
             states:{State}
             transitions:{Transition}
         '''
-        self.states = set()
-        self.transitions = set()
+        self.states = []
+        self.transitions = []
         self.initial_state = None
         self.current_state = None
 
@@ -27,12 +27,13 @@ class State():
         State attributes:
             name:{str}
             offers:{str}
+            requires:{str}
             transitions:{Transition}
         '''
         self.name = name
-        self.requires = requires if requires is not None else set()
-        self.offers = offers if offers is not None else set()
-        self.transitions = transitions if transitions is not None else set()
+        self.requires = requires if requires is not None else []
+        self.offers = offers if offers is not None else []
+        self.transitions = transitions if transitions is not None else []
 
 class Transition():
     '''

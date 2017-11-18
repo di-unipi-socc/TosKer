@@ -3,12 +3,20 @@ Relationships module
 '''
 import six
 
+REQUIREMENTS = STORAGE, CONNECTION, DEPENDENCY, HOST =\
+               'storage', 'connection', 'dependency', 'host'
+
+CAPABILITIES = ENDPOINT, FEATURE, HOST, ATTACHMENT =\
+               'endpoint', 'feature', 'host', 'attachement'
+
 
 class Relationship(object):
 
-    def __init__(self, origin, to):
+    def __init__(self, origin, to, requirement=None, capability=None):
         self.origin = origin
         self.to = to
+        self.requirement = requirement
+        self.capability = capability
 
     def __str__(self):
         return 'Relationship'
@@ -24,8 +32,9 @@ def _get_str_full_name(obj):
 
 class ConnectsTo(Relationship):
 
-    def __init__(self, origin, node, alias=None):
-        super(ConnectsTo, self).__init__(origin, node)
+    def __init__(self, origin, node, alias=None,
+                 requirement=CONNECTION, capability=ENDPOINT):
+        super(ConnectsTo, self).__init__(origin, node, requirement, capability)
         self.alias = alias
 
     @property
@@ -42,6 +51,9 @@ class ConnectsTo(Relationship):
 
 class HostedOn(Relationship):
 
+    def __init__(self, origin, node, requirement=HOST, capability=HOST):
+        super(HostedOn, self).__init__(origin, node, requirement, capability)
+
     @property
     def format(self):
         return _get_str_name(self.to)
@@ -52,8 +64,8 @@ class HostedOn(Relationship):
 
 class AttachesTo(Relationship):
 
-    def __init__(self, origin, node, folder=None):
-        super(AttachesTo, self).__init__(origin, node)
+    def __init__(self, origin, node, folder=None, requirement=STORAGE, capability=ATTACHMENT):
+        super(AttachesTo, self).__init__(origin, node, requirement, capability)
         self.location = folder
 
     @property
@@ -68,6 +80,9 @@ class AttachesTo(Relationship):
 
 
 class DependsOn(Relationship):
+
+    def __init__(self, origin, node, requirement=DEPENDENCY, capability=FEATURE):
+        super(DependsOn, self).__init__(origin, node, requirement, capability)
 
     @property
     def format(self):

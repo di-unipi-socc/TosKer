@@ -25,13 +25,6 @@ def _str_obj(o):
     return ', '.join(["{}: {}".format(k, v) for k, v in vars(o).items()])
 
 
-REQUIREMENTS = STORAGE, CONNECTION, DEPENDENCY, HOST=\
-               'storage', 'connection', 'dependency', 'host'
-
-CAPABILITIES = ENDPOINT, FEATURE, HOST, ATTACHMENT =\
-               'endpoint', 'feature', 'host', 'attachement'
-
-
 class Root(object):
 
     def __init__(self, name):
