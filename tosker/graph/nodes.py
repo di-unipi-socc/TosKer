@@ -4,6 +4,7 @@ Nodes module
 from .artifacts import Artifact, Dockerfile, DockerfileExecutable,\
                        DockerImage, DockerImageExecutable, File
 from .relationships import AttachesTo, ConnectsTo, DependsOn, HostedOn
+from .. import protocol_helper
 
 
 def _add_to_map(d, k, v):
@@ -22,6 +23,13 @@ def _add_to_list(l_name, i):
 
 def _str_obj(o):
     return ', '.join(["{}: {}".format(k, v) for k, v in vars(o).items()])
+
+
+REQUIREMENTS = STORAGE, CONNECTION, DEPENDENCY, HOST=\
+               'storage', 'connection', 'dependency', 'host'
+
+CAPABILITIES = ENDPOINT, FEATURE, HOST, ATTACHMENT =\
+               'endpoint', 'feature', 'host', 'attachement'
 
 
 class Root(object):
@@ -43,6 +51,9 @@ class Root(object):
 
         # reverse requirements
         self.up_requirements = []
+        
+        # protocol
+        self.protocol = None
 
     @property
     def full_name(self):
@@ -127,6 +138,8 @@ class Container(Root):
 
         self.interfaces = {'create', 'start', 'stop', 'delete'}
 
+        self.protocol = protocol_helper.get_container_protocol()
+
     @property
     def image(self):
         return self.artifacts[0]
@@ -186,6 +199,8 @@ class Volume(Root):
 
         self.driver_opt = None
 
+        self.protocol = protocol_helper.get_volume_protocol()
+
     def get_all_opt(self):
         ris = self.driver_opt.copy() if self.driver_opt else {}
         if self.size:
@@ -214,6 +229,8 @@ class Software(Root):
         self.host_container = None
         # self.depend = None
         # self.connection = None
+
+        self.protocol = protocol_helper.get_software_protocol()
 
     @property
     def relationships(self):

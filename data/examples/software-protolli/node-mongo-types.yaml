@@ -30,43 +30,51 @@ node_types:
           capability: tosca.capabilities.Endpoint
           node: tosker.nodes.Root
           relationship: tosca.relationships.ConnectsTo
-    protocols:
-      initial_state: deleted
-      states:
-        - deleted:
-            transitions:
-              create:
-                target: created
-                interface: my_create
-        - created:
-            relies_on: host
-            transitions:
-              configure:
-                target: configured
-                interface: my_configure
-              delete:
-                target: deleted
-                interface: my_delete
-        - configured:
-            relies_on: host
-            transitions:
-              start:
-                target: running
-                interface: my_start
-              delete:
-                target: deleted
-                interface: my_delete
-        - running:
-            relies_on: [ host, my_connection ]
-            transitions:
-              stop:
-                target: configured
-                interface: my_stop
     interfaces:
       my_interface:
         type: my_software_interface
 
 topology_template:
+  policies:
+  - my_software_protocol:
+      type: tosker.policies.Protocol
+      targets: [ app ]
+      properties:
+        initial_state: deleted
+        states:
+          deleted:
+          created:
+            relies_on: host
+          configured:
+            relies_on: host
+          running:
+            relies_on: [ host, my_connection ]
+        transitions:
+        - create:
+            from: deleted
+            target: created
+            interface: my_create
+        - configure:
+            from: created
+            target: configured
+            interface: my_configure
+        - delete:
+            from: configured
+            target: deleted
+            interface: my_delete
+        - delete:
+            from: created
+            target: deleted
+            interface: my_delete
+        - start:
+            from: configured
+            target: running
+            interface: my_start
+        - stop:
+            from: running
+            target: configured
+            interface: my_stop
+  
   node_templates:
     app:
       type: my_software

@@ -1,3 +1,5 @@
+#!/bin/python
+
 from os import path
 from sys import argv
 
@@ -14,7 +16,15 @@ if not path.isfile(argv[1]) and not argv[1].endswith('.yaml'):
 tosca = ToscaTemplate(argv[1])
 print(helper.print_TOSCA(tosca))
 
-
 # TEST parent discovery
 for node in tosca.nodetemplates:
-    print(node.name, node.is_derived_from('tosker.nodes.Software'))
+    print('node "{}" derived from tosker.nodes.Software: {}'
+          ''.format(node.name, node.is_derived_from('tosker.nodes.Software')))
+print()
+
+# TEST policy
+for policy in tosca.policies:
+    print(policy.name,
+          policy.is_derived_from('tosker.policies.Protocol'),
+          policy.properties,
+          policy.targets)
