@@ -47,7 +47,8 @@ setup(
         ('/usr/share/tosker', ['data/tosker-types.yaml']),
         ('/usr/share/tosker/examples',
             ['data/examples/thoughts-app/thoughts.csar',
-             'data/examples/node-mongo-csar/node-mongo.csar'])
+             'data/examples/node-mongo-csar/node-mongo.csar',
+             'data/examples/sockshop-app/sockshop.csar'])
 
     ],
     install_requires=requirements,

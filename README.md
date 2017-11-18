@@ -39,7 +39,7 @@ TosKer requires having [Docker](https://www.docker.com) installed and configured
 The minimum Python version supported is 2.7. It is possible to find other installation methods on the documentation.
 
 ### Example of usage
-After the installation it is possible to found in `/usr/share/tosker/examples` the CSAR of two example application, `node-mongo.casr` and `thoughts.csar`.
+After the installation it is possible to found in `/usr/share/tosker/examples` the CSAR of two example application, `node-mongo.casr`, `thoughts.csar` and `sockshop.csar`.
 
 To `create` and `start` the thoughts application run the command:
 ```
