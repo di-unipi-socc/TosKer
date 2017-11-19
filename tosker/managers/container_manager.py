@@ -6,7 +6,6 @@ Container manager module
 from .. import docker_interface
 from ..graph.nodes import Container
 
-
 class ContainerManager:
 
     @staticmethod
@@ -42,3 +41,16 @@ class ContainerManager:
         assert isinstance(node, Container)
         docker_interface.delete_container(node)
         docker_interface.delete_image(docker_interface.get_saved_image(node))
+
+    @staticmethod
+    def exec_operation(component, operation):
+        '''
+        Exec an operation on the component
+        '''
+        assert isinstance(component, Container)
+        assert isinstance(operation, str)
+        try:
+            getattr(ContainerManager, operation)(component)
+        except AttributeError:
+            return False
+        return True

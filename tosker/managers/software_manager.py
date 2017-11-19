@@ -12,7 +12,6 @@ from ..graph.nodes import Software
 from ..helper import Logger
 from ..storage import Memory
 
-
 class SoftwareManager:
 
     def _get_cmd(interface, force_exec=False):
@@ -156,3 +155,16 @@ class SoftwareManager:
         _log.debug('%s command (%s) on container %s', interface,
                    res, node.host_container)
         return res
+
+    @staticmethod
+    def exec_operation(component, operation):
+        '''
+        Exec an operation on the component
+        '''
+        assert isinstance(component, Software)
+        assert isinstance(operation, str)
+        try:
+            getattr(SoftwareManager, operation)(component)
+        except AttributeError:
+            return False
+        return True

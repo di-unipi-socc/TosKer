@@ -67,7 +67,8 @@ _FLAG = {
     '--help': 'help',
     '-h': 'help',
     '-v': 'version',
-    '--version': 'version'
+    '--version': 'version',
+    '--protocol': 'protocol'
 }
 
 _CMD = {'create', 'start', 'stop', 'delete'}
@@ -161,7 +162,13 @@ def run():
         orchestrator = Orchestrator(quiet=flags.get('quiet', False))
 
     if mod == 'deploy':
-        orchestrator.orchestrate(file, cmds, comps, inputs)
+        if flags.get('protocol', False):
+            if not comps or comps[0] == '_':
+                import sys
+                comps = [line.strip() for line in sys.stdin]
+            orchestrator.orchestrate_with_protocols(file, comps, inputs)
+        else:
+            orchestrator.orchestrate(file, cmds, comps, inputs)
     elif mod == 'ls':
         if len(comps) > 1:
             _error('too many arguments, ls take an "application name"'

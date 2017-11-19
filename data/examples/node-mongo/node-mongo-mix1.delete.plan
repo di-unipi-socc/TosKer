@@ -1,0 +1,6 @@
+app.stop
+db.stop
+db.delete
+app.delete
+node.delete
+server1.delete

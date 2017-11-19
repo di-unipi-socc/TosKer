@@ -1,0 +1,8 @@
+server1.create
+node.create
+node.configure
+db.create
+app.create
+db.start
+app.configure
+app.start

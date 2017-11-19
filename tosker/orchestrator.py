@@ -15,7 +15,7 @@ from termcolor import colored
 from yaml.scanner import ScannerError
 from toscaparser.common.exception import ValidationError
 
-from . import docker_interface, helper
+from . import docker_interface, helper, protocol_helper
 from .graph.nodes import Container, Software, Volume
 from .helper import Logger
 from .managers.container_manager import ContainerManager
@@ -71,41 +71,56 @@ class Orchestrator:
             pass
         Memory.set_db(data_dir)
 
-        status, faulty = self._update_state()
-        Logger.println('update memory {} {}'.format(
-            'ok' if status else 'fixed',
-            '({})'.format(', '.join(faulty)) if not status else ''))
+        # TODO: add this again!
+        # status, faulty = self._update_state()
+        # Logger.println('update memory {} {}'.format(
+        #     'ok' if status else 'fixed',
+        #     '({})'.format(', '.join(faulty)) if not status else ''))
 
-    def orchestrate(self, file_path, commands, components=[], inputs={}):
-        # Parse TOSCA file
+    def _parse_tosca(self, file_path, inputs):
+        '''
+        Parse TOSCA file
+        '''
         try:
-            tpl = get_tosca_template(file_path, inputs)
+            return get_tosca_template(file_path, inputs)
         except ScannerError as e:
             Logger.print_error('YAML parse error\n    {}'.format(e))
-            return False
+            return None
         except ValidationError as e:
             Logger.print_error('TOSCA validation error\n    {}'.format(e))
-            return False
+            return None
         except ValueError as e:
             Logger.print_error('TosKer validation error\n    {}'.format(e))
-            return False
+            return None
         except Exception as e:
             Logger.print_error('Internal error\n    {}'.format(e))
             self._log.debug('Exception type: %s', type(e))
             self._log.debug(colored(traceback.format_exc(), 'red'))
+            return None
+    
+    def _create_tmp_dir(self, tpl):
+        '''
+        Create temporany directory
+        '''
+        tpl.tmp_dir = os.path.join(self._tmp_dir, tpl.name)
+        try:
+            os.makedirs(tpl.tmp_dir)
+        except os.error as e:
+            self._log.info(e)
+
+    def orchestrate(self, file_path, commands, components=[], inputs={}):
+        # Parse TOSCA file
+        tpl = self._parse_tosca(file_path, inputs)
+        if tpl is None:
             return False
 
         # Check if inputs components exists in the TOSCA file
         if not self._components_exists(tpl, components):
             Logger.print_error('a selected component do not exists')
             return False
-
-        # Create temporany directory
-        tpl.tmp_dir = os.path.join(self._tmp_dir, tpl.name)
-        try:
-            os.makedirs(tpl.tmp_dir)
-        except os.error as e:
-            self._log.info(e)
+        
+        # Create tmp directory for the template
+        self._create_tmp_dir(tpl)
 
         # Start orchestration
         try:
@@ -140,6 +155,60 @@ class Orchestrator:
             self._print_cross(e)
             return False
         return True
+    
+    def orchestrate_with_protocols(self, file_path, operations, inputs):
+        '''
+        Start the orchestration using the management protocols
+            operations:['component.operation'...]
+        '''
+        # Parse TOSCA file
+        tpl = self._parse_tosca(file_path, inputs)
+        if tpl is None:
+            return False
+
+        # Create tmp directory for the template
+        self._create_tmp_dir(tpl)
+
+        # Load components state
+        for comp in Memory.get_comps(tpl.name):
+            tpl[comp['name']].protocol.current_state = comp['state']
+        self._log.debug('State: %s', ' '.join(
+            (c['name']+'.'+c['state'] for c in Memory.get_comps(tpl.name))
+        ))
+
+        # Create Network
+        self._print_loading_start('Create network... ')
+        docker_interface.create_network(tpl.name)
+        self._print_tick()
+
+        for op in operations:
+            op_list = op.split('.')
+            comp_name, operation = '.'.join(op_list[:-1]), op_list[-1]
+
+            component = tpl[comp_name]
+            self._print_loading_start('Execute op "{}" on "{}"... '
+                ''.format(operation, comp_name))
+            if protocol_helper.can_execute(operation, component):
+
+                if isinstance(component, Container):
+                    res = ContainerManager.exec_operation(component, operation)
+                elif isinstance(component, Volume):
+                    res = VolumeManager.exec_operation(component, operation)
+                elif isinstance(component, Software):
+                    res = SoftwareManager.exec_operation(component, operation)
+                
+                if not res:
+                    self._print_cross('Cannot find the operation')
+                    return False
+                else:
+                    state = component.protocol.execute_operation(operation)
+                    Memory.update_state(component, state.name)
+                    self._print_tick()
+            else:
+                self._print_cross('Cannot execute the operation')
+                return False
+        
+        return True
 
     # @_filter_interface('create')
     def _create(self, components, tpl):
@@ -150,7 +219,7 @@ class Orchestrator:
             self._print_loading_start('Create {}... '.format(node))
 
             status = Memory.get_comp_state(node)
-            if Memory.STATE.DELETED == status:
+            if Memory.STATE.DELETED.value == status or status is None:
                 if isinstance(node, Container):
                     ContainerManager.create(node)
                 elif isinstance(node, Volume):
@@ -172,10 +241,10 @@ class Orchestrator:
             self._print_loading_start('Start {}... '.format(node))
 
             status = Memory.get_comp_state(node)
-            if Memory.STATE.STARTED == status:
+            if Memory.STATE.STARTED.value == status:
                 self._print_skip()
                 self._log.info('skipped already started')
-            elif Memory.STATE.CREATED == status or\
+            elif Memory.STATE.CREATED.value == status or\
                     'create' not in node.interfaces:
                 if isinstance(node, Container):
                     ContainerManager.start(node)
@@ -194,7 +263,7 @@ class Orchestrator:
             self._print_loading_start('Stop {}... '.format(node))
 
             status = Memory.get_comp_state(node)
-            if Memory.STATE.STARTED == status:
+            if Memory.STATE.STARTED.value == status:
                 if isinstance(node, Container):
                     ContainerManager.stop(node)
                 elif isinstance(node, Software):
@@ -212,14 +281,14 @@ class Orchestrator:
             self._print_loading_start('Delete {}... '.format(node))
 
             status = Memory.get_comp_state(node)
-            if Memory.STATE.CREATED == status:
+            if Memory.STATE.CREATED.value == status:
                 if isinstance(node, Container):
                     ContainerManager.delete(node)
                 elif isinstance(node, Software):
                     SoftwareManager.delete(node)
                 Memory.update_state(node, Memory.STATE.DELETED)
                 self._print_tick()
-            elif Memory.STATE.STARTED == status:
+            elif Memory.STATE.STARTED.value == status:
                 self._print_cross('The component must be stopped first')
                 self._log.info('%s have to be stopped first', node)
                 break
@@ -288,6 +357,7 @@ class Orchestrator:
             Logger.println('  - ' + out.name + ":", value)
 
     def _update_state(self):
+        # FIXME: this method update the memory not in the correct way 
         errors = []
 
         def manage_error(comp, state):

@@ -20,19 +20,15 @@ def parse_tosca(file_path, inputs=None):
         print('Internal error\n    {}'.format(e))
         return False
 
-def get_next_state(state, operation):
-    transition = next((t for t in state.transitions if t.name == operation))
-    return transition.target
-
 def can_execute(operation:str, component:Root):
     assert isinstance(operation, str)
     assert isinstance(component, Root)
 
     # component must have the opetaion in the current state
-    state = component.protocol.current_state
-    # print('DEBUG:', state.name, state.transitions)
-    transition = next((t for t in state.transitions if t.name == operation), None)
-    print('    component "{}" is in state "{}"'. format(component.name, state.name))
+    protocol = component.protocol
+    transition = protocol.next_transition(operation)
+    print('    component "{}" is in state "{}"'
+          ''.format(component.name, protocol.current_state.name))
     if transition is None:
         return False
 
@@ -51,12 +47,6 @@ def can_execute(operation:str, component:Root):
                     return False
     return True
 
-def execute_op(operation:str, component:Root):
-    assert isinstance(operation, str)
-    assert isinstance(component, Root)
-    next_state = get_next_state(component.protocol.current_state, operation)
-    component.protocol.current_state = next_state
-
 def check(tpl, ops):
     '''
     tpl:Template
@@ -68,7 +58,7 @@ def check(tpl, ops):
         print('check op "{}" on "{}"'.format(operation, comp_name))
         
         if can_execute(operation, component):
-            execute_op(operation, component)
+            component.protocol.execute_operation(operation)
             print('execute op "{}" on "{}"'.format(operation, comp_name))
         else:
             print('cannot execute op "{}" on "{}"'.format(operation, comp_name))

@@ -4,7 +4,7 @@ Nodes module
 from .artifacts import Artifact, Dockerfile, DockerfileExecutable,\
                        DockerImage, DockerImageExecutable, File
 from .relationships import AttachesTo, ConnectsTo, DependsOn, HostedOn
-from .. import protocol_helper
+from . import protocol
 
 
 def _add_to_map(d, k, v):
@@ -131,7 +131,7 @@ class Container(Root):
 
         self.interfaces = {'create', 'start', 'stop', 'delete'}
 
-        self.protocol = protocol_helper.get_container_protocol()
+        self.protocol = protocol.get_container_protocol()
 
     @property
     def image(self):
@@ -192,7 +192,7 @@ class Volume(Root):
 
         self.driver_opt = None
 
-        self.protocol = protocol_helper.get_volume_protocol()
+        self.protocol = protocol.get_volume_protocol()
 
     def get_all_opt(self):
         ris = self.driver_opt.copy() if self.driver_opt else {}
@@ -223,7 +223,7 @@ class Software(Root):
         # self.depend = None
         # self.connection = None
 
-        self.protocol = protocol_helper.get_software_protocol()
+        self.protocol = protocol.get_software_protocol()
 
     @property
     def relationships(self):
