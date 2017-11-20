@@ -2,7 +2,7 @@
 from .helper import Logger
 from .graph.nodes import Root
 
-def can_execute(operation:str, component:Root):
+def can_execute(operation, component):
     """Check if an operation can be executed on a component."""
     assert isinstance(operation, str)
     assert isinstance(component, Root)
