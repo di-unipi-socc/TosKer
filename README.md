@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo/tosker-logo.png" />
+  <img src="data/img/logo/tosker-logo.png" />
 </p>
 
 -------
