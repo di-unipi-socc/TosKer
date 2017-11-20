@@ -91,6 +91,7 @@ class Orchestrator:
             return None
         except ValueError as e:
             Logger.print_error('TosKer validation error\n    {}'.format(e))
+            self._log.debug(colored(traceback.format_exc(), 'red'))
             return None
         except Exception as e:
             Logger.print_error('Internal error\n    {}'.format(e))
@@ -155,7 +156,7 @@ class Orchestrator:
             self._print_cross(e)
             return False
         return True
-    
+
     def orchestrate_with_protocols(self, file_path, operations, inputs):
         '''
         Start the orchestration using the management protocols
@@ -181,28 +182,36 @@ class Orchestrator:
         docker_interface.create_network(tpl.name)
         self._print_tick()
 
+        # TODO: validate operatin format
         for op in operations:
             op_list = op.split('.')
             comp_name, operation = '.'.join(op_list[:-1]), op_list[-1]
 
             component = tpl[comp_name]
+            protocol = component.protocol
             self._print_loading_start('Execute op "{}" on "{}"... '
                 ''.format(operation, comp_name))
             if protocol_helper.can_execute(operation, component):
 
+                transition = protocol.next_transition(operation)
+                interface_name = transition.interface
                 if isinstance(component, Container):
-                    res = ContainerManager.exec_operation(component, operation)
+                    res = ContainerManager.exec_operation(component, interface_name)
                 elif isinstance(component, Volume):
-                    res = VolumeManager.exec_operation(component, operation)
+                    res = VolumeManager.exec_operation(component, interface_name)
                 elif isinstance(component, Software):
-                    res = SoftwareManager.exec_operation(component, operation)
+                    res = SoftwareManager.exec_operation(component, interface_name)
                 
                 if not res:
-                    self._print_cross('Cannot find the operation')
+                    self._print_cross('Cannot find the interface {}'.format(interface_name))
                     return False
                 else:
-                    state = component.protocol.execute_operation(operation)
-                    Memory.update_state(component, state.name)
+                    state = protocol.execute_operation(operation)
+                    # remove the component if it is in the initial state
+                    if state == protocol.initial_state:
+                        Memory.remove(component)
+                    else:
+                        Memory.update_state(component, state.name)
                     self._print_tick()
             else:
                 self._print_cross('Cannot execute the operation')

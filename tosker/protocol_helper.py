@@ -21,9 +21,9 @@ def can_execute(operation:str, component:Root):
             if rel.requirement == req:
                 # check that the capability needed is offered
                 # by the target of the relationship
-                _log.info('component "{}" require "{}" and "{}" offers {}'.format(
-                    component.name, rel.requirement, rel.to.name,
-                    rel.to.protocol.current_state.offers))
+                _log.info('component "%s" require "%s" and "%s" offers %s',
+                          component.name, rel.requirement, rel.to.name,
+                          rel.to.protocol.current_state.offers)
 
                 if rel.capability not in rel.to.protocol.current_state.offers:
                     return False
@@ -34,9 +34,9 @@ def can_execute(operation:str, component:Root):
             if rel.capability == off:
                 # check that the capability needed is offered
                 # by the target of the relationship
-                _log.info('component "{}" offers "{}" and "{}" requires {}'.format(
-                    component.name, rel.capability, rel.origin.name,
-                    rel.origin.protocol.current_state.requires))
+                _log.info('component "%s" offers "%s" and "%s" requires %s',
+                          component.name, rel.capability, rel.origin.name,
+                          rel.origin.protocol.current_state.requires)
 
                 if rel.requirement in rel.origin.protocol.current_state.requires:
                     return False

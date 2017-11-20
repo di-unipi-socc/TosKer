@@ -9,16 +9,16 @@ from toscaparser.prereq.csar import CSAR
 from toscaparser.tosca_template import ToscaTemplate
 
 from . import helper
-from .graph.artifacts import (Dockerfile, DockerfileExecutable, DockerImage,
-                              DockerImageExecutable, File)
+from .graph.artifacts import Dockerfile, DockerfileExecutable, DockerImage,\
+                             DockerImageExecutable, File
 from .graph.nodes import Container, Software, Volume
+from .graph.protocol import Protocol, State, Transition
 from .graph.template import Template
 from .helper import Logger
 
 _log = None
 
 # CUSTOM TYPE
-# PERSISTENT_CONTAINER = 'tosker.nodes.Container.Executable'
 CONTAINER = 'tosker.nodes.Container'
 VOLUME = 'tosker.nodes.Volume'
 SOFTWARE = 'tosker.nodes.Software'
@@ -26,10 +26,20 @@ IMAGE = 'tosker.artifacts.Image'
 IMAGE_EXE = 'tosker.artifacts.Image.Service'
 DOCKERFILE = 'tosker.artifacts.Dockerfile'
 DOCKERFILE_EXE = 'tosker.artifacts.Dockerfile.Service'
-
+PROTOCOL_POLICY = 'tosker.policies.Protocol'
 # EXECUTABLE_IMAGE = 'tosker.artifacts.ExecutableImage'
 # IMAGE2 = 'tosca.artifacts.Deployment.Image.Container.Docker'
 # DOCKERFILE2 = 'tosca.artifacts.File'
+
+# PROTOCOL NAMES
+PROT_STATES = 'states'
+PROT_INITIAL_STATE = 'initial_state'
+PROT_TRANSITIONS = 'transitions'
+PROT_REQUIRES = 'requires'
+PROT_OFFERS = 'offers'
+PROT_SOURCE = 'source'
+PROT_TARGET = 'target'
+PROT_INTERFACE = 'interface'
 
 # REQUIREMENTS
 CONNECT = 'tosca.relationships.ConnectsTo'
@@ -143,26 +153,18 @@ def _parse_conf(tpl, node, repos, base_path):
         # get interfaces
         if 'interfaces' in node.entity_tpl:
             intf = {}
-            for int_type, interface in node.entity_tpl['interfaces'].items():
+            for _, interface in node.entity_tpl['interfaces'].items():
                 for key, value in interface.items():
                     intf[key] = {}
                     if 'implementation' in value:
                         abs_path = path.abspath(
                             path.join(base_path, value['implementation'])
                         )
-                        # path_split = abs_path.split('/')
-
                         intf[key]['cmd'] = File(None, abs_path)
-                        # {
-                        #     'file': path_split[-1],
-                        #     'path': '/'.join(path_split[:-1]),
-                        #     'file_path': abs_path
-                        # }
                         _log.debug('path: %s file: %s', intf[key]['cmd'].path,
                                    intf[key]['cmd'].file)
                     if 'inputs' in value:
                         intf[key]['inputs'] = value['inputs']
-                        # intf[key]['inputs'] = _parse_map(value['inputs'])
 
             conf.interfaces = intf
 
@@ -228,22 +230,95 @@ def get_tosca_template(file_path, inputs=None):
     tosca_name = tosca.input_path.split('/')[-1][:-5]
     tpl = Template(tosca_name)
 
-    if hasattr(tosca, 'nodetemplates'):
-        if tosca.outputs:
+    if hasattr(tosca, 'topology_template'):
+        if hasattr(tosca, 'outputs'):
             tpl.outputs = tosca.outputs
-        if tosca.nodetemplates:
 
+        if hasattr(tosca, 'nodetemplates'):
             for node in tosca.nodetemplates:
                 tpl.push(_parse_conf(tpl, node,
                                      repositories,
                                      base_path))
-
             _add_pointer(tpl)
             _add_back_links(tpl)
             _add_extension(tpl)
 
+        if hasattr(tosca, 'policies'):
+            for policy in tosca.policies:
+                if not policy.is_derived_from(PROTOCOL_POLICY):
+                    raise ValueError('policy of type "{}" not supported.'.format(policy.type))
+                # policy.name
+                # policy.properties
+                # policy.targets
+                _validate_protocol(policy.properties)
+                protocol = _parse_protocol(policy.properties)
+                _log.debug(protocol)
+                for target in policy.targets:
+                    comp = tpl[target]
+                    if not isinstance(comp, Software):
+                        raise ValueError('Only software support custom protocol')
+                    comp.protocol = protocol
+
     return tpl
 
+def _validate_protocol(properties):
+    if PROT_INITIAL_STATE not in properties:
+        raise ValueError('Attribute {}, is required in policy properties')
+    if not isinstance(properties[PROT_INITIAL_STATE], str):
+        raise ValueError('Attribute {}, must be string')
+
+    if PROT_STATES not in properties:
+        raise ValueError('Attribute {}, is required in policy properties')
+    if not isinstance(properties[PROT_STATES], dict):
+        raise ValueError('Attribute {}, must be dictionary')
+
+    if PROT_TRANSITIONS not in properties:
+        raise ValueError('Attribute {}, is required in policy properties')
+    if not isinstance(properties[PROT_TRANSITIONS], list):
+        raise ValueError('Attribute {}, must be list')
+
+    for name, value in properties[PROT_STATES].items():
+        if value is not None :
+            for name, value in value.items():
+                if name not in (PROT_REQUIRES, PROT_OFFERS):
+                    raise ValueError('State must contains only {} and {}'
+                                     ''.format(PROT_OFFERS, PROT_REQUIRES))
+                if not isinstance(value, list):
+                    raise ValueError('{} and {} must be list'.format(PROT_OFFERS, PROT_REQUIRES))
+
+    for transition in properties[PROT_TRANSITIONS]:
+        name, value = list(transition.items())[0]
+        if PROT_SOURCE not in value or\
+           PROT_TARGET not in value or\
+           PROT_INTERFACE not in value:
+            raise ValueError('Transition require the properties {}, {}, {}'
+                             ''.format(PROT_SOURCE, PROT_TARGET, PROT_INTERFACE))
+        for name, value in value.items():
+                if name not in (PROT_SOURCE, PROT_TARGET, PROT_INTERFACE):
+                    raise ValueError('Transition must contains only {}, {} and {}'
+                                     ''.format(PROT_SOURCE, PROT_TARGET, PROT_INTERFACE))
+                             
+def _parse_protocol(properties):
+    protocol = Protocol()
+    
+    for name, value in properties[PROT_STATES].items():
+        value = value if value is not None else {}
+        state = State(name,
+                      requires=value.get(PROT_REQUIRES, []),
+                      offers=value.get(PROT_OFFERS, []))
+        protocol.states.append(state)
+        if name == properties[PROT_INITIAL_STATE]:
+            protocol.initial_state = state
+
+    for transition in properties[PROT_TRANSITIONS]:
+        name, value = list(transition.items())[0]
+        source = protocol.find_state(value[PROT_SOURCE])
+        target = protocol.find_state(value[PROT_TARGET])
+        transition = Transition(name, source, target,
+                                value[PROT_INTERFACE])
+        protocol.transitions.append(transition)
+        source.transitions.append(transition)
+    return protocol
 
 def _add_pointer(tpl):
     for node in tpl.nodes:

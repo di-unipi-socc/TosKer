@@ -163,7 +163,7 @@ def run():
 
     if mod == 'deploy':
         if flags.get('protocol', False):
-            if not comps or comps[0] == '_':
+            if comps and comps[0] == '_':
                 import sys
                 comps = [line.strip() for line in sys.stdin]
             orchestrator.orchestrate_with_protocols(file, comps, inputs)

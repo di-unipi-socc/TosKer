@@ -109,6 +109,7 @@ class SoftwareManager:
                 return ''
 
             def set_out_state():
+                # TODO: generalize with protocols
                 if interface == 'create':
                     return ';' + get_echo(Memory.STATE.CREATED.value,
                                           get_inside_path('state'))
@@ -161,6 +162,7 @@ class SoftwareManager:
         """Exec an operation on the component."""
         assert isinstance(component, Software)
         assert isinstance(operation, str)
+        # TODO: add the possibility to runn any interface
         try:
             getattr(SoftwareManager, operation)(component)
         except AttributeError:

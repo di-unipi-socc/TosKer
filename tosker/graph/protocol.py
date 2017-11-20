@@ -40,7 +40,11 @@ class Protocol():
         if isinstance(state, str):
             state = next((s for s in self.states if s.name == state), None)
         self._current_state = state
-        
+    
+    def find_state(self, state_name):
+        '''Find the state object given its name.'''
+        return next((s for s in self.states if state_name == s.name), None)
+    
     def reset(self):
         """Reset the protocol state."""
         self.current_state = self.initial_state
@@ -60,6 +64,13 @@ class Protocol():
     def next_transition(self, operation):
         """Return the transition reached with the given operation."""
         return self.current_state.next_transition(operation)
+
+    def __str__(self):
+        return 'States: {}\nTransitions: {}\nInitial state: {}\nCurrent state: {}'.format(
+            ', '.join((str(s) for s in self.states)),
+            ', '.join((str(t) for t in self.transitions)),
+            self.initial_state, self.current_state
+        )
 
 class State():
     """
@@ -87,6 +98,15 @@ class State():
         transition = self.next_transition(operation)
         return transition.target if transition is not None else None
 
+    def __eq__(self, other):
+        return isinstance(other, State) and\
+               self.name == other.name
+
+    def __str__(self):
+        return '({}, r=[{}], o=[{}], t=[{}])'.format(
+            self.name, ','.join(self.requires), ','.join(self.offers),
+            ','.join((t.name for t in self.transitions)))
+
 class Transition():
     """
     The protocol Transition class represention.
@@ -104,8 +124,19 @@ class Transition():
         self.target = target
         self.interface = interface
 
+    def __eq__(self, other):
+        return isinstance(other, Transition) and\
+               self.name == other.name and\
+               self.source == other.source and\
+               self.target == other.target and\
+               self.interface == other.interface
+
+    def __str__(self):
+        return '({}, s={}, t={}, i={})'.format(
+            self.name, self.source.name, self.target.name, self.interface)
 
 # Default protocols
+# FIXME: remove sets
 def get_container_protocol():
     """Return the default protocol for the Container component."""
     protocol = Protocol()
