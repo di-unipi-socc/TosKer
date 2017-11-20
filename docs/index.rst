@@ -9,6 +9,7 @@ Contents:
    readme
    installation
    usage
+   protocols
    contributing
    authors
    history
