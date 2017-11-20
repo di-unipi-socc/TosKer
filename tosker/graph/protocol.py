@@ -6,16 +6,16 @@ from .relationships import HOST, STORAGE, CONNECTION,\
 
 class Protocol():
     '''
-    A protocol class representation
+    The Protocol class representation.
+
+    Attributes:
+    initial_state -- the initial state (type:State)
+    current_state -- the current state (type:State)
+    states        -- a list of States (type:[State])
+    transitions   -- the list of transitions (type:[Transition])
     '''
     def __init__(self):
-        '''
-        Attributes:
-            initial_state:State
-            current_state:State
-            states:[State]
-            transitions:[Transition]
-        '''
+        """Create a new Protocol object."""
         self.states = []
         self.transitions = []
         self._initial_state = None
@@ -42,15 +42,11 @@ class Protocol():
         self._current_state = state
         
     def reset(self):
-        '''
-        Reset the protocol state
-        '''
+        """Reset the protocol state."""
         self.current_state = self.initial_state
 
     def execute_operation(self, operation):
-        '''
-        Execute the operation and change the current state
-        '''
+        """Execute the operation and change the current state."""
         next_state = self.next_state(operation)
         if next_state is None:
             return None
@@ -58,53 +54,51 @@ class Protocol():
         return next_state
 
     def next_state(self, operation):
+        """Return the state reached from the current state with the given operation."""
         return self.current_state.next_state(operation)
 
     def next_transition(self, operation):
+        """Return the transition reached with the given operation."""
         return self.current_state.next_transition(operation)
 
 class State():
-    '''
-    A protocol state class representation
-    '''
+    """
+    The protocol State class representation.
+
+    Attributes:
+    name        -- the State name (type:str)
+    offers      -- the list of the capability offered in the state (type:[str])
+    requires    -- the list of the requirement required in the state (type:[str])
+    transitions -- the transition list (type:[Transition])
+    """
     def __init__(self, name, requires=None, offers=None, transitions=None):
-        '''
-        Attributes:
-            name:[str]
-            offers:[str]
-            requires:[str]
-            transitions:[Transition]
-        '''
+        """Create a new State object."""
         self.name = name
         self.requires = requires if requires is not None else []
         self.offers = offers if offers is not None else []
         self.transitions = transitions if transitions is not None else []
 
     def next_transition(self, operation):
-        '''
-        Return the transition object with the opetion
-        '''
+        """Return the transition reached with the given operation."""
         return next((t for t in self.transitions if t.name == operation), None)
 
     def next_state(self, operation):
-        '''
-        Return the state object which the operation bring
-        '''
+        """Return the state reached with the given operation."""
         transition = self.next_transition(operation)
         return transition.target if transition is not None else None
 
 class Transition():
-    '''
-    A protocol transition class represention
-    '''
+    """
+    The protocol Transition class represention.
+
+    Attributes:
+    name -- the name Transition name (type:str)
+    source -- the source state of the Transition (type:State)
+    target -- the target state of the Transition (type:State)
+    interface -- the interface name to be executed to change the State (type:str)
+    """
     def __init__(self, name, source=None, target=None, interface=None):
-        '''
-        Attributes:
-            name :str
-            source :State
-            target :State
-            interface :str
-        '''
+        """Create a new Transition object."""
         self.name = name
         self.source = source
         self.target = target
@@ -113,9 +107,7 @@ class Transition():
 
 # Default protocols
 def get_container_protocol():
-    '''
-    Return the default protocol for the Container components
-    '''
+    """Return the default protocol for the Container component."""
     protocol = Protocol()
     protocol.states = deleted, created, running = [
         State('deleted'),
@@ -141,9 +133,7 @@ def get_container_protocol():
 
 
 def get_software_protocol():
-    '''
-    Return the default protocol for the Software components
-    '''
+    """Return the default protocol for the Software component."""
     protocol = Protocol()
     protocol.states = deleted, created, configured, running = [
         State('deleted'),
@@ -172,9 +162,7 @@ def get_software_protocol():
     return protocol
 
 def get_volume_protocol():
-    '''
-    Return the default protocol for the Volume components
-    '''
+    """Return the default protocol for the Volume component."""
     protocol = Protocol()
     protocol.states = deleted, created = [
         State('deleted'),

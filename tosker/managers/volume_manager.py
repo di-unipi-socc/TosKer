@@ -19,9 +19,7 @@ class VolumeManager:
 
     @staticmethod
     def exec_operation(component, operation):
-        '''
-        Exec an operation on the component
-        '''
+        """Exec an operation on the component."""
         assert isinstance(component, Volume)
         assert isinstance(operation, str)
         try:

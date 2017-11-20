@@ -131,8 +131,10 @@ class Memory(Storage):
         queries = []
         if filters is not None:
             assert isinstance(filters, dict)
-            for k, v in filters.items():
-                queries.append(Query()[k] == v)
+            for key, value in filters.items():
+                if isinstance(value, Memory.STATE):
+                    value = value.value
+                queries.append(Query()[key] == value)
 
         if app_name is not None:
             queries.append(Query()['app_name'] == app_name)

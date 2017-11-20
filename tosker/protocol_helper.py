@@ -1,13 +1,9 @@
-'''
-A set of function to help the implementation of the protocols
-'''
+"""A set of functions to help the protocols implementation."""
 from .helper import Logger
 from .graph.nodes import Root
 
 def can_execute(operation:str, component:Root):
-    '''
-    Check if an operation can be executed on a component
-    '''
+    """Check if an operation can be executed on a component."""
     assert isinstance(operation, str)
     assert isinstance(component, Root)
     _log = Logger.get(__name__)

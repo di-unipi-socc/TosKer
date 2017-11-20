@@ -45,19 +45,19 @@ class TestStorage(unittest.TestCase):
 
         Memory.update_state(cont, Memory.STATE.CREATED)
         state = Memory.get_comp_state(cont)
-        self.assertEqual(state, Memory.STATE.CREATED)
+        self.assertEqual(state, Memory.STATE.CREATED.value)
 
         Memory.update_state(cont, Memory.STATE.STARTED)
         state = Memory.get_comp_state(cont)
-        self.assertEqual(state, Memory.STATE.STARTED)
+        self.assertEqual(state, Memory.STATE.STARTED.value)
 
         Memory.update_state(cont, Memory.STATE.CREATED)
         state = Memory.get_comp_state(cont)
-        self.assertEqual(state, Memory.STATE.CREATED)
+        self.assertEqual(state, Memory.STATE.CREATED.value)
 
         Memory.update_state(cont, Memory.STATE.DELETED)
         state = Memory.get_comp_state(cont)
-        self.assertEqual(state, Memory.STATE.DELETED)
+        self.assertEqual(state, Memory.STATE.DELETED.value)
 
     def test_memory_get_comps(self):
         tpl = Template('template_test')
