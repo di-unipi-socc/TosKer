@@ -30,28 +30,6 @@ except ImportError:
     from scandir import scandir
 
 
-def _filter_components(*comps):
-    def _filter_components_decorator(func):
-        @wraps(func)
-        def func_wrapper(self, *args):
-            filter_componets = [c for c in args[0]
-                                if isinstance(c, comps)]
-            return func(self, filter_componets, *args[1:])
-        return func_wrapper
-    return _filter_components_decorator
-
-
-def _filter_interface(interface):
-    def _filter_interface_decorator(func):
-        @wraps(func)
-        def func_wrapper(self, *args):
-            filter_componets = [c for c in args[0]
-                                if interface in c.interfaces]
-            return func(self, filter_componets, *args[1:])
-        return func_wrapper
-    return _filter_interface_decorator
-
-
 class Orchestrator:
 
     def __init__(self,
@@ -141,7 +119,6 @@ class Orchestrator:
             return False
         return True
 
-    # @_filter_interface('create')
     def _create(self, components, tpl):
         self._print_loading_start('Create network... ')
         docker_interface.create_network(tpl.name)  # TODO: da rimuovere
@@ -166,7 +143,6 @@ class Orchestrator:
                 self._print_skip()
                 self._log.info('skipped already created')
 
-    @_filter_interface('start')
     def _start(self, components, tpl):
         for node in components:
             self._print_loading_start('Start {}... '.format(node))
@@ -188,7 +164,6 @@ class Orchestrator:
                 self._log.info('%s have to be created first', node)
                 break
 
-    @_filter_interface('stop')
     def _stop(self, components, tpl):
         for node in components:
             self._print_loading_start('Stop {}... '.format(node))
@@ -205,7 +180,6 @@ class Orchestrator:
                 self._print_skip()
                 self._log.info('skipped already stopped')
 
-    @_filter_interface('delete')
     def _delete(self, components, tpl):
         self._log.debug('start delete')
         for node in components:
@@ -288,10 +262,10 @@ class Orchestrator:
             Logger.println('  - ' + out.name + ":", value)
 
     def _update_state(self):
-        errors = []
+        errors = set()
 
         def manage_error(comp, state):
-            errors.append(comp['full_name'])
+            errors.add(comp['full_name'])
             Memory.update_state(comp, state)
 
         def manage_error_container(comp, state):
@@ -314,7 +288,7 @@ class Orchestrator:
                     os.remove(os.path.join(s_path, 'state'))
                 except FileNotFoundError:
                     pass
-                errors.append(full_name)
+                errors.add(full_name)
 
         for c in Memory.get_comps(filters={'type': 'Software'}):
             state = glob('{}/{}/*/{}/state'.format(self._tmp_dir,
