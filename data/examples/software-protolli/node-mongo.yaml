@@ -13,13 +13,13 @@ imports:
 interface_types:
    my_software_interface:
       derived_from: tosca.interfaces.node.Root
-      create_interface:
+      my_create:
         description: my create
-      start_interface:
+      my_start:
         description: my start
-      stop_interface:
+      my_stop:
         description: my stop
-      delete_interface:
+      my_delete:
         description: my delete
 
 node_types:
@@ -50,22 +50,26 @@ topology_template:
             requires: [ host, my_connection ]
             offers: [ host ]
         transitions:
-        - my_create:
-            source: deleted
-            target: created
-            interface: create_interface
-        - my_delete:
-            source: created
-            target: deleted
-            interface: delete_interface
-        - my_start:
-            source: created
-            target: started
-            interface: start_interface
-        - my_stop:
-            source: started
-            target: created
-            interface: stop_interface
+        - source: deleted
+          target: created
+          interface: my_software_interface
+          operation: my_create
+          requires: []
+        - source: created
+          target: deleted
+          interface: my_software_interface
+          operation: my_delete
+          requires: []
+        - source: created
+          target: started
+          interface: my_software_interface
+          operation: my_start
+          requires: []
+        - source: started
+          target: created
+          interface: my_software_interface
+          operation: my_stop
+          requires: []
   
   node_templates:
     app:
@@ -78,18 +82,18 @@ topology_template:
         - my_connection: db
       interfaces:
         my_interface:
-          create_interface:
+          my_create:
             implementation: app/install.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
               main: { get_artifact: [ SELF, code ] }
-          start_interface:
+          my_start:
             implementation: app/start.sh
             inputs:
               port: 80
-          stop_interface:
+          my_stop:
             implementation: app/stop.sh
-          delete_interface:
+          my_delete:
             implementation: app/delete.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
