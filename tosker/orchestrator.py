@@ -269,15 +269,14 @@ class Orchestrator:
         con = docker_interface.get_containers(all=True)
         for c in (c for c in con if c['Names'][0].startswith('/tosker')):
             self._log.debug(c['Names'][0])
-            docker_interface.delete_container(c['Id'])
+            docker_interface.delete_container(c['Id'], force=True)
         self._print_tick()
 
-        # FIXME: this not remove volume
         self._print_loading_start('Remove volumes.. ')
         vol = docker_interface.get_volumes()
         for v in (v for v in vol if v['Name'].startswith('tosker')):
             self._log.debug(v['Name'])
-            docker_interface.delete_volume(v['Id'])
+            docker_interface.delete_volume(v['Name'])
         self._print_tick()
 
         self._print_loading_start('Remove images.. ')
