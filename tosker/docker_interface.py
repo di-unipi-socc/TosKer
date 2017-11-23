@@ -221,6 +221,9 @@ def get_volumes(_cli):
     volumes = _cli.volumes()
     return volumes['Volumes'] or []
 
+@_inject_docker_cli
+def get_images(_cli, name=None):
+    return _cli.images(name=name)
 
 def inspect(item):
     return (inspect_image(item) or

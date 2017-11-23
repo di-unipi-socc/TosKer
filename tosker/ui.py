@@ -16,6 +16,7 @@ def _usage():
 Usage: tosker FILE [COMPONENTS...] COMMAND...  [OPTIONS] [INPUTS]
        tosker ls [APPLICATION] [FILTES]
        tosker log COMPONET COMMAND
+       tosker prune
        tosker -h|--help
        tosker -v|--version
 Orchestrate TOSCA applications on top of Docker.
@@ -118,6 +119,8 @@ def _parse_unix_input(args):
                 mod = 'ls'
             elif args[i] == 'log':
                 mod = 'log'
+            elif args[i] == 'prune':
+                mod = 'prune'
             else:
                 error = ('first argument must be a TOSCA yaml file, a CSAR or '
                          'a ZIP archive.')
@@ -175,3 +178,5 @@ def run():
             return
         comp, interface = comps
         orchestrator.log(comp, interface)
+    elif mod == 'prune':
+        orchestrator.prune()

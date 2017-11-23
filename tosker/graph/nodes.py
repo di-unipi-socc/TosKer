@@ -128,6 +128,10 @@ class Container(Root):
         self.interfaces = {'create', 'start', 'stop', 'delete'}
 
     @property
+    def full_name(self):
+        return 'tosker_{}.{}'.format(self.tpl.name, self.name)
+
+    @property
     def image(self):
         return self.artifacts[0]
 
@@ -185,6 +189,10 @@ class Volume(Root):
                            }
 
         self.driver_opt = None
+
+    @property
+    def full_name(self):
+        return 'tosker_{}.{}'.format(self.tpl.name, self.name)
 
     def get_all_opt(self):
         ris = self.driver_opt.copy() if self.driver_opt else {}
