@@ -345,8 +345,8 @@ class Orchestrator:
 
         for c in Memory.get_comps(filters={'type': 'Container'}):
                 status = docker_interface.inspect_container(c['full_name'])
-                self._log.debug('%s status %s', c['full_name'], status['State'])
                 if status is not None:
+                    self._log.debug('%s status %s', c['full_name'], status['State'])
                     if c['state'] == Memory.STATE.CREATED.value and \
                        status['State']['Running'] is not False:
                         manage_error_container(c, Memory.STATE.STARTED)
