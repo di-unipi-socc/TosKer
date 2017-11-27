@@ -182,28 +182,32 @@ class Orchestrator:
         docker_interface.create_network(tpl.name)
         self._print_tick()
 
-        # TODO: validate operatin format
-        for op in operations:
-            op_list = op.split('.')
-            comp_name, operation = '.'.join(op_list[:-1]), op_list[-1]
+        # TODO: validate operatin format.
 
+        for op in operations:
+            op_list = op.split(':')
+            comp_name, operation = ':'.join(op_list[:-1]), op_list[-1]
+            
             component = tpl[comp_name]
+            if component is None:
+                self._print_cross('Cannot find component {}'.format(comp_name))
+                return False
             protocol = component.protocol
             self._print_loading_start('Execute op "{}" on "{}"... '
                 ''.format(operation, comp_name))
             if protocol_helper.can_execute(operation, component):
 
                 transition = protocol.next_transition(operation)
-                interface_name = transition.interface
                 if isinstance(component, Container):
-                    res = ContainerManager.exec_operation(component, interface_name)
+                    res = ContainerManager.exec_operation(component, transition.operation)
                 elif isinstance(component, Volume):
-                    res = VolumeManager.exec_operation(component, interface_name)
+                    res = VolumeManager.exec_operation(component, transition.operation)
                 elif isinstance(component, Software):
-                    res = SoftwareManager.exec_operation(component, interface_name)
+                    res = SoftwareManager.exec_operation(component, transition.interface,
+                                                         transition.operation)
                 
                 if not res:
-                    self._print_cross('Cannot find the interface {}'.format(interface_name))
+                    self._print_cross('Cannot find the operation {}'.format(operation))
                     return False
                 else:
                     state = protocol.execute_operation(operation)

@@ -158,8 +158,9 @@ class SoftwareManager:
         return res
 
     @staticmethod
-    def exec_operation(component, operation):
+    def exec_operation(component, interface, operation):
         """Exec an operation on the component."""
+        # TODO: use interface here
         assert isinstance(component, Software)
         assert isinstance(operation, str)
         # TODO: add the possibility to runn any interface

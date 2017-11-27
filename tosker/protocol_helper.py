@@ -7,6 +7,7 @@ def can_execute(operation, component):
     assert isinstance(operation, str)
     assert isinstance(component, Root)
     _log = Logger.get(__name__)
+
     # component must have the opetaion in the current state
     protocol = component.protocol
     transition = protocol.next_transition(operation)
@@ -15,8 +16,9 @@ def can_execute(operation, component):
     if transition is None:
         return False
 
-    # all requirement of the next state are satisfied
-    for req in transition.target.requires:
+    # all requirement of the transition and of the next state
+    # are satisfied.
+    for req in transition.target.requires + transition.requires:
         for rel in component.relationships:
             if rel.requirement == req:
                 # check that the capability needed is offered
@@ -28,7 +30,7 @@ def can_execute(operation, component):
                 if rel.capability not in rel.to.protocol.current_state.offers:
                     return False
 
-    # all offers are not used by anyone
+    # all offers are not used by other component
     for off in transition.source.offers:
         for rel in component.up_requirements:
             if rel.capability == off:

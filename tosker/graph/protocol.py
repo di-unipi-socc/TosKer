@@ -91,7 +91,7 @@ class State():
 
     def next_transition(self, operation):
         """Return the transition reached with the given operation."""
-        return next((t for t in self.transitions if t.name == operation), None)
+        return next((t for t in self.transitions if t.full_operation == operation), None)
 
     def next_state(self, operation):
         """Return the state reached with the given operation."""
@@ -105,7 +105,7 @@ class State():
     def __str__(self):
         return '({}, r=[{}], o=[{}], t=[{}])'.format(
             self.name, ','.join(self.requires), ','.join(self.offers),
-            ','.join((t.name for t in self.transitions)))
+            ','.join((t.full_operation for t in self.transitions)))
 
 class Transition():
     """
@@ -115,25 +115,31 @@ class Transition():
     name -- the name Transition name (type:str)
     source -- the source state of the Transition (type:State)
     target -- the target state of the Transition (type:State)
-    interface -- the interface name to be executed to change the State (type:str)
+    interface -- the interface name (type:str)
+    operation -- the operation name to be executed to change the State (type:str)
     """
-    def __init__(self, name, source=None, target=None, interface=None):
+    def __init__(self, source=None, target=None, interface='Standard',
+                 operation=None, requires=None):
         """Create a new Transition object."""
-        self.name = name
         self.source = source
         self.target = target
         self.interface = interface
+        self.operation = operation
+        self.requires = requires if requires is not None else []
+
+    @property
+    def full_operation(self):
+        return '.'.join((self.interface, self.operation))
 
     def __eq__(self, other):
         return isinstance(other, Transition) and\
-               self.name == other.name and\
                self.source == other.source and\
                self.target == other.target and\
-               self.interface == other.interface
+               self.full_operation == other.full_operation
 
     def __str__(self):
-        return '({}, s={}, t={}, i={})'.format(
-            self.name, self.source.name, self.target.name, self.interface)
+        return '(s={}, t={}, o={}, r=[{}])'.format(
+            self.source.name, self.target.name, self.full_operation, ','.join(self.requires))
 
 # Default protocols
 # FIXME: remove sets
@@ -142,18 +148,18 @@ def get_container_protocol():
     protocol = Protocol()
     protocol.states = deleted, created, running = [
         State('deleted'),
-        State('created', offers={HOST}),
+        State('created', offers=[HOST]),
         State('running',
-              requires={STORAGE, CONNECTION, DEPENDENCY},
-              offers={HOST, ENDPOINT, FEATURE})
+              requires=[STORAGE, CONNECTION, DEPENDENCY],
+              offers=[HOST, ENDPOINT, FEATURE])
     ]
     protocol.initial_state = protocol.current_state = deleted
 
     protocol.transitions = create, start, stop, delete = [
-        Transition('create', deleted, created, 'create'),
-        Transition('start', created, running, 'start'),
-        Transition('stop', running, created, 'stop'),
-        Transition('delete', created, deleted, 'delete')
+        Transition(deleted, created, operation='create'),
+        Transition(created, running, operation='start'),
+        Transition(running, created, operation='stop'),
+        Transition(created, deleted, operation='delete')
     ]
 
     deleted.transitions = [create]
@@ -168,21 +174,21 @@ def get_software_protocol():
     protocol = Protocol()
     protocol.states = deleted, created, configured, running = [
         State('deleted'),
-        State('created', requires={HOST}, offers={HOST}),
-        State('configured', requires={HOST}, offers={HOST}),
+        State('created', requires=[HOST], offers=[HOST]),
+        State('configured', requires=[HOST], offers=[HOST]),
         State('running',
-              requires={HOST, CONNECTION, DEPENDENCY},
-              offers={HOST, ENDPOINT, FEATURE})
+              requires=[HOST, CONNECTION, DEPENDENCY],
+              offers=[HOST, ENDPOINT, FEATURE])
     ]
     protocol.initial_state = protocol.current_state = deleted
 
     protocol.transitions = create, configure, start, stop, delete, delete_conf = [
-        Transition('create', deleted, created, 'create'),
-        Transition('configure', created, configured, 'configure'),
-        Transition('start', configured, running, 'start'),
-        Transition('stop', running, configured, 'stop'),
-        Transition('delete', created, deleted, 'delete'),
-        Transition('delete', configured, deleted, 'delete')
+        Transition(deleted, created, operation='create'),
+        Transition(created, configured, operation='configure'),
+        Transition(configured, running, operation='start'),
+        Transition(running, configured, operation='stop'),
+        Transition(created, deleted, operation='delete'),
+        Transition(configured, deleted, operation='delete')
     ]
 
     deleted.transitions = [create]
@@ -197,7 +203,7 @@ def get_volume_protocol():
     protocol = Protocol()
     protocol.states = deleted, created = [
         State('deleted'),
-        State('created', offers={ATTACHMENT})
+        State('created', offers=[ATTACHMENT])
     ]
     protocol.initial_state = protocol.current_state = deleted
 

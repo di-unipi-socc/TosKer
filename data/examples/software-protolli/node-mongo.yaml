@@ -8,7 +8,7 @@ repositories:
 
 imports:
   # - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
-  - tosker: ../../tosker-types.yaml
+- tosker: ../../tosker-types.yaml
 
 interface_types:
    my_software_interface:
@@ -54,22 +54,18 @@ topology_template:
           target: created
           interface: my_software_interface
           operation: my_create
-          requires: []
         - source: created
           target: deleted
           interface: my_software_interface
           operation: my_delete
-          requires: []
         - source: created
           target: started
           interface: my_software_interface
           operation: my_start
-          requires: []
         - source: started
           target: created
           interface: my_software_interface
           operation: my_stop
-          requires: []
   
   node_templates:
     app:

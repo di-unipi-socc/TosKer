@@ -35,11 +35,9 @@ PROTOCOL_POLICY = 'tosker.policies.Protocol'
 PROT_STATES = 'states'
 PROT_INITIAL_STATE = 'initial_state'
 PROT_TRANSITIONS = 'transitions'
-PROT_REQUIRES = 'requires'
-PROT_OFFERS = 'offers'
-PROT_SOURCE = 'source'
-PROT_TARGET = 'target'
-PROT_INTERFACE = 'interface'
+PROT_STATE_PROP = PROT_REQUIRES, PROT_OFFERS = 'requires', 'offers'
+PROT_TRANSITION_PROP = PROT_SOURCE, PROT_TARGET, PROT_INTERFACE, PROT_OPERATION, PROT_REQUIRES =\
+                       'source', 'target', 'interface', 'operation', 'requires'
 
 # REQUIREMENTS
 CONNECT = 'tosca.relationships.ConnectsTo'
@@ -280,42 +278,41 @@ def _validate_protocol(properties):
     for name, value in properties[PROT_STATES].items():
         if value is not None :
             for name, value in value.items():
-                if name not in (PROT_REQUIRES, PROT_OFFERS):
+                if name not in PROT_STATE_PROP:
                     raise ValueError('State must contains only {} and {}'
                                      ''.format(PROT_OFFERS, PROT_REQUIRES))
                 if not isinstance(value, list):
                     raise ValueError('{} and {} must be list'.format(PROT_OFFERS, PROT_REQUIRES))
 
+    req_prop = (PROT_SOURCE, PROT_TARGET, PROT_INTERFACE, PROT_OPERATION)
     for transition in properties[PROT_TRANSITIONS]:
-        name, value = list(transition.items())[0]
-        if PROT_SOURCE not in value or\
-           PROT_TARGET not in value or\
-           PROT_INTERFACE not in value:
-            raise ValueError('Transition require the properties {}, {}, {}'
-                             ''.format(PROT_SOURCE, PROT_TARGET, PROT_INTERFACE))
-        for name, value in value.items():
-                if name not in (PROT_SOURCE, PROT_TARGET, PROT_INTERFACE):
-                    raise ValueError('Transition must contains only {}, {} and {}'
-                                     ''.format(PROT_SOURCE, PROT_TARGET, PROT_INTERFACE))
-                             
+        if any((p not in transition for p in req_prop)):
+            raise ValueError('Transition require the properties {}'
+                             ''.format(', '.join(req_prop)))
+        for name, value in transition.items():
+            if name not in PROT_TRANSITION_PROP:
+                raise ValueError('Transition must contains only {}'
+                                 ''.format(', '.join(PROT_TRANSITION_PROP)))
+                                
 def _parse_protocol(properties):
     protocol = Protocol()
     
     for name, value in properties[PROT_STATES].items():
         value = value if value is not None else {}
         state = State(name,
-                      requires=value.get(PROT_REQUIRES, []),
-                      offers=value.get(PROT_OFFERS, []))
+                      requires=value.get(PROT_REQUIRES, None),
+                      offers=value.get(PROT_OFFERS, None))
         protocol.states.append(state)
         if name == properties[PROT_INITIAL_STATE]:
             protocol.initial_state = state
 
     for transition in properties[PROT_TRANSITIONS]:
-        name, value = list(transition.items())[0]
-        source = protocol.find_state(value[PROT_SOURCE])
-        target = protocol.find_state(value[PROT_TARGET])
-        transition = Transition(name, source, target,
-                                value[PROT_INTERFACE])
+        source = protocol.find_state(transition[PROT_SOURCE])
+        target = protocol.find_state(transition[PROT_TARGET])
+        transition = Transition(source, target,
+                                transition[PROT_INTERFACE],
+                                transition[PROT_OPERATION],
+                                transition.get(PROT_REQUIRES, None))
         protocol.transitions.append(transition)
         source.transitions.append(transition)
     return protocol
