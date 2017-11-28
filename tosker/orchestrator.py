@@ -7,13 +7,14 @@ import shutil
 import traceback
 from functools import wraps
 from glob import glob
+from io import open
 
 import six
 from halo import Halo
 from tabulate import tabulate
-from termcolor import colored
-from yaml.scanner import ScannerError
 from toscaparser.common.exception import ValidationError
+from yaml.scanner import ScannerError
+from termcolor import colored
 
 from . import docker_interface, helper
 from .graph.nodes import Container, Software, Volume
@@ -23,6 +24,7 @@ from .managers.software_manager import SoftwareManager
 from .managers.volume_manager import VolumeManager
 from .storage import Memory
 from .tosca_parser import get_tosca_template
+
 try:
     from os import scandir
 except ImportError:
@@ -259,7 +261,7 @@ class Orchestrator:
             Logger.print_error('Component or interface log not found')
             return
 
-        with open(log_file[0]) as f:
+        with open(log_file[0], 'r', encoding='utf-8', errors='ignore') as f:
             for line in f.readlines():
                 line = colored(line, 'green') if line.startswith('+ ') else line
                 Logger.print_(line)

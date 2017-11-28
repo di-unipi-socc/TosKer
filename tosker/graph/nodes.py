@@ -1,8 +1,8 @@
 '''
 Nodes module
 '''
-from .artifacts import Artifact, Dockerfile, DockerfileExecutable,\
-                       DockerImage, DockerImageExecutable, File
+from .artifacts import (Artifact, Dockerfile, DockerfileExecutable,
+                        DockerImage, DockerImageExecutable, File)
 from .relationships import AttachesTo, ConnectsTo, DependsOn, HostedOn
 
 
