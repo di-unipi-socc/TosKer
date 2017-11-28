@@ -150,10 +150,10 @@ def start_container(_cli, name, wait=False):
 
 @_get_name
 @_inject_docker_cli
-def delete_container(_cli, name):
+def delete_container(_cli, name, force=False):
     _log = Logger.get(__name__)
     try:
-        _cli.remove_container(name, v=True)
+        _cli.remove_container(name, v=True, force=force)
     except (errors.NotFound, errors.APIError) as e:
         _log.error(e)
         raise e
@@ -221,6 +221,9 @@ def get_volumes(_cli):
     volumes = _cli.volumes()
     return volumes['Volumes'] or []
 
+@_inject_docker_cli
+def get_images(_cli, name=None):
+    return _cli.images(name=name)
 
 def inspect(item):
     return (inspect_image(item) or

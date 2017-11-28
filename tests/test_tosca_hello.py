@@ -39,7 +39,7 @@ class TestHello(TestOrchestrator):
         with redirect_stdout(temp_stdout):
             self.stop()
 
-        con_id = docker.inspect_container('hello.hello_container')['Id']
+        con_id = docker.inspect_container('tosker_hello.hello_container')['Id']
 
         output = temp_stdout.getvalue().strip()
         self.assertIn('- container_id: {}'.format(con_id), output)

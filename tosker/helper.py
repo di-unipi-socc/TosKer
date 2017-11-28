@@ -5,8 +5,8 @@ import json
 import logging
 import sys
 
-from termcolor import colored
 from six import StringIO, print_
+from termcolor import colored
 
 
 class Logger:

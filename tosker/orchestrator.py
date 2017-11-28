@@ -7,13 +7,14 @@ import shutil
 import traceback
 from functools import wraps
 from glob import glob
+from io import open
 
 import six
 from halo import Halo
 from tabulate import tabulate
-from termcolor import colored
-from yaml.scanner import ScannerError
 from toscaparser.common.exception import ValidationError
+from yaml.scanner import ScannerError
+from termcolor import colored
 
 from . import docker_interface, helper, protocol_helper
 from .graph.nodes import Container, Software, Volume
@@ -39,18 +40,6 @@ def _filter_components(*comps):
             return func(self, filter_componets, *args[1:])
         return func_wrapper
     return _filter_components_decorator
-
-
-def _filter_interface(interface):
-    def _filter_interface_decorator(func):
-        @wraps(func)
-        def func_wrapper(self, *args):
-            filter_componets = [c for c in args[0]
-                                if interface in c.interfaces]
-            return func(self, filter_componets, *args[1:])
-        return func_wrapper
-    return _filter_interface_decorator
-
 
 class Orchestrator:
 
@@ -223,7 +212,6 @@ class Orchestrator:
         
         return True
 
-    # @_filter_interface('create')
     def _create(self, components, tpl):
         self._print_loading_start('Create network... ')
         docker_interface.create_network(tpl.name)  # TODO: da rimuovere
@@ -247,8 +235,8 @@ class Orchestrator:
             else:
                 self._print_skip()
                 self._log.info('skipped already created')
-
-    @_filter_interface('start')
+    
+    @_filter_components(Software, Container)
     def _start(self, components, tpl):
         for node in components:
             self._print_loading_start('Start {}... '.format(node))
@@ -269,8 +257,8 @@ class Orchestrator:
                 self._print_cross('the components must be created first')
                 self._log.info('%s have to be created first', node)
                 break
-
-    @_filter_interface('stop')
+    
+    @_filter_components(Software, Container)
     def _stop(self, components, tpl):
         for node in components:
             self._print_loading_start('Stop {}... '.format(node))
@@ -287,7 +275,7 @@ class Orchestrator:
                 self._print_skip()
                 self._log.info('skipped already stopped')
 
-    @_filter_interface('delete')
+    @_filter_components(Software, Container)
     def _delete(self, components, tpl):
         self._log.debug('start delete')
         for node in components:
@@ -355,10 +343,38 @@ class Orchestrator:
             Logger.print_error('Component or interface log not found')
             return
 
-        with open(log_file[0]) as f:
+        with open(log_file[0], 'r', encoding='utf-8', errors='ignore') as f:
             for line in f.readlines():
                 line = colored(line, 'green') if line.startswith('+ ') else line
                 Logger.print_(line)
+
+    def prune(self):
+        self._print_loading_start('Remove containers.. ')
+        con = docker_interface.get_containers(all=True)
+        for c in (c for c in con if c['Names'][0].startswith('/tosker')):
+            self._log.debug(c['Names'][0])
+            docker_interface.delete_container(c['Id'], force=True)
+        self._print_tick()
+
+        self._print_loading_start('Remove volumes.. ')
+        vol = docker_interface.get_volumes()
+        for v in (v for v in vol if v['Name'].startswith('tosker')):
+            self._log.debug(v['Name'])
+            docker_interface.delete_volume(v['Name'])
+        self._print_tick()
+
+        self._print_loading_start('Remove images.. ')
+        images = docker_interface.get_images()
+        for i in (i for i in images if i['RepoTags'][0].startswith('tosker')):
+            self._log.debug(i['RepoTags'][0])
+            docker_interface.delete_image(i['Id'])
+        self._print_tick()
+        
+        # TODO: remove also networks
+
+        self._print_loading_start('Remove tosker data.. ')
+        shutil.rmtree(self._tmp_dir)
+        self._print_tick()
 
     def _print_outputs(self, tpl):
         if len(tpl.outputs) != 0:
@@ -371,10 +387,10 @@ class Orchestrator:
 
     def _update_state(self):
         # FIXME: this method update the memory not in the correct way 
-        errors = []
+        errors = set()
 
         def manage_error(comp, state):
-            errors.append(comp['full_name'])
+            errors.add(comp['full_name'])
             Memory.update_state(comp, state)
 
         def manage_error_container(comp, state):
@@ -397,7 +413,7 @@ class Orchestrator:
                     os.remove(os.path.join(s_path, 'state'))
                 except FileNotFoundError:
                     pass
-                errors.append(full_name)
+                errors.add(full_name)
 
         for c in Memory.get_comps(filters={'type': 'Software'}):
             state = glob('{}/{}/*/{}/state'.format(self._tmp_dir,
@@ -414,6 +430,7 @@ class Orchestrator:
         for c in Memory.get_comps(filters={'type': 'Container'}):
                 status = docker_interface.inspect_container(c['full_name'])
                 if status is not None:
+                    self._log.debug('%s status %s', c['full_name'], status['State'])
                     if c['state'] == Memory.STATE.CREATED.value and \
                        status['State']['Running'] is not False:
                         manage_error_container(c, Memory.STATE.STARTED)
