@@ -24,6 +24,14 @@ class TestStorage(unittest.TestCase):
         res = Storage.search(Query().name == 'hello')
         self.assertEqual(len(res), 1)
 
+    def test_storage_remove(self):
+        res = Storage.insert({'name': 'hello'})
+        res = Storage.remove(Query().name == 'hello')
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0], 1)
+        res = Storage.all()
+        self.assertEqual(len(res), 0)
+
     def test_storage_update(self):
         self.test_storage_insert()
 
@@ -84,3 +92,15 @@ class TestStorage(unittest.TestCase):
         self.assertEqual(len(comps), 1)
         self.assertEqual(comps[0]['full_name'],
                          'template_test.container_test2')
+    
+    def test_memory_remove(self):
+        cont = Container('container_test')
+        cont.tpl = Template('template_test')
+
+        Memory.insert(cont)
+        res = Memory.get_comps()
+        self.assertEqual(len(res), 1)
+
+        Memory.remove(cont)
+        res = Memory.get_comps()
+        self.assertEqual(len(res), 0)

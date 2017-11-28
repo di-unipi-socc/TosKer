@@ -106,15 +106,14 @@ class Memory(Storage):
 
     @staticmethod
     def remove(obj):
-        # FIXME: this doesn't work
         assert isinstance(obj, (dict, Root, str))
         if isinstance(obj, Root):
-            full_name = obj.full_name
-        if isinstance(obj, dict):
-            full_name = obj['full_name']
+            name = obj.full_name
+        elif isinstance(obj, dict):
+            name = obj['full_name']
         else:
-            full_name = obj
-        return Storage.remove(Query().full_name == full_name)
+            name = obj
+        return Storage.remove(Query().full_name == name)
 
     @staticmethod
     def insert(obj):
