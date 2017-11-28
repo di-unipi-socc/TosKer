@@ -177,8 +177,8 @@ def get_software_protocol():
     protocol = Protocol()
     protocol.states = deleted, created, configured, running = [
         State('deleted'),
-        State('created', requires=[ALIVE], offers=[ALIVE, HOST]),
-        State('configured', requires=[ALIVE], offers=[ALIVE, HOST]),
+        State('created', requires=[ALIVE], offers=[ALIVE]),
+        State('configured', requires=[ALIVE], offers=[ALIVE]),
         State('running',
               requires=[ALIVE, HOST, CONNECTION, DEPENDENCY],
               offers=[ALIVE, HOST, ENDPOINT, FEATURE])

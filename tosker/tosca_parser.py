@@ -15,6 +15,8 @@ from .graph.nodes import Container, Software, Volume
 from .graph.protocol import Protocol, State, Transition
 from .graph.template import Template
 from .helper import Logger
+from .graph.protocol import ALIVE
+from .graph.relationships import HOST
 
 _log = None
 
@@ -40,10 +42,10 @@ PROT_TRANSITION_PROP = PROT_SOURCE, PROT_TARGET, PROT_INTERFACE, PROT_OPERATION,
                        'source', 'target', 'interface', 'operation', 'requires'
 
 # REQUIREMENTS
-CONNECT = 'tosca.relationships.ConnectsTo'
-DEPEND = 'tosca.relationships.DependsOn'
-ATTACH = 'tosca.relationships.AttachesTo'
-HOST = 'tosca.relationships.HostedOn'
+REL_CONNECT = 'tosca.relationships.ConnectsTo'
+REL_DEPEND = 'tosca.relationships.DependsOn'
+REL_ATTACH = 'tosca.relationships.AttachesTo'
+REL_HOST = 'tosca.relationships.HostedOn'
 
 
 # def _check_requirements(node, running):
@@ -150,21 +152,22 @@ def _parse_conf(tpl, node, repos, base_path):
 
         # get interfaces
         if 'interfaces' in node.entity_tpl:
-            intf = {}
-            for _, interface in node.entity_tpl['interfaces'].items():
-                for key, value in interface.items():
-                    intf[key] = {}
+            interfaces = {}
+            for name, tpl_interface in node.entity_tpl['interfaces'].items():
+                interfaces[name] = interface = {}
+                for key, value in tpl_interface.items():
+                    interface[key] = operation = {}
                     if 'implementation' in value:
                         abs_path = path.abspath(
                             path.join(base_path, value['implementation'])
                         )
-                        intf[key]['cmd'] = File(None, abs_path)
-                        _log.debug('path: %s file: %s', intf[key]['cmd'].path,
-                                   intf[key]['cmd'].file)
+                        operation['cmd'] = File(None, abs_path)
+                        _log.debug('path: %s file: %s', operation['cmd'].path,
+                                   operation['cmd'].file)
                     if 'inputs' in value:
-                        intf[key]['inputs'] = value['inputs']
+                        operation['inputs'] = value['inputs']
 
-            conf.interfaces = intf
+            conf.interfaces = interfaces
 
     else:
         raise ValueError(
@@ -181,13 +184,13 @@ def _parse_conf(tpl, node, repos, base_path):
         req_type = get_req_type(name)
         _log.debug('%s %s', target, req_type)
 
-        if req_type == CONNECT:
+        if req_type == REL_CONNECT:
             conf.add_connection(target)
-        if req_type == DEPEND:
+        if req_type == REL_DEPEND:
             conf.add_depend(target)
-        if req_type == HOST:
+        if req_type == REL_HOST:
             conf.host = target
-        if req_type == ATTACH:
+        if req_type == REL_ATTACH:
             location = value['relationship']['properties']['location']
             _log.debug('location: %s', location)
             conf.add_volume(target, location)
@@ -305,6 +308,9 @@ def _parse_protocol(properties):
         protocol.states.append(state)
         if name == properties[PROT_INITIAL_STATE]:
             protocol.initial_state = state
+        else:
+            state.requires.append(ALIVE)
+            state.offers.append(ALIVE)
 
     for transition in properties[PROT_TRANSITIONS]:
         source = protocol.find_state(transition[PROT_SOURCE])
@@ -312,7 +318,7 @@ def _parse_protocol(properties):
         transition = Transition(source, target,
                                 transition[PROT_INTERFACE],
                                 transition[PROT_OPERATION],
-                                transition.get(PROT_REQUIRES, None))
+                                [HOST] + transition.get(PROT_REQUIRES, []))
         protocol.transitions.append(transition)
         source.transitions.append(transition)
     return protocol

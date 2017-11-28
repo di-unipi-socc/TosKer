@@ -1,0 +1,15 @@
+app:my_interface.my_stop
+app:my_interface.my_delete
+
+node:Standard.stop
+node:Standard.delete
+
+db:Standard.stop
+db:Standard.delete
+
+server_app:Standard.stop
+server_app:Standard.delete
+
+server_db:Standard.stop
+server_db:Standard.delete
+

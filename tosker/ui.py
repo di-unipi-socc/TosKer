@@ -168,7 +168,7 @@ def run():
         if flags.get('protocol', False):
             if comps and comps[0] == '_':
                 import sys
-                comps = [line.strip() for line in sys.stdin]
+                comps = [line.strip() for line in sys.stdin if line.strip()]
             orchestrator.orchestrate_with_protocols(file, comps, inputs)
         else:
             orchestrator.orchestrate(file, cmds, comps, inputs)

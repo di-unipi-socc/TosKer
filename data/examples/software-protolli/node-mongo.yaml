@@ -45,26 +45,24 @@ topology_template:
           deleted:
           created:
             requires: [ host ]
-            offers: [ host ]
           started:
             requires: [ host, my_connection ]
-            offers: [ host ]
         transitions:
         - source: deleted
           target: created
-          interface: my_software_interface
+          interface: my_interface
           operation: my_create
         - source: created
           target: deleted
-          interface: my_software_interface
+          interface: my_interface
           operation: my_delete
         - source: created
           target: started
-          interface: my_software_interface
+          interface: my_interface
           operation: my_start
         - source: started
           target: created
-          interface: my_software_interface
+          interface: my_interface
           operation: my_stop
   
   node_templates:

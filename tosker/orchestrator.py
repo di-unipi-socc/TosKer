@@ -187,6 +187,8 @@ class Orchestrator:
             if protocol_helper.can_execute(operation, component):
 
                 transition = protocol.next_transition(operation)
+                self._log.debug('transition: i={} o={}'.format(transition.interface, transition.operation))
+                
                 if isinstance(component, Container):
                     res = ContainerManager.exec_operation(component, transition.operation)
                 elif isinstance(component, Volume):
@@ -322,7 +324,7 @@ class Orchestrator:
                                              'Type', 'State', 'Full name'])
         Logger.println(table_str)
 
-    def log(self, component, interface):
+    def log(self, component, operation):
         # TODO: add logs also for Docker container
         try:
             split_list = component.split('.')
@@ -332,15 +334,18 @@ class Orchestrator:
             Logger.print_error('First argument must be a component full name (i.e my_app.my_component)')
             return
         
-        self._log.debug('app: %s, name: %s, interface: %s', app, name, interface)
+        if '.' not in operation:
+            operation = 'Standard.{}'.format(operation)
+
+        self._log.debug('app: %s, name: %s, operation: %s', app, name, operation)
 
         log_file_name = '{}/{}/*/{}/{}.log'.format(self._tmp_dir,
-                                               app, name, interface)
+                                               app, name, operation)
 
         log_file = glob(log_file_name)
 
         if len(log_file) != 1:
-            Logger.print_error('Component or interface log not found')
+            Logger.print_error('Component or operation log not found')
             return
 
         with open(log_file[0], 'r', encoding='utf-8', errors='ignore') as f:
