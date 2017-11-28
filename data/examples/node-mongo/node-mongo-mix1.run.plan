@@ -1,8 +1,8 @@
 server1:Standard.create
+server1:Standard.start
 node:Standard.create
-node:Standard.configure
 db:Standard.create
-app:Standard.create
 db:Standard.start
+app:Standard.create
 app:Standard.configure
 app:Standard.start

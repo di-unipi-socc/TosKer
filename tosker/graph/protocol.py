@@ -49,6 +49,9 @@ class Protocol():
         """Reset the protocol state."""
         self.current_state = self.initial_state
 
+    def is_reset(self):
+        return self.current_state == self.initial_state
+
     def execute_operation(self, operation):
         """Execute the operation and change the current state."""
         next_state = self.next_state(operation)
@@ -142,16 +145,16 @@ class Transition():
             self.source.name, self.target.name, self.full_operation, ','.join(self.requires))
 
 # Default protocols
-# FIXME: remove sets
+ALIVE = 'alive'
 def get_container_protocol():
     """Return the default protocol for the Container component."""
     protocol = Protocol()
     protocol.states = deleted, created, running = [
         State('deleted'),
-        State('created', offers=[HOST]),
+        State('created', offers=[ALIVE]),
         State('running',
               requires=[STORAGE, CONNECTION, DEPENDENCY],
-              offers=[HOST, ENDPOINT, FEATURE])
+              offers=[ALIVE, HOST, ENDPOINT, FEATURE])
     ]
     protocol.initial_state = protocol.current_state = deleted
 
@@ -174,21 +177,21 @@ def get_software_protocol():
     protocol = Protocol()
     protocol.states = deleted, created, configured, running = [
         State('deleted'),
-        State('created', requires=[HOST], offers=[HOST]),
-        State('configured', requires=[HOST], offers=[HOST]),
+        State('created', requires=[ALIVE], offers=[ALIVE, HOST]),
+        State('configured', requires=[ALIVE], offers=[ALIVE, HOST]),
         State('running',
-              requires=[HOST, CONNECTION, DEPENDENCY],
-              offers=[HOST, ENDPOINT, FEATURE])
+              requires=[ALIVE, HOST, CONNECTION, DEPENDENCY],
+              offers=[ALIVE, HOST, ENDPOINT, FEATURE])
     ]
     protocol.initial_state = protocol.current_state = deleted
 
     protocol.transitions = create, configure, start, stop, delete, delete_conf = [
-        Transition(deleted, created, operation='create'),
-        Transition(created, configured, operation='configure'),
-        Transition(configured, running, operation='start'),
-        Transition(running, configured, operation='stop'),
-        Transition(created, deleted, operation='delete'),
-        Transition(configured, deleted, operation='delete')
+        Transition(deleted, created, operation='create', requires=[HOST]),
+        Transition(created, configured, operation='configure', requires=[HOST]),
+        Transition(configured, running, operation='start', requires=[HOST]),
+        Transition(running, configured, operation='stop', requires=[HOST]),
+        Transition(created, deleted, operation='delete', requires=[HOST]),
+        Transition(configured, deleted, operation='delete', requires=[HOST])
     ]
 
     deleted.transitions = [create]

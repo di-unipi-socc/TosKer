@@ -158,14 +158,16 @@ class SoftwareManager:
         return res
 
     @staticmethod
-    def exec_operation(component, interface, operation):
+    def exec_operation(comp, interface, operation):
         """Exec an operation on the component."""
-        # TODO: use interface here
-        assert isinstance(component, Software)
-        assert isinstance(operation, str)
-        # TODO: add the possibility to runn any interface
-        try:
-            getattr(SoftwareManager, operation)(component)
-        except AttributeError:
-            return False
+        _log = Logger.get(__name__)
+        assert isinstance(comp, Software) and isinstance(operation, str)
+        # TODO: add the possibility to run any interface
+
+        if comp.protocol.is_reset():
+            SoftwareManager._copy_files(comp)
+        
+        cmd = SoftwareManager._get_cmd_args(comp, operation)
+        if cmd is not None:
+            docker_interface.exec_cmd(comp.host_container, cmd)
         return True
