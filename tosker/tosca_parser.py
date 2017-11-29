@@ -1,6 +1,6 @@
-'''
+"""
 Tosca parser module
-'''
+"""
 import re
 from os import path
 
@@ -9,8 +9,8 @@ from toscaparser.prereq.csar import CSAR
 from toscaparser.tosca_template import ToscaTemplate
 
 from . import helper
-from .graph.artifacts import Dockerfile, DockerfileExecutable, DockerImage,\
-                             DockerImageExecutable, File
+from .graph.artifacts import (Dockerfile, DockerfileExecutable, DockerImage,
+                              DockerImageExecutable, File)
 from .graph.nodes import Container, Software, Volume
 from .graph.protocol import Protocol, State, Transition
 from .graph.template import Template
@@ -46,24 +46,6 @@ REL_CONNECT = 'tosca.relationships.ConnectsTo'
 REL_DEPEND = 'tosca.relationships.DependsOn'
 REL_ATTACH = 'tosca.relationships.AttachesTo'
 REL_HOST = 'tosca.relationships.HostedOn'
-
-
-# def _check_requirements(node, running):
-#     for req in node.requirements:
-#         for key, value in req.items():
-#             value = value['node'] if type(value) is dict else value
-#             if value not in running:
-#                 return False
-#     return True
-
-# def _parse_path(base_path, value):
-#     abs_path = path.abspath(
-#         path.join(base_path, value)
-#     )
-#     split_path = abs_path.split('/')
-#     return {'path': '/'.join(split_path[:-1]),
-#             'file': split_path[-1],
-#             'file_path': abs_path}
 
 
 def _get_file(base_path, name, file):
@@ -262,6 +244,7 @@ def get_tosca_template(file_path, inputs=None):
 
     return tpl
 
+
 def _validate_protocol(properties):
     if PROT_INITIAL_STATE not in properties:
         raise ValueError('Attribute {}, is required in policy properties')
@@ -296,7 +279,8 @@ def _validate_protocol(properties):
             if name not in PROT_TRANSITION_PROP:
                 raise ValueError('Transition must contains only {}'
                                  ''.format(', '.join(PROT_TRANSITION_PROP)))
-                                
+
+
 def _parse_protocol(properties):
     protocol = Protocol()
     
@@ -323,6 +307,7 @@ def _parse_protocol(properties):
         source.transitions.append(transition)
     return protocol
 
+
 def _add_pointer(tpl):
     for node in tpl.nodes:
         for rel in node.relationships:
@@ -335,10 +320,14 @@ def _add_back_links(tpl):
             rel.to.up_requirements.append(rel)
 
 
-# - add pointer host_container pointer on software
-# - add pointer on host property
-# - add software links to the corrisponding container
+
 def _add_extension(tpl):
+    """
+    This function add the following extension on the template:
+      - add pointer host_container pointer on software
+      - add pointer on host property
+      - add software links to the corrisponding container
+    """
     # Add the host_container property
     for node in tpl.software:
         def find_container(node):
@@ -373,50 +362,6 @@ def _add_extension(tpl):
             if isinstance(con.to, Software):
                 con.alias = con.to.name
                 con.to = con.to.host_container
-
-
-# def _parse_functions(tosca, inputs, base_path):
-#     # Get the template nodes
-#     tpl = tosca.topology_template.tpl['node_templates']
-#
-#     # Get the inputs of the TOSCA file
-#     if 'inputs' in tosca.topology_template.tpl:
-#         tosca_inputs = tosca.topology_template.tpl['inputs']
-#
-#     # Recurvive function searching for TOSCA function in the node
-#     def parse_node(name, node):
-#
-#         # This function return the result of the TOSCA function
-#         def execute_function(value, args):
-#             if 'SELF' == args[0]:
-#                 args[0] = name
-#             return helper.get_attributes(args[1:], tpl[args[0]][value])
-#
-#         for k, v in node.items():
-#             # If the function is already parse by toscaparser use the result
-#             if isinstance(v, toscaparser.functions.Function):
-#                 node[k] = v.result()
-#             elif type(v) is dict:
-#                 # Found a get_property function
-#                 if 'get_property' == v:
-#                     node[k] = execute_function('properties',
-#                                                v['get_property'])
-#                 # Found a get_artifact function
-#                 if 'get_artifact' == v:
-#                     art = execute_function('artifacts', v['get_artifact'])
-#                     node[k] = _parse_path(base_path, art)
-#                 # Found a get_input function
-#                 elif 'get_input' == v:
-#                     if v['get_input'] in inputs:
-#                         node[k] = inputs[v['get_input']]
-#                     else:
-#                         node[k] = tosca_inputs[v['get_input']]['default']
-#                 else:
-#                     parse_node(name, v)
-#
-#     # Scan each component of the application to find TOSCA funcions
-#     for k, v in tpl.items():
-#         parse_node(k, v)
 
 
 def _parse_functions(tosca, inputs, base_path):

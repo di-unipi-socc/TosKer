@@ -1,4 +1,4 @@
 #!bin/sh
-echo "hello!" > /tmp/dt/out
+echo "hello!"
 sleep 5
-echo "bye!" > /tmp/dt/out
+echo "bye!"

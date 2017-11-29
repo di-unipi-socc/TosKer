@@ -20,8 +20,8 @@ class VolumeManager:
     @staticmethod
     def exec_operation(component, operation):
         """Exec an operation on the component."""
-        assert isinstance(component, Volume)
-        assert isinstance(operation, str)
+        assert isinstance(component, Volume) and\
+               isinstance(operation, str)
         try:
             getattr(VolumeManager, operation)(component)
         except AttributeError:

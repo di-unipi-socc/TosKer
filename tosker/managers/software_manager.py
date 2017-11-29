@@ -1,6 +1,6 @@
-'''
+"""
 Software manager module
-'''
+"""
 import os
 from functools import wraps
 from os import path
@@ -12,61 +12,24 @@ from ..graph.nodes import Software
 from ..helper import Logger
 from ..storage import Memory
 
+
 class SoftwareManager:
 
-    def _get_cmd(interface, force_exec=False):
-        def _get_cmd_decorator(func):
-            @wraps(func)
-            def func_wrapper(*args):
-                assert isinstance(args[0], Software)
-                cmd = SoftwareManager._get_cmd_args(args[0], interface)
-                if cmd or force_exec:
-                    return func(cmd, *args)
-            return func_wrapper
-        return _get_cmd_decorator
-
     @staticmethod
-    @_get_cmd('create', force_exec=True)
-    def create(cmd, node):
-        SoftwareManager._copy_files(node)
+    def exec_operation(comp, interface, operation):
+        """Exec an operation on the component."""
+        _log = Logger.get(__name__)
+        assert isinstance(comp, Software) and isinstance(interface, str) and\
+               isinstance(operation, str)
+
+        if comp.protocol.is_reset():
+            _log.debug('copy file inside the container')
+            SoftwareManager._copy_files(comp)
+        
+        cmd = SoftwareManager._get_cmd_args(comp, operation, interface=interface)
         if cmd is not None:
-            docker_interface.update_container(node.host_container, cmd)
-
-    @staticmethod
-    @_get_cmd('configure')
-    def configure(cmd, node):
-        docker_interface.update_container(node.host_container, cmd)
-
-    @staticmethod
-    @_get_cmd('start')
-    def start(cmd, node):
-        _log = Logger.get(__name__)
-        try:
-            docker_interface.exec_cmd(node.host_container, cmd)
-        except Exception:
-            _log.debug('is not running!')
-            # docker_interface.delete_container(node.host_container)
-            docker_interface.create_container(node.host_container,
-                                              cmd=cmd,
-                                              entrypoint='',
-                                              from_saved=True,
-                                              force=True)
-            docker_interface.start_container(node.host_container)
-
-    @staticmethod
-    @_get_cmd('stop')
-    def stop(cmd, node):
-        _log = Logger.get(__name__)
-        if docker_interface.is_running(node.host_container):
-            _log.debug('exec stop command!')
-            docker_interface.exec_cmd(node.host_container, cmd)
-
-    @staticmethod
-    @_get_cmd('delete')
-    def delete(cmd, node):
-        _log = Logger.get(__name__)
-        _log.debug('exec delete command!')
-        docker_interface.update_container(node.host_container, cmd)
+            docker_interface.exec_cmd(comp.host_container, cmd)
+        return True
 
     @staticmethod
     def _copy_files(node):
@@ -160,20 +123,3 @@ class SoftwareManager:
         _log.debug('%s.%s command (%s) on container %s', interface, operation,
                    res, node.host_container)
         return res
-
-    @staticmethod
-    def exec_operation(comp, interface, operation):
-        """Exec an operation on the component."""
-        _log = Logger.get(__name__)
-        assert isinstance(comp, Software) and isinstance(interface, str) and\
-               isinstance(operation, str)
-        # TODO: add the possibility to run any interface
-
-        if comp.protocol.is_reset():
-            _log.debug('copy file inside the container')
-            SoftwareManager._copy_files(comp)
-        
-        cmd = SoftwareManager._get_cmd_args(comp, operation, interface=interface)
-        if cmd is not None:
-            docker_interface.exec_cmd(comp.host_container, cmd)
-        return True
