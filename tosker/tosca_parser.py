@@ -12,11 +12,10 @@ from . import helper
 from .graph.artifacts import (Dockerfile, DockerfileExecutable, DockerImage,
                               DockerImageExecutable, File)
 from .graph.nodes import Container, Software, Volume
-from .graph.protocol import Protocol, State, Transition
+from .graph.protocol import ALIVE, Protocol, State, Transition
+from .graph.relationships import HOST
 from .graph.template import Template
 from .helper import Logger
-from .graph.protocol import ALIVE
-from .graph.relationships import HOST
 
 _log = None
 

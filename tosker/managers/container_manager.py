@@ -6,6 +6,7 @@ Container manager module
 from .. import docker_interface
 from ..graph.nodes import Container
 
+
 class ContainerManager:
 
     @staticmethod

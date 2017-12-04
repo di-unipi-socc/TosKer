@@ -5,6 +5,7 @@ Volume manager module
 from .. import docker_interface
 from ..graph.nodes import Volume
 
+
 class VolumeManager:
 
     @staticmethod

@@ -13,23 +13,16 @@ from .orchestrator import Orchestrator
 
 def _usage():
     return '''
-Usage: tosker FILE [COMPONENTS...] COMMAND...  [OPTIONS] [INPUTS]
+Usage: tosker FILE COMPONENT:INTERFACE.OPERATION... [OPTIONS] [INPUTS]
+       tosker FILE _ [OPTIONS] [INPUTS]
        tosker ls [APPLICATION] [FILTES]
-       tosker log COMPONET COMMAND
+       tosker log APPLICATION.COMPONENT INTERFACE.OPERATION
        tosker prune
        tosker -h|--help
        tosker -v|--version
 Orchestrate TOSCA applications on top of Docker.
 
 FILE: TOSCA YAML file or CSAR file
-
-COMMAND:
-  create   Create application components
-  start    Start applications components
-  stop     Stop application components
-  delete   Delete application components (except volume)
-
-COMPONENTS: list of components to deploy
 
 OPTIONS:
   -h --help      Print usage
@@ -41,23 +34,23 @@ INPUTS: provide TOSCA inputs (syntax: --NAME VALUE)
 
 APPLICATION: the application name (CSAR or YAML file without the extension)
 
+COMPONENT: Name of a component in the application
+
 FILTER:
   --name <name>    filter by the component name
   --state <state>  filter by the state (created, started, deleted)
   --type <type>    filter by the type (Container, Volume, Software)
 
-COMPONENT: the component fullname (i.e. my_app.my_component)
-
 Examples:
-  tosker hello.yaml create start --name mario
-  tosker hello.yaml stop delete -q
-  tosker hello.yaml database api create start
+  tosker hello.yaml component1:Standard.create component1:Standard.start --name mario
+  tosker hello.yaml component1:Standard.stop component1:Standard.delete -q
+  cat hello_run.plan | tosker hello.yaml _
 
   tosker ls
   tosker ls hello
-  tosker ls hello --type Software --state started
+  tosker ls hello --type Software --state running
 
-  tosker log my_app.my_component create
+  tosker log my_app.my_component Standard.create
 '''
 
 
@@ -71,12 +64,8 @@ _FLAG = {
     '--version': 'version'
 }
 
-_CMD = {'create', 'start', 'stop', 'delete'}
-
-
 def _parse_unix_input(args):
     inputs = {}
-    cmds = []
     comps = []
     flags = {}
     file = ''
@@ -103,12 +92,7 @@ def _parse_unix_input(args):
             else:
                 error = 'known parameter.'
         elif mod == 'deploy':
-            if args[i] in _CMD:
-                cmds.append(args[i])
-            elif not cmds:
-                comps.append(args[i])
-            else:
-                error = '{} is not a valid command.'.format(args[i])
+            comps.append(args[i])
         elif mod == 'ls' or mod == 'log':
             comps.append(args[i])
         elif i == 0:
@@ -125,7 +109,7 @@ def _parse_unix_input(args):
                 error = ('first argument must be a TOSCA yaml file, a CSAR or '
                          'a ZIP archive.')
         i += 1
-    return error, mod, file, cmds, comps, flags, inputs
+    return error, mod, file, comps, flags, inputs
 
 
 def _check_file(file):
@@ -145,7 +129,7 @@ def run():
     if len(argv) < 2:
         _error('few arguments.', '\n', _usage())
 
-    error, mod, file, cmds, comps, flags, inputs = _parse_unix_input(argv[1:])
+    error, mod, file, comps, flags, inputs = _parse_unix_input(argv[1:])
 
     if error is not None:
         _error(error)

@@ -66,33 +66,9 @@ class SoftwareManager:
             def get_echo(string, where):
                 return 'echo {} > {}'.format(string, where)
 
-            def set_in_state():
-                if operation == 'start':
-                    return get_echo(Memory.STATE.STARTED.value,
-                                    get_inside_path('state')) + ';'
-                return ''
-
-            def set_out_state():
-                # TODO: generalize with protocols
-                if operation == 'create':
-                    return ';' + get_echo(Memory.STATE.CREATED.value,
-                                          get_inside_path('state'))
-                elif operation == 'start':
-                    return ';' + get_echo(Memory.STATE.CREATED.value,
-                                          get_inside_path('state'))
-                elif operation == 'stop':
-                    return ';' + get_echo(Memory.STATE.CREATED.value,
-                                          get_inside_path('state'))
-                elif operation == 'delete':
-                    return ';' + get_echo(Memory.STATE.DELETED.value,
-                                          get_inside_path('state'))
-                return ''
-
-            return '{}sh -x {} >> {} 2>&1{}'.format(
-                set_in_state(),
+            return 'sh -x {} >> {} 2>&1'.format(
                 get_inside_path(node.interfaces[interface][operation]['cmd']),
-                get_inside_path('{}.{}.log'.format(interface, operation)),
-                set_out_state()
+                get_inside_path('{}.{}.log'.format(interface, operation))
             )
 
         if interface not in node.interfaces or\

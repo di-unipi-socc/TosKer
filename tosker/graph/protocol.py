@@ -1,8 +1,9 @@
 '''
-Classes to represent a Protocol
+Classes used to represent a Management Protocol
 '''
-from .relationships import HOST, STORAGE, CONNECTION,\
-                           DEPENDENCY, ATTACHMENT, ENDPOINT, FEATURE
+from .relationships import (ATTACHMENT, CONNECTION, DEPENDENCY, ENDPOINT,
+                            FEATURE, HOST, STORAGE)
+
 
 class Protocol():
     '''
@@ -36,13 +37,11 @@ class Protocol():
 
     @current_state.setter
     def current_state(self, state):
-        assert isinstance(state, (State, str))
-        if isinstance(state, str):
-            state = next((s for s in self.states if s.name == state), None)
+        assert isinstance(state, State)
         self._current_state = state
     
     def find_state(self, state_name):
-        '''Find the state object given its name.'''
+        """Find the state object given its name."""
         return next((s for s in self.states if state_name == s.name), None)
     
     def reset(self):
@@ -144,15 +143,26 @@ class Transition():
         return '(s={}, t={}, o={}, r=[{}])'.format(
             self.source.name, self.target.name, self.full_operation, ','.join(self.requires))
 
-# Default protocols
+# Protocols constants
 ALIVE = 'alive'
+CONTAINER_STATES = CONTAINER_STATE_DELETED, CONTAINER_STATE_CREATED, CONTAINER_STATE_RUNNING =\
+                   'deleted', 'created', 'running'
+SOFTWARE_STATES = SOFTWARE_STATE_DELETED, SOFTWARE_STATE_CREATED, SOFTWARE_STATE_CONFIGURED,\
+                  SOFTWARE_STATE_RUNNING, SOFTWARE_STATE_ZOTTED = 'deleted', 'created',\
+                  'configured', 'running', 'zotted'
+VOLUME_STATES = VOLUME_STATE_DELETED, VOLUME_STATE_CREATED = 'deleted', 'created'
+
+STATES = STATE_DELETED, STATE_CREATED, STATE_CONFIGURED, STATE_RUNNING, STATE_ZOTTED =\
+         SOFTWARE_STATES
+
+# Default protocols
 def get_container_protocol():
     """Return the default protocol for the Container component."""
     protocol = Protocol()
     protocol.states = deleted, created, running = [
-        State('deleted'),
-        State('created', offers=[ALIVE]),
-        State('running',
+        State(CONTAINER_STATE_DELETED),
+        State(CONTAINER_STATE_CREATED, offers=[ALIVE]),
+        State(CONTAINER_STATE_RUNNING,
               requires=[STORAGE, CONNECTION, DEPENDENCY],
               offers=[ALIVE, HOST, ENDPOINT, FEATURE])
     ]
@@ -176,10 +186,10 @@ def get_software_protocol():
     """Return the default protocol for the Software component."""
     protocol = Protocol()
     protocol.states = deleted, created, configured, running = [
-        State('deleted'),
-        State('created', requires=[ALIVE], offers=[ALIVE]),
-        State('configured', requires=[ALIVE], offers=[ALIVE]),
-        State('running',
+        State(SOFTWARE_STATE_DELETED),
+        State(SOFTWARE_STATE_CREATED, requires=[ALIVE], offers=[ALIVE]),
+        State(SOFTWARE_STATE_CONFIGURED, requires=[ALIVE], offers=[ALIVE]),
+        State(SOFTWARE_STATE_RUNNING,
               requires=[ALIVE, HOST, CONNECTION, DEPENDENCY],
               offers=[ALIVE, HOST, ENDPOINT, FEATURE])
     ]
@@ -205,8 +215,8 @@ def get_volume_protocol():
     """Return the default protocol for the Volume component."""
     protocol = Protocol()
     protocol.states = deleted, created = [
-        State('deleted'),
-        State('created', offers=[ATTACHMENT])
+        State(VOLUME_STATE_DELETED),
+        State(VOLUME_STATE_CREATED, offers=[ATTACHMENT])
     ]
     protocol.initial_state = protocol.current_state = deleted
 

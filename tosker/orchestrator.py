@@ -1,10 +1,11 @@
-'''
+"""
 Orchestrator module
-'''
+"""
 import logging
 import os
 import shutil
 import traceback
+import re
 from functools import wraps
 from glob import glob
 from io import open
@@ -12,12 +13,16 @@ from io import open
 import six
 from halo import Halo
 from tabulate import tabulate
+from termcolor import colored
 from toscaparser.common.exception import ValidationError
 from yaml.scanner import ScannerError
-from termcolor import colored
 
 from . import docker_interface, helper, protocol_helper
 from .graph.nodes import Container, Software, Volume
+from .graph.protocol import (CONTAINER_STATE_CREATED, CONTAINER_STATE_DELETED,
+                             CONTAINER_STATE_RUNNING, SOFTWARE_STATE_ZOTTED,
+                             STATE_RUNNING, VOLUME_STATE_CREATED,
+                             VOLUME_STATE_DELETED)
 from .helper import Logger
 from .managers.container_manager import ContainerManager
 from .managers.software_manager import SoftwareManager
@@ -49,59 +54,62 @@ class Orchestrator:
             pass
         Memory.set_db(data_dir)
 
-        # FIXME: add this again!
-        # status, faulty = self._update_state()
-        # Logger.println('update memory {} {}'.format(
-        #     'ok' if status else 'fixed',
-        #     '({})'.format(', '.join(faulty)) if not status else ''))
+        status, faulty = self._update_state()
+        Logger.println('(update memory: {})'.format(
+                       'ok' if status else 'fixed {}'.format(', '.join(faulty))))
 
     def orchestrate(self, file_path, operations, inputs):
-        '''
-        Start the orchestration using the management protocols
-            operations:['component:interface.operation'...]
-        '''
+        """
+        Start the orchestration using the management protocols.
+        Operations mus be a list where every element are in the format "component:interface.operation"
+        """
         # Parse TOSCA file
         tpl = self._parse_tosca(file_path, inputs)
         if tpl is None:
             return False
 
+        # Parse operations
+        operations = self._parse_operations(tpl, operations)
+
         # Create tmp directory for the template
         self._create_tmp_dir(tpl)
 
         # Load components state
-        for comp in Memory.get_comps(tpl.name):
-            tpl[comp['name']].protocol.current_state = comp['state']
+        if not self._load_component_state(tpl):
+            Logger.print_error('Cannot load components state, try to use "tosker prune" to hard reset.')
+            return False
         self._log.debug('State: %s', ' '.join(
-            (c['name']+'.'+c['state'] for c in Memory.get_comps(tpl.name))
-        ))
-
-        # Create Network
-        # TODO: do not create network if already there
-        self._print_loading_start('Create network... ')
-        docker_interface.create_network(tpl.name)
-        self._print_tick()
-
-        # TODO: validate operatin format.
+            (c['name']+'.'+c['state'] for c in Memory.get_comps(tpl.name))))
 
         try:
-            for op in operations:
-                op_list = op.split(':')
-                comp_name, operation = ':'.join(op_list[:-1]), op_list[-1]
-                
-                component = tpl[comp_name]
-                if component is None:
-                    self._print_cross('Cannot find component {}'.format(comp_name))
+            # Check plan
+            self._print_loading_start('Check deployment plan... ')
+            for component, full_operation in operations:
+                try:
+                    protocol_helper.can_execute(full_operation, component)
+                    component.protocol.execute_operation(full_operation)
+                except ValueError as e:
+                    self._print_cross('Error on {}.{}: {}'
+                                      ''.format(component.name, full_operation, e))
                     return False
+            self._load_component_state(tpl)
+            self._print_tick()
+            
+
+            # Create Network
+            # TODO: do not create network if already there
+            self._print_loading_start('Create network... ')
+            docker_interface.create_network(tpl.name)
+            self._print_tick()
+
+            # Execute plan
+            for component, full_operation in operations:
                 protocol = component.protocol
+                self._log.debug('Component %s is in state %s', component.name, component.protocol.current_state)
                 self._print_loading_start('Execute op "{}" on "{}"... '
-                    ''.format(operation, comp_name))
+                    ''.format(full_operation, component.name))
 
-                if not protocol_helper.can_execute(operation, component):
-                    # TODO: write the motivation because is not possible
-                    self._print_cross('Cannot execute the operation')
-                    return False
-
-                transition = protocol.next_transition(operation)
+                transition = protocol.next_transition(full_operation)
                 self._log.debug('transition: i={} o={}'.format(transition.interface, transition.operation))
                 
                 if isinstance(component, Container):
@@ -112,7 +120,7 @@ class Orchestrator:
                     SoftwareManager.exec_operation(component, transition.interface,
                                                    transition.operation)
 
-                state = protocol.execute_operation(operation)
+                state = protocol.execute_operation(full_operation)
 
                 # remove the component if it is in the initial state
                 if state == protocol.initial_state:
@@ -134,9 +142,7 @@ class Orchestrator:
         comps = Memory.get_comps(app, filters)
 
         def get_state(state):
-            return colored(state, {
-                Memory.STATE.CREATED.value: None,
-                Memory.STATE.STARTED.value: 'green'}.get(state))
+            return colored(state, ('green' if state == STATE_RUNNING else None))
 
         def format_row(comp):
             return [comp['app_name'],
@@ -152,11 +158,9 @@ class Orchestrator:
 
     def log(self, component, operation):
         # TODO: add logs also for Docker container
-        try:
-            split_list = component.split('.')
-            app = '.'.join(split_list[:-1])
-            name = split_list[-1]
-        except ValueError:
+
+        app, name = helper.split(component, '.')
+        if app is None:
             Logger.print_error('First argument must be a component full name (i.e my_app.my_component)')
             return
         
@@ -193,13 +197,6 @@ class Orchestrator:
             self._log.debug(v['Name'])
             docker_interface.delete_volume(v['Name'])
         self._print_tick()
-
-        # self._print_loading_start('Remove images.. ')
-        # images = docker_interface.get_images()
-        # for i in (i for i in images if i['RepoTags'][0].startswith('tosker')):
-        #     self._log.debug(i['RepoTags'][0])
-        #     docker_interface.delete_image(i['Id'])
-        # self._print_tick()
         
         # TODO: remove also networks
 
@@ -239,6 +236,43 @@ class Orchestrator:
         except os.error as e:
             self._log.info(e)
 
+    def _parse_operations(self, tpl, operations):
+            res = []
+            for op in operations:
+                # Check that the format of the operation si correct
+                if re.match('.*:.*\..*', op) is None:
+                    Logger.print_error('Wrong operation format. The format must be "COMPONENT:INTERFACE.OPERATION"')
+
+                # Check that the component existes in the template
+                comp_name, full_operation = helper.split(op, ':')
+                comp = tpl[comp_name]
+                if comp is None:
+                    Logger.print_error('Component "{}" not found in template.'.format(comp_name))
+
+                # check that the component has interface.operation
+                interface, operation = helper.split(full_operation, '.')
+                if interface not in comp.interfaces and\
+                   operation not in comp.interfaces[interface]:
+                    Logger.print_error('Component "{}" not has the "{}" operation in the "{}" interface.'
+                                    ''.format(comp_name, operation, interface))
+                
+                res.append((comp, full_operation))
+            
+            return res
+    
+    def _load_component_state(self, tpl):
+        for comp in tpl.nodes:
+            state = Memory.get_comp_state(comp)
+            if state is not None:
+                state = comp.protocol.find_state(state)
+                if state is not None:
+                    comp.protocol.current_state = state
+                else:
+                    return False
+            else:
+                comp.protocol.reset()
+        return True
+
     def _print_outputs(self, tpl):
         if len(tpl.outputs) != 0:
             Logger.println('\nOUTPUTS:')
@@ -249,7 +283,6 @@ class Orchestrator:
             Logger.println('  - ' + out.name + ":", value)
 
     def _update_state(self):
-        # FIXME: this method update the memory not in the correct way 
         errors = set()
 
         def manage_error(comp, state):
@@ -269,44 +302,25 @@ class Orchestrator:
 
             for s, s_path in software:
                 full_name = '{}.{}'.format(comp['app_name'], s)
-                Memory.update_state('{}.{}'.format(comp['app_name'], s), state)
-                # with open(os.path.join(s_path, 'state'), 'w') as f:
-                #     f.write(state.value)
-                try:
-                    os.remove(os.path.join(s_path, 'state'))
-                except FileNotFoundError:
-                    pass
+                Memory.update_state('{}.{}'.format(comp['app_name'], s), SOFTWARE_STATE_ZOTTED)
                 errors.add(full_name)
 
-        for c in Memory.get_comps(filters={'type': 'Software'}):
-            state = glob('{}/{}/*/{}/state'.format(self._tmp_dir,
-                                                   c['app_name'],
-                                                   c['name']))
-            self._log.debug('software update %s', state)
+        for container in Memory.get_comps(filters={'type': 'Container'}):
+            status = docker_interface.inspect_container(container['full_name'])
+            deleted, created, running = status is None,\
+                                        status is not None and not status['State']['Running'],\
+                                        status is not None and status['State']['Running']
+            if deleted and container['state'] != CONTAINER_STATE_DELETED:
+                manage_error_container(container, CONTAINER_STATE_DELETED)
+            elif created and container['state'] != CONTAINER_STATE_CREATED:
+                manage_error_container(container, CONTAINER_STATE_CREATED)
+            elif running and container['state'] != CONTAINER_STATE_RUNNING:
+                manage_error_container(container, CONTAINER_STATE_RUNNING)
 
-            if len(state) == 1:
-                with open(state[0], 'r') as f:
-                    state = f.read().replace('\n', '')
-                if state != c['state']:
-                    manage_error(c, Memory.STATE(state))
-
-        for c in Memory.get_comps(filters={'type': 'Container'}):
-                status = docker_interface.inspect_container(c['full_name'])
-                if status is not None:
-                    self._log.debug('%s status %s', c['full_name'], status['State'])
-                    if c['state'] == Memory.STATE.CREATED.value and \
-                       status['State']['Running'] is not False:
-                        manage_error_container(c, Memory.STATE.STARTED)
-                    if c['state'] == Memory.STATE.STARTED.value and\
-                       status['State']['Running'] is not True:
-                        manage_error_container(c, Memory.STATE.CREATED)
-                else:
-                    manage_error_container(c, Memory.STATE.DELETED)
-
-        for c in Memory.get_comps(filters={'type': 'Volume'}):
-                status = docker_interface.inspect_volume(c['full_name'])
-                if status is None:
-                    manage_error(c, Memory.STATE.DELETED)
+        for volume in Memory.get_comps(filters={'type': 'Volume'}):
+            status = docker_interface.inspect_volume(volume['full_name'])
+            if status is None:
+                manage_error(volume, VOLUME_STATE_DELETED)
 
         return len(errors) == 0, errors
 
@@ -317,8 +331,8 @@ class Orchestrator:
         self._loading_thread.info(self._loading_thread.text + 'Skipped')
 
     def _print_cross(self, error):
-        self._loading_thread.fail(self._loading_thread.text +
-                                  'Error ({})'.format(error))
+        self._loading_thread.fail(self._loading_thread.text + '\n' +
+                                  colored(error, 'red'))
 
     def _print_loading_start(self, msg):
         self._loading_thread = Halo(text=msg, spinner='dots')

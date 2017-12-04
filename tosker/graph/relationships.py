@@ -19,7 +19,7 @@ class Relationship(object):
         self.capability = capability
 
     def __str__(self):
-        return 'Relationship'
+        return 'o={0.origin},t={0.to},req={0.requirement},cap={0.capability}'.format(self)
 
 
 def _get_str_name(obj):
@@ -46,7 +46,7 @@ class ConnectsTo(Relationship):
             return (full_name, _get_str_name(self.to))
 
     def __str__(self):
-        return 'ConnectsTo'
+        return 'ConnectsTo({})'.format(super(ConnectsTo, self).__str__())
 
 
 class HostedOn(Relationship):
@@ -59,7 +59,7 @@ class HostedOn(Relationship):
         return _get_str_name(self.to)
 
     def __str__(self):
-        return 'HostedOn'
+        return 'HostedOn({})'.format(super(HostedOn, self).__str__())
 
 
 class AttachesTo(Relationship):
@@ -76,7 +76,7 @@ class AttachesTo(Relationship):
             return _get_str_full_name(self.to)
 
     def __str__(self):
-        return 'AttachesTo'
+        return 'AttachesTo({})'.format(super(AttachesTo, self).__str__())
 
 
 class DependsOn(Relationship):
@@ -89,4 +89,4 @@ class DependsOn(Relationship):
         return _get_str_name(self.to)
 
     def __str__(self):
-        return 'DependsOn'
+        return 'DependsOn({})'.format(super(DependsOn, self).__str__())

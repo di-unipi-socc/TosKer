@@ -109,3 +109,10 @@ def print_json(stream, fprint):
 def print_byte(stream, fprint):
     for line in stream:
         fprint('\t' + line.decode("utf-8").strip())
+
+def split(string, char):
+    """ Split string a string and return always two parts"""
+    string_list = string.split(char)
+    if len(string_list) == 1:
+        return None, None
+    return char.join(string_list[:-1]), string_list[-1]

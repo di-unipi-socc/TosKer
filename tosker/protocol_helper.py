@@ -1,6 +1,7 @@
 """A set of functions to help the protocols implementation."""
-from .helper import Logger
 from .graph.nodes import Root
+from .helper import Logger
+
 
 def can_execute(operation, component):
     """Check if an operation can be executed on a component."""
@@ -11,10 +12,10 @@ def can_execute(operation, component):
     # component must have the opetaion in the current state
     protocol = component.protocol
     transition = protocol.next_transition(operation)
-    _log.info('component "{}" is in state "{}"'.format(
-        component.name, protocol.current_state.name))
+    _log.info('component "%s" is in state "%s"', component.name, protocol.current_state.name)
     if transition is None:
-        return False
+        raise ValueError('cannot execute operation "{}" from state "{}".'
+                         ''.format(operation, protocol.current_state.name))
 
     # all requirement of the transition and of the next state
     # are satisfied.
@@ -28,9 +29,12 @@ def can_execute(operation, component):
                           rel.to.protocol.current_state.offers)
 
                 if rel.capability not in rel.to.protocol.current_state.offers:
-                    return False
+                    raise ValueError('component "{}" require "{}" that is not offers by "{}"'
+                                     ''.format(component.name, rel.requirement, rel.to.name))
 
     # all offers are not used by other component
+    _log.debug('what I offer %s', transition.source.offers)
+    _log.debug('who require me %s', [str(r) for r in component.up_requirements])
     for off in transition.source.offers:
         for rel in component.up_requirements:
             if rel.capability == off:
@@ -40,6 +44,7 @@ def can_execute(operation, component):
                           component.name, rel.capability, rel.origin.name,
                           rel.origin.protocol.current_state.requires)
 
-                if rel.requirement in rel.origin.protocol.current_state.requires:
-                    return False
-    return True
+                if rel.requirement in rel.origin.protocol.current_state.requires and\
+                   rel.requirement not in transition.target.offers:
+                    raise ValueError('component "{}" offers "{}" that is required by "{}"'
+                                     ''.format(component.name, rel.capability, rel.origin.name))

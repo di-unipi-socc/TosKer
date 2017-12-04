@@ -1,3 +1,2 @@
 #!/bin/sh
-
-/app/payment -port=$INPUT_PORT
+/app/payment -port=$INPUT_PORT&

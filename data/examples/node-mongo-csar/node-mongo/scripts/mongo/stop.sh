@@ -1,3 +1,2 @@
 #!/bin/sh
-
-pkill "mongod"
+pidof mongod | xargs kill -9

@@ -58,10 +58,6 @@ class Storage:
 
 
 class Memory(Storage):
-    class STATE(Enum):
-        DELETED = 'deleted'
-        CREATED = 'created'
-        STARTED = 'running'
 
     @staticmethod
     def _comp_to_dict(comp):
@@ -76,10 +72,8 @@ class Memory(Storage):
     @staticmethod
     def update_state(comp, state):
         assert isinstance(comp, (six.string_types, dict, Root))
-        assert isinstance(state, (str, Memory.STATE))
-        if isinstance(state, Memory.STATE):
-            state = state.value
-        
+        assert isinstance(state, str)
+
         def _update_state(full_name, state):
             log = Logger.get(__name__)
             log.debug('update %s to %s', full_name, state)
@@ -135,8 +129,6 @@ class Memory(Storage):
         if filters is not None:
             assert isinstance(filters, dict)
             for key, value in filters.items():
-                if isinstance(value, Memory.STATE):
-                    value = value.value
                 queries.append(Query()[key] == value)
 
         if app_name is not None:

@@ -1,3 +1,2 @@
-#!/bin/bash
-
-pkill "java"
+#!/bin/sh
+pidof java | xargs kill -9

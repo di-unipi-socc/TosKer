@@ -6,7 +6,8 @@ from tinydb import Query
 from tosker.graph.nodes import Container
 from tosker.graph.template import Template
 from tosker.storage import Memory, Storage
-
+from tosker.graph.protocol import (CONTAINER_STATE_DELETED, CONTAINER_STATE_CREATED,
+                                   CONTAINER_STATE_RUNNING)
 
 class TestStorage(unittest.TestCase):
     @classmethod
@@ -51,21 +52,21 @@ class TestStorage(unittest.TestCase):
         cont = Container('container_test')
         cont.tpl = Template('template_test')
 
-        Memory.update_state(cont, Memory.STATE.CREATED)
+        Memory.update_state(cont, CONTAINER_STATE_CREATED)
         state = Memory.get_comp_state(cont)
-        self.assertEqual(state, Memory.STATE.CREATED.value)
+        self.assertEqual(state, CONTAINER_STATE_CREATED)
 
-        Memory.update_state(cont, Memory.STATE.STARTED)
+        Memory.update_state(cont, CONTAINER_STATE_RUNNING)
         state = Memory.get_comp_state(cont)
-        self.assertEqual(state, Memory.STATE.STARTED.value)
+        self.assertEqual(state, CONTAINER_STATE_RUNNING)
 
-        Memory.update_state(cont, Memory.STATE.CREATED)
+        Memory.update_state(cont, CONTAINER_STATE_CREATED)
         state = Memory.get_comp_state(cont)
-        self.assertEqual(state, Memory.STATE.CREATED.value)
+        self.assertEqual(state, CONTAINER_STATE_CREATED)
 
-        Memory.update_state(cont, Memory.STATE.DELETED)
+        Memory.update_state(cont, CONTAINER_STATE_DELETED)
         state = Memory.get_comp_state(cont)
-        self.assertEqual(state, Memory.STATE.DELETED.value)
+        self.assertEqual(state, CONTAINER_STATE_DELETED)
 
     def test_memory_get_comps(self):
         tpl = Template('template_test')
@@ -76,19 +77,19 @@ class TestStorage(unittest.TestCase):
         cont3 = Container('container_test3')
         cont3.tpl = tpl
 
-        Memory.update_state(cont1, Memory.STATE.CREATED)
-        Memory.update_state(cont2, Memory.STATE.STARTED)
-        Memory.update_state(cont3, Memory.STATE.DELETED)
+        Memory.update_state(cont1, CONTAINER_STATE_CREATED)
+        Memory.update_state(cont2, CONTAINER_STATE_RUNNING)
+        Memory.update_state(cont3, CONTAINER_STATE_DELETED)
 
         comps = Memory.get_comps()
         self.assertEqual(len(comps), 3)
 
-        comps = Memory.get_comps(filters={'state': Memory.STATE.CREATED})
+        comps = Memory.get_comps(filters={'state': CONTAINER_STATE_CREATED})
         self.assertEqual(len(comps), 1)
         self.assertEqual(comps[0]['full_name'],
                          'tosker_template_test.container_test1')
 
-        comps = Memory.get_comps(filters={'state': Memory.STATE.STARTED})
+        comps = Memory.get_comps(filters={'state': CONTAINER_STATE_RUNNING})
         self.assertEqual(len(comps), 1)
         self.assertEqual(comps[0]['full_name'],
                          'template_test.container_test2')
