@@ -70,6 +70,8 @@ class Orchestrator:
 
         # Parse operations
         operations = self._parse_operations(tpl, operations)
+        if operations is None:
+            return False
 
         # Create tmp directory for the template
         self._create_tmp_dir(tpl)
@@ -242,12 +244,14 @@ class Orchestrator:
                 # Check that the format of the operation si correct
                 if re.match('.*:.*\..*', op) is None:
                     Logger.print_error('Wrong operation format. The format must be "COMPONENT:INTERFACE.OPERATION"')
+                    return None
 
                 # Check that the component existes in the template
                 comp_name, full_operation = helper.split(op, ':')
                 comp = tpl[comp_name]
                 if comp is None:
                     Logger.print_error('Component "{}" not found in template.'.format(comp_name))
+                    return None
 
                 # check that the component has interface.operation
                 interface, operation = helper.split(full_operation, '.')
@@ -255,7 +259,7 @@ class Orchestrator:
                    operation not in comp.interfaces[interface]:
                     Logger.print_error('Component "{}" not has the "{}" operation in the "{}" interface.'
                                     ''.format(comp_name, operation, interface))
-                
+                    return None
                 res.append((comp, full_operation))
             
             return res

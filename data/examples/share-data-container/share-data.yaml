@@ -1,0 +1,36 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: Simple example of the share_data property of the containers
+
+repositories:
+  docker_hub: https://registry.hub.docker.com/
+
+imports:
+# - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
+- tosker: ../../tosker-types.yaml
+
+topology_template:
+  node_templates:
+    docker_container:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: docker
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+      properties:
+        share_data:
+          /var/run/docker.sock: /var/run/docker.sock
+        command: docker run hello-world
+
+    share_folder:
+      type: tosker.nodes.Container
+      artifacts:
+        my_image:
+          file: alpine
+          type: tosker.artifacts.Image.Service
+          repository: docker_hub
+      properties:
+        share_data:
+          /tmp_inside: /tmp
+        command: touch /tmp_inside/tosker_share_data_test

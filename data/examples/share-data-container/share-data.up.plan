@@ -1,0 +1,5 @@
+docker_container:Standard.create
+docker_container:Standard.start
+
+share_folder:Standard.create
+share_folder:Standard.start

@@ -166,7 +166,7 @@ def get_container_protocol():
               requires=[STORAGE, CONNECTION, DEPENDENCY],
               offers=[ALIVE, HOST, ENDPOINT, FEATURE])
     ]
-    protocol.initial_state = protocol.current_state = deleted
+    protocol.initial_state = deleted
 
     protocol.transitions = create, start, stop, delete = [
         Transition(deleted, created, operation='create'),
@@ -193,7 +193,7 @@ def get_software_protocol():
               requires=[ALIVE, HOST, CONNECTION, DEPENDENCY],
               offers=[ALIVE, HOST, ENDPOINT, FEATURE])
     ]
-    protocol.initial_state = protocol.current_state = deleted
+    protocol.initial_state = deleted
 
     protocol.transitions = create, configure, start, stop, delete, delete_conf = [
         Transition(deleted, created, operation='create', requires=[HOST]),
@@ -218,11 +218,11 @@ def get_volume_protocol():
         State(VOLUME_STATE_DELETED),
         State(VOLUME_STATE_CREATED, offers=[ATTACHMENT])
     ]
-    protocol.initial_state = protocol.current_state = deleted
+    protocol.initial_state = deleted
 
     protocol.transitions = create, delete = [
-        Transition('create', deleted, created, 'create'),
-        Transition('delete', created, deleted, 'delete')
+        Transition(deleted, created, operation='create'),
+        Transition(created, deleted, operation='delete')
     ]
 
     deleted.transitions = [create]

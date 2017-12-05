@@ -5,32 +5,12 @@ var bodyParser = require('body-parser');
 
 var app = express();
 
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
-app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({
+//     extended: true
+// }));
+// app.use(bodyParser.json());
 
 var http = require('http');
-//
-// app.get('/', function(req, res) { //  /api
-//     var path = '/' + (req._parsedUrl.search || '');
-//     console.log("\nRedirect to " + (process.env.SERVER_NAME || 'server1') + ' with path ' + path);
-//
-//     var reqApi = http.request({
-//             host: process.env.SERVER_NAME || 'server1',
-//             // host: 'images_server',
-//             path: path,
-//             port: '8081',
-//             method: 'GET'
-//         },
-//         function(resApi) {
-//             res.writeHead(resApi.statusCode);
-//             resApi.pipe(res);
-//             console.log("Response received!");
-//         }
-//     );
-//     reqApi.end();
-// });
 
 app.get('/', function(req, res) {
     http.request({

@@ -1,0 +1,7 @@
+wp_container:Standard.stop
+wp_container:Standard.delete
+
+mysql_container:Standard.stop
+mysql_container:Standard.delete
+
+mysql_volume:Standard.delete
