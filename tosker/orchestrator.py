@@ -37,6 +37,16 @@ except ImportError:
 
 class Orchestrator:
 
+    def update_memory(f):
+        """decorator that update memory before execute function"""
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            status, faulty = args[0]._update_state()
+            Logger.println('(update memory: {})'.format(
+                           'ok' if status else 'fixed {}'.format(', '.join(faulty))))
+            return f(*args, **kwargs)
+        return decorated_function
+
     def __init__(self,
                  log_handler=logging.NullHandler(),
                  quiet=True,
@@ -46,7 +56,7 @@ class Orchestrator:
         self._log = Logger.get(__name__)
         self._tmp_dir = tmp_dir
 
-        # Setup Storage system (folder and class
+        # Setup Storage system (folder and class)
         self._data_dir = data_dir
         try:
             os.makedirs(data_dir)
@@ -54,11 +64,8 @@ class Orchestrator:
             pass
         Memory.set_db(data_dir)
 
-        status, faulty = self._update_state()
-        Logger.println('(update memory: {})'.format(
-                       'ok' if status else 'fixed {}'.format(', '.join(faulty))))
-
-    def orchestrate(self, file_path, operations, inputs):
+    @update_memory
+    def orchestrate(self, file_path, operations, inputs=None):
         """
         Start the orchestration using the management protocols.
         Operations mus be a list where every element are in the format "component:interface.operation"
@@ -139,7 +146,8 @@ class Orchestrator:
             return False
         
         return True
-
+    
+    @update_memory
     def ls_components(self, app=None, filters={}):
         comps = Memory.get_comps(app, filters)
 

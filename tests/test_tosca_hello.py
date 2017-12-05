@@ -3,7 +3,6 @@ import unittest
 from contextlib import contextmanager
 
 from six import StringIO
-
 from tosker import docker_interface as docker
 from tosker.orchestrator import Orchestrator
 

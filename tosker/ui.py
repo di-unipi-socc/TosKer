@@ -5,6 +5,7 @@ import re
 from os import path
 from sys import argv
 
+from termcolor import colored
 from six import print_
 
 from . import __version__, helper
@@ -20,6 +21,7 @@ Usage: tosker FILE COMPONENT:INTERFACE.OPERATION... [OPTIONS] [INPUTS]
        tosker prune
        tosker -h|--help
        tosker -v|--version
+
 Orchestrate TOSCA applications on top of Docker.
 
 FILE: TOSCA YAML file or CSAR file
@@ -121,7 +123,7 @@ def _check_file(file):
 
 
 def _error(*str):
-    print_('ERROR:', *str)
+    print_(colored('ERROR: {}'.format(' '.join(str)), 'red'))
     exit(-1)
 
 
@@ -148,9 +150,11 @@ def run():
         orchestrator = Orchestrator(quiet=flags.get('quiet', False))
 
     if mod == 'deploy':
-        if comps and comps[0] == '_':
+        if comps and comps[0] in ('_', '-'):
             import sys
             comps = [line.strip() for line in sys.stdin if line.strip()]
+        if not comps:
+            _error('Must supply a lisy of operation to execute.')
         orchestrator.orchestrate(file, comps, inputs)
     elif mod == 'ls':
         if len(comps) > 1:

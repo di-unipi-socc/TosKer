@@ -2,12 +2,13 @@ import os
 import unittest
 
 from tinydb import Query
-
 from tosker.graph.nodes import Container
+from tosker.graph.protocol import (CONTAINER_STATE_CREATED,
+                                   CONTAINER_STATE_DELETED,
+                                   CONTAINER_STATE_RUNNING)
 from tosker.graph.template import Template
 from tosker.storage import Memory, Storage
-from tosker.graph.protocol import (CONTAINER_STATE_DELETED, CONTAINER_STATE_CREATED,
-                                   CONTAINER_STATE_RUNNING)
+
 
 class TestStorage(unittest.TestCase):
     @classmethod
@@ -92,7 +93,7 @@ class TestStorage(unittest.TestCase):
         comps = Memory.get_comps(filters={'state': CONTAINER_STATE_RUNNING})
         self.assertEqual(len(comps), 1)
         self.assertEqual(comps[0]['full_name'],
-                         'template_test.container_test2')
+                         'tosker_template_test.container_test2')
     
     def test_memory_remove(self):
         cont = Container('container_test')
