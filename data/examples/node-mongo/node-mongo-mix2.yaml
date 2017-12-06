@@ -7,8 +7,8 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  # - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
-  - tosker: ../../tosker-types.yaml
+# - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
+- tosker: ../../tosker-types.yaml
 
 topology_template:
   node_templates:
@@ -19,13 +19,13 @@ topology_template:
       interfaces:
         Standard:
           create:
-            implementation: mongo/install.sh
+            implementation: scripts/mongo/install.sh
           start:
-            implementation: mongo/start.sh
+            implementation: scripts/mongo/start.sh
           stop:
-            implementation: mongo/stop.sh
+            implementation: scripts/mongo/stop.sh
           delete:
-            implementation: mongo/delete.sh
+            implementation: scripts/mongo/delete.sh
 
     app_container:
       type: tosker.nodes.Container
@@ -36,7 +36,7 @@ topology_template:
         - connection: db
       artifacts:
         node_mogo_image:
-          file: app/Dockerfile
+          file: code/app/Dockerfile
           type: tosker.artifacts.Dockerfile.Service
 
     server2:

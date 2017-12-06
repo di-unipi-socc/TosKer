@@ -5,17 +5,16 @@ from .test_tosca_base import TestOrchestrator
 
 class TestSoftwareLink(TestOrchestrator):
 
-    def setUp(self):
-        super(TestSoftwareLink, self).setUp()
-        self.file = 'data/examples/software-link/software.yaml'
-
     def test(self):
-        self.create()
-        self.start()
-        self.stop()
-        self.start()
-        self.stop()
-        self.delete()
+        file = 'data/examples/software-link/software-link.yaml'
+        up = self.read_plan(
+            'data/examples/software-link/software-link.up.plan'
+        )
+        down = self.read_plan(
+            'data/examples/software-link/software-link.down.plan'
+        )
+        self.assert_up_start(file, up)
+        self.assert_down(file, down)
 
 
 if __name__ == '__main__':

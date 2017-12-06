@@ -69,26 +69,26 @@ topology_template:
     app:
       type: my_software
       artifacts:
-        code: app/main.js
-        package: app/package.json
+        code: code/app/main.js
+        package: code/app/package.json
       requirements:
         - host: node
         - my_connection: db
       interfaces:
         my_interface:
           my_create:
-            implementation: app/install.sh
+            implementation: scripts/app/install.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
               main: { get_artifact: [ SELF, code ] }
           my_start:
-            implementation: app/start.sh
+            implementation: scripts/app/start.sh
             inputs:
               port: 80
           my_stop:
-            implementation: app/stop.sh
+            implementation: scripts/app/stop.sh
           my_delete:
-            implementation: app/delete.sh
+            implementation: scripts/app/delete.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
               main: { get_artifact: [ SELF, code ] }
@@ -100,13 +100,13 @@ topology_template:
       interfaces:
         Standard:
           create:
-            implementation: mongo/install.sh
+            implementation: scripts/mongo/install.sh
           start:
-            implementation: mongo/start.sh
+            implementation: scripts/mongo/start.sh
           stop:
-            implementation: mongo/stop.sh
+            implementation: scripts/mongo/stop.sh
           delete:
-            implementation: mongo/delete.sh
+            implementation: scripts/mongo/delete.sh
 
     node:
       type: tosker.nodes.Software
@@ -115,9 +115,9 @@ topology_template:
       interfaces:
         Standard:
           create:
-            implementation: install_node.sh
+            implementation: scripts/node/install.sh
           delete:
-            implementation: uninstall_node.sh
+            implementation: scripts/node/uninstall.sh
 
     server_app:
       type: tosker.nodes.Container

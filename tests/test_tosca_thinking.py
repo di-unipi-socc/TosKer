@@ -3,15 +3,15 @@ import unittest
 from .test_tosca_base import TestOrchestrator
 
 
-class TestWordpress(TestOrchestrator):
+class TestThinking(TestOrchestrator):
 
     def test(self):
-        file = 'data/examples/wordpress/wordpress.yaml'
+        file = 'data/examples/thinking-app/thinking.csar'
         up = self.read_plan(
-            'data/examples/wordpress/wordpress.up.plan'
+            'data/examples/thinking-app/thinking.up.plan'
         )
         down = self.read_plan(
-            'data/examples/wordpress/wordpress.down.plan'
+            'data/examples/thinking-app/thinking.down.plan'
         )
         self.assert_up_start(file, up)
         self.assert_down(file, down)

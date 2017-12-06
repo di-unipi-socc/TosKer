@@ -3,15 +3,15 @@ import unittest
 from .test_tosca_base import TestOrchestrator
 
 
-class TestWordpress(TestOrchestrator):
+class TestNginxLifecycle(TestOrchestrator):
 
     def test(self):
-        file = 'data/examples/wordpress/wordpress.yaml'
+        file = 'data/examples/nginx-lifecycle/nginx-lifecycle.yaml'
         up = self.read_plan(
-            'data/examples/wordpress/wordpress.up.plan'
+            'data/examples/nginx-lifecycle/nginx-lifecycle.up.plan'
         )
         down = self.read_plan(
-            'data/examples/wordpress/wordpress.down.plan'
+            'data/examples/nginx-lifecycle/nginx-lifecycle.down.plan'
         )
         self.assert_up_start(file, up)
         self.assert_down(file, down)

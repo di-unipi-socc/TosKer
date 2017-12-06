@@ -1,4 +1,5 @@
 import sys
+import os
 import unittest
 from contextlib import contextmanager
 
@@ -21,11 +22,17 @@ class TestOrchestrator(unittest.TestCase):
         self.o.prune()
 
     def get_tpl(self, file):
-        return get_tosca_template(file)
-    
+        self.assertTrue(os.path.isfile(file))
+        tpl = get_tosca_template(file)
+        self.assertIsNotNone(tpl)
+        return tpl
+
     def read_plan(self, file):
+        self.assertTrue(os.path.isfile(file))
         with open(file, 'r') as plan:
-            return [l.strip() for l in plan.readlines() if l.strip()]
+            plan_list = [l.strip() for l in plan.readlines() if l.strip()]
+            self.assertTrue(plan_list)
+            return plan_list
 
     def assert_create(self, tpl):
         for c in tpl.containers:
