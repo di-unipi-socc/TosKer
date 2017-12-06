@@ -1,6 +1,6 @@
 import sys
 import os
-import unittest
+from unittest import TestCase
 from contextlib import contextmanager
 
 from tosker import docker_interface as docker
@@ -10,7 +10,7 @@ from tosker.storage import Memory
 from tosker.tosca_parser import get_tosca_template
 
 
-class TestOrchestrator(unittest.TestCase):
+class TestToscaBase(TestCase):
     @staticmethod
     def setUpClass():
         pass

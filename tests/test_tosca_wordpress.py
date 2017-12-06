@@ -1,9 +1,9 @@
 import unittest
 
-from .test_tosca_base import TestOrchestrator
+from .test_tosca_base import TestToscaBase
 
 
-class TestWordpress(TestOrchestrator):
+class TestWordpress(TestToscaBase):
 
     def test(self):
         file = 'data/examples/wordpress/wordpress.yaml'

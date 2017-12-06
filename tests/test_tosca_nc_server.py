@@ -4,16 +4,16 @@ from six import StringIO
 from tosker import docker_interface as docker
 from tosker.orchestrator import Orchestrator
 
-from .test_tosca_base import TestOrchestrator
+from .test_tosca_base import TestToscaBase
 
 
-class TestDockerfile(TestOrchestrator):
+class TestNcServer(TestToscaBase):
 
     def setUp(self):
-        super(TestDockerfile, self).setUp()
+        super(TestNcServer, self).setUp()
         with self.redirect_stdout(StringIO()):
             self.o = Orchestrator(quiet=False)
-        
+
 
     def test_dockerfile(self):
         file = 'data/examples/nc-server/nc-dockerfile.yaml'
@@ -23,14 +23,15 @@ class TestDockerfile(TestOrchestrator):
         down_plan = self.read_plan(
             'data/examples/nc-server/nc-dockerfile.down.plan'
         )
-        
+        tpl = self.get_tpl(file)
+
         temp_stdout = StringIO()
         with self.redirect_stdout(temp_stdout):
             self.assertTrue(
                 self.o.orchestrate(file, up_plan)
             )
-        self.assert_create(file)
-        self.assert_start(file)
+        self.assert_create(tpl)
+        self.assert_start(tpl)
 
         con_id = docker.inspect_container('tosker_nc-dockerfile.server')['Id']
         output = temp_stdout.getvalue().strip()
@@ -41,7 +42,7 @@ class TestDockerfile(TestOrchestrator):
             self.assertTrue(
                 self.o.orchestrate(file, down_plan)
             )
-        self.assert_delete(file)
+        self.assert_delete(tpl)
 
     def test_image(self):
         file = 'data/examples/nc-server/nc-image.yaml'
@@ -51,14 +52,15 @@ class TestDockerfile(TestOrchestrator):
         down_plan = self.read_plan(
             'data/examples/nc-server/nc-image.down.plan'
         )
-
+        tpl = self.get_tpl(file)
+        
         temp_stdout = StringIO()
         with self.redirect_stdout(temp_stdout):
             self.assertTrue(
                 self.o.orchestrate(file, up_plan)
             )
-        self.assert_create(file)
-        self.assert_start(file)
+        self.assert_create(tpl)
+        self.assert_start(tpl)
 
         con_id = docker.inspect_container('tosker_nc-image.server')['Id']
         output = temp_stdout.getvalue().strip()
@@ -69,7 +71,7 @@ class TestDockerfile(TestOrchestrator):
             self.assertTrue(
                 self.o.orchestrate(file, down_plan)
             )
-        self.assert_delete(file)
+        self.assert_delete(tpl)
 
 
 if __name__ == '__main__':

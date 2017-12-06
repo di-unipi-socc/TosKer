@@ -1,11 +1,9 @@
-import unittest
+from unittest import TestCase
 
 from tosker.orchestrator import Orchestrator
 
-# from tosker import helper
 
-
-class TestToscaParsing(unittest.TestCase):
+class TestOrchestrator(TestCase):
     @classmethod
     def setUpClass(self):
         self._orchestrator = Orchestrator(

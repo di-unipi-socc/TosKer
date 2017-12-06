@@ -1,9 +1,9 @@
 import unittest
 
-from .test_tosca_base import TestOrchestrator
+from .test_tosca_base import TestToscaBase
 
 
-class TestSoftwareLink(TestOrchestrator):
+class TestSoftwareLink(TestToscaBase):
 
     def test(self):
         file = 'data/examples/software-link/software-link.yaml'

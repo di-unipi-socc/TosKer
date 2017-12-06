@@ -1,9 +1,9 @@
 import unittest
 
-from .test_tosca_base import TestOrchestrator
+from .test_tosca_base import TestToscaBase
 
 
-class TestNodeMongo(TestOrchestrator):
+class TestNodeMongo(TestToscaBase):
 
     def test_csar(self):
         file = 'data/examples/node-mongo-csar/node-mongo.csar'

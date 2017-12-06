@@ -1,9 +1,9 @@
 import unittest
 
-from .test_tosca_base import TestOrchestrator
+from .test_tosca_base import TestToscaBase
 
 
-class TestThinking(TestOrchestrator):
+class TestThinking(TestToscaBase):
 
     def test(self):
         file = 'data/examples/thinking-app/thinking.csar'

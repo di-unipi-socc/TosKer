@@ -1,5 +1,5 @@
 import os
-import unittest
+from unittest import TestCase
 
 from tinydb import Query
 from tosker.graph.nodes import Container
@@ -10,7 +10,7 @@ from tosker.graph.template import Template
 from tosker.storage import Memory, Storage
 
 
-class TestStorage(unittest.TestCase):
+class TestStorage(TestCase):
     @classmethod
     def setUpClass(self):
         pass

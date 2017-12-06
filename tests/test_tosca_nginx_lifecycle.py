@@ -1,9 +1,9 @@
 import unittest
 
-from .test_tosca_base import TestOrchestrator
+from .test_tosca_base import TestToscaBase
 
 
-class TestNginxLifecycle(TestOrchestrator):
+class TestNginxLifecycle(TestToscaBase):
 
     def test(self):
         file = 'data/examples/nginx-lifecycle/nginx-lifecycle.yaml'

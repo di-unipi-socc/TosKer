@@ -1,9 +1,9 @@
-import unittest
+from unittest import TestCase
 
 from tosker import ui
 
 
-class TestUi(unittest.TestCase):
+class TestUi(TestCase):
 
     def test_args_flags(self):
         args = ['--help', '--debug', '--quiet', '--version']

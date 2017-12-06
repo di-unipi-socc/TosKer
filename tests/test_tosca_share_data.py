@@ -2,10 +2,10 @@ import os
 import unittest
 from time import sleep
 
-from .test_tosca_base import TestOrchestrator
+from .test_tosca_base import TestToscaBase
 
 
-class TestShareData(TestOrchestrator):
+class TestShareData(TestToscaBase):
 
     def test(self):
 

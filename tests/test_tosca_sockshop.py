@@ -1,9 +1,9 @@
 import unittest
 
-from .test_tosca_base import TestOrchestrator
+from .test_tosca_base import TestToscaBase
 
 
-class TestSockshop(TestOrchestrator):
+class TestSockshop(TestToscaBase):
 
     def test(self):
         file = 'data/examples/sockshop-app/sockshop.csar'
