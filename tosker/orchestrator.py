@@ -147,6 +147,11 @@ class Orchestrator:
         
         return True
     
+    def read_plan(self, file):
+        with open(file, 'r') as plan:
+            plan_list = [l.strip() for l in plan.readlines() if l.strip()]
+            return plan_list
+    
     @update_memory
     def ls_components(self, app=None, filters={}):
         comps = Memory.get_comps(app, filters)
