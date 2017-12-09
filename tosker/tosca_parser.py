@@ -245,6 +245,7 @@ def get_tosca_template(file_path, inputs=None):
 
 
 def _validate_protocol(properties):
+    # TODO: check that the declared initial_state is a valid state
     if PROT_INITIAL_STATE not in properties:
         raise ValueError('Attribute {}, is required in policy properties')
     if not isinstance(properties[PROT_INITIAL_STATE], str):
@@ -281,6 +282,13 @@ def _validate_protocol(properties):
 
 
 def _parse_protocol(properties):
+    """
+    Parse and return the protocol to manage the Software compnent from the TOSCA policy.
+    
+    This function also add the ALIVE requirements on all the state except the initial one
+    and the HOST requirements on all the transition. This permits to always have a container
+    underneed the Software componets.
+    """
     protocol = Protocol()
     
     for name, value in properties[PROT_STATES].items():

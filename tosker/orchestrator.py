@@ -149,7 +149,8 @@ class Orchestrator:
     
     def read_plan(self, file):
         with open(file, 'r') as plan:
-            plan_list = [l.strip() for l in plan.readlines() if l.strip()]
+            plan_list = [l for l in (l.strip() for l in plan.readlines())
+                         if l and not l.startswith('#')]
             return plan_list
     
     @update_memory
@@ -256,7 +257,8 @@ class Orchestrator:
             for op in operations:
                 # Check that the format of the operation si correct
                 if re.match('.*:.*\..*', op) is None:
-                    Logger.print_error('Wrong operation format. The format must be "COMPONENT:INTERFACE.OPERATION"')
+                    Logger.print_error('"{}" has a wrong format. The format must be'
+                                       '"COMPONENT:INTERFACE.OPERATION"'.format(op))
                     return None
 
                 # Check that the component existes in the template

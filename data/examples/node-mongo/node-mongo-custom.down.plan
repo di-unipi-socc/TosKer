@@ -1,8 +1,7 @@
-app:my_interface.my_stop
-app:my_interface.my_delete
+app:my_interface.stop
+app:my_interface.delete
 
-node:Standard.stop
-node:Standard.delete
+node:my_interface.uninstall
 
 db:Standard.stop
 db:Standard.delete

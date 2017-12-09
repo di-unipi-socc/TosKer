@@ -30,7 +30,7 @@ def cli(ctx, quiet, debug):
 @click.argument('file', type=click.Path(exists=True))
 @click.argument('cmds', nargs=-1)
 @click.option('--plan', '-p', type=click.Path(exists=True), help='File with the plan to execute.')
-@click.option('--dry-run', '-p', is_flag=True, help='Simulate the dangerous operations.')
+@click.option('--dry-run', is_flag=True, help='Simulate the dangerous operations.')
 def exec(ctx, file, cmds, plan, dry_run):
     """Exec a plan to a topology.
 

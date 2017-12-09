@@ -1,0 +1,16 @@
+[{
+  "name": "Mario",
+  "surname": "Rossi"
+}, {
+  "name": "Mario",
+  "surname": "Verdi"
+}, {
+  "name": "John",
+  "surname": "Foo"
+}, {
+  "name": "John",
+  "surname": "Bar"
+}, {
+  "name": "Mario",
+  "surname": "FooBar"
+}]

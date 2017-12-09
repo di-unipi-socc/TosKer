@@ -11,32 +11,45 @@ imports:
 - tosker: ../../tosker-types.yaml
 
 interface_types:
-   my_software_interface:
-      derived_from: tosca.interfaces.node.Root
-      my_create:
-        description: my create
-      my_start:
-        description: my start
-      my_stop:
-        description: my stop
-      my_delete:
-        description: my delete
+  app_interface:
+    derived_from: tosca.interfaces.Root
+    create:
+      description: create the Software component
+    add_examples:
+      description: push tests data on the DB
+    start:
+      description: start the Software component
+    stop:
+      description: stop the Software component
+    delete:
+      description: delete the Software component
+  language_interface:
+    derived_from: tosca.interfaces.Root
+    install:
+      description: install a programming language
+    uninstall:
+      description: uninstall a programming language
 
 node_types:
-  my_software:
+  AppSoftware:
     derived_from: tosker.nodes.Software
     requirements:
-      - my_connection:
+      - db_connection:
           capability: tosca.capabilities.Endpoint
           node: tosker.nodes.Root
           relationship: tosca.relationships.ConnectsTo
     interfaces:
       my_interface:
-        type: my_software_interface
+        type: app_interface
+  NodeSoftware:
+    derived_from: tosker.nodes.Software
+    interfaces:
+      my_interface:
+        type: language_interface
 
 topology_template:
   policies:
-  - my_software_protocol:
+  - app_protocol:
       type: tosker.policies.Protocol
       targets: [ app ]
       properties:
@@ -44,54 +57,92 @@ topology_template:
         states:
           deleted:
           created:
-            requires: [ host ]
           started:
-            requires: [ host, my_connection ]
+            requires: [ host, db_connection ]
         transitions:
         - source: deleted
           target: created
           interface: my_interface
-          operation: my_create
+          operation: create
         - source: created
           target: deleted
           interface: my_interface
-          operation: my_delete
+          operation: delete
+        - source: created
+          target: created
+          requires: [ db_connection ]
+          interface: my_interface
+          operation: add_examples
         - source: created
           target: started
           interface: my_interface
-          operation: my_start
+          operation: start
         - source: started
           target: created
           interface: my_interface
-          operation: my_stop
+          operation: stop
+  - nodejs_protocol:
+      type: tosker.policies.Protocol
+      targets: [ node ]
+      properties:
+        initial_state: uninstalled
+        states:
+          installed:
+            requires: [ host ]
+            offers: [ host ]
+          uninstalled:
+        transitions:
+        - source: uninstalled
+          target: installed
+          interface: my_interface
+          operation: install
+        - source: installed
+          target: uninstalled
+          interface: my_interface
+          operation: uninstall
   
   node_templates:
     app:
-      type: my_software
+      type: AppSoftware
       artifacts:
         code: code/app/main.js
         package: code/app/package.json
+        test_data: code/app/test_data.json
       requirements:
         - host: node
-        - my_connection: db
+        - db_connection: db
       interfaces:
         my_interface:
-          my_create:
+          create:
             implementation: scripts/app/install.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
               main: { get_artifact: [ SELF, code ] }
-          my_start:
+              data: { get_artifact: [ SELF, test_data ] }
+          add_examples:
+            implementation: scripts/app/add_examples.sh
+          start:
             implementation: scripts/app/start.sh
             inputs:
               port: 80
-          my_stop:
+          stop:
             implementation: scripts/app/stop.sh
-          my_delete:
+          delete:
             implementation: scripts/app/delete.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
               main: { get_artifact: [ SELF, code ] }
+
+    node:
+      type: NodeSoftware
+      requirements:
+        - host: server_app
+      interfaces:
+        my_interface:
+          install:
+            implementation: scripts/node/install.sh
+          uninstall:
+            implementation: scripts/node/uninstall.sh
 
     db:
       type: tosker.nodes.Software
@@ -108,16 +159,6 @@ topology_template:
           delete:
             implementation: scripts/mongo/delete.sh
 
-    node:
-      type: tosker.nodes.Software
-      requirements:
-        - host: server_app
-      interfaces:
-        Standard:
-          create:
-            implementation: scripts/node/install.sh
-          delete:
-            implementation: scripts/node/uninstall.sh
 
     server_app:
       type: tosker.nodes.Container
