@@ -46,7 +46,7 @@ setup(
     data_files=[
         ('/usr/share/tosker', ['data/tosker-types.yaml']),
         ('/usr/share/tosker/examples',
-            ['data/examples/thoughts-app/thoughts.csar',
+            ['data/examples/thinking-app/thinking.csar',
              'data/examples/node-mongo-csar/node-mongo.csar',
              'data/examples/sockshop-app/sockshop.csar'])
 
