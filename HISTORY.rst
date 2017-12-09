@@ -19,7 +19,7 @@ Stable release without Management Protocols.
 * Bug fix.
 
 
-2.0.0 (2017-12-09)
+2.0.1 (2017-12-09)
 ----------------------------
 * Switch to Management Protocols to manage the life cycle of the components
 * Add support for derived node types.
