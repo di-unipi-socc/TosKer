@@ -13,9 +13,9 @@ with open('HISTORY.rst') as history_file:
 
 exec(open('tosker/__init__.py').read())
 
-requirements = [  # 'Click>=6.0',
+requirements = [
     'docker', 'tosca-parser', 'termcolor', 'six', 'enum34',
-    'tabulate', 'tinydb', 'scandir', 'halo'
+    'tabulate', 'tinydb', 'scandir', 'halo', 'click'
 ]
 
 # put setup requirements (distutils extensions, etc.) here
@@ -39,7 +39,7 @@ setup(
     packages=find_packages(exclude=['tests']),
     entry_points={
         'console_scripts': [
-            'tosker=tosker.ui:run'
+            'tosker=tosker.click_ui:cli'
         ]
     },
     include_package_data=True,

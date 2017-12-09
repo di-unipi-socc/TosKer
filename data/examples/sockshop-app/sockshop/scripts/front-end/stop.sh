@@ -1,3 +1,2 @@
-#!/bin/bash
-
-pkill "node"
+#!/bin/sh
+pidof node | xargs kill -9

@@ -1,21 +1,20 @@
 import unittest
 
-from .test_tosca_base import TestOrchestrator
+from .test_tosca_base import TestToscaBase
 
 
-class TestSoftwareLink(TestOrchestrator):
-
-    def setUp(self):
-        super(TestSoftwareLink, self).setUp()
-        self.file = 'data/examples/software-link/software.yaml'
+class TestSoftwareLink(TestToscaBase):
 
     def test(self):
-        self.create()
-        self.start()
-        self.stop()
-        self.start()
-        self.stop()
-        self.delete()
+        file = 'data/examples/software-link/software-link.yaml'
+        up = self.read_plan(
+            'data/examples/software-link/software-link.up.plan'
+        )
+        down = self.read_plan(
+            'data/examples/software-link/software-link.down.plan'
+        )
+        self.assert_up_start(file, up)
+        self.assert_down(file, down)
 
 
 if __name__ == '__main__':

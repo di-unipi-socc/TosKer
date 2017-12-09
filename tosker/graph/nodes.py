@@ -1,6 +1,7 @@
 '''
 Nodes module
 '''
+from . import protocol
 from .artifacts import (Artifact, Dockerfile, DockerfileExecutable,
                         DockerImage, DockerImageExecutable, File)
 from .relationships import AttachesTo, ConnectsTo, DependsOn, HostedOn
@@ -43,6 +44,9 @@ class Root(object):
 
         # reverse requirements
         self.up_requirements = []
+        
+        # protocol
+        self.protocol = None
 
     @property
     def full_name(self):
@@ -125,7 +129,9 @@ class Container(Root):
         }
         self._overlay = []
 
-        self.interfaces = {'create', 'start', 'stop', 'delete'}
+        self.interfaces = {'Standard': {'create', 'start', 'stop', 'delete'}}
+
+        self.protocol = protocol.get_container_protocol()
 
     @property
     def full_name(self):
@@ -184,11 +190,11 @@ class Volume(Root):
             'size': lambda: self.size
         }
 
-        self.interfaces = {'create'
-                           # , 'delete' TODO: add this interface
-                           }
+        self.interfaces = {'Standard': {'create', 'delete'}}
 
         self.driver_opt = None
+
+        self.protocol = protocol.get_volume_protocol()
 
     @property
     def full_name(self):
@@ -218,27 +224,32 @@ class Software(Root):
         self.interfaces = {}
 
         # requirements
-        self._host = None
+        self._host = []
         self.host_container = None
         # self.depend = None
         # self.connection = None
 
+        self.interfaces = {'Standard': {'create', 'configure', 'start', 'stop', 'delete'}}
+
+        self.protocol = protocol.get_software_protocol()
+
     @property
     def relationships(self):
-        return super(Software, self).relationships + \
-               ([self._host] if self._host is not None else [])
+        return super(Software, self).relationships + self._host
 
     @property
     def host(self):
-        return self._host
+        return self._host[0]
 
     @host.setter
     def host(self, item):
         if not isinstance(item, HostedOn):
             item = HostedOn(self, item)
-        self._host = item
+        alive = HostedOn(self, item.to, protocol.ALIVE, protocol.ALIVE)
+        self._host = [item, alive]
         if not isinstance(item.to, str):
             item.to.up_requirements.append(item)
+            item.to.up_requirements.append(alive)
 
     def add_artifact(self, art):
         assert isinstance(art, File)

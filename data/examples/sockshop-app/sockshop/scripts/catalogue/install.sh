@@ -1,5 +1,4 @@
 #!/bin/sh
-
 go get -u github.com/microservices-demo/catalogue
 go get -u github.com/FiloSottile/gvt
 cd /go/src/github.com/microservices-demo/catalogue && gvt restore

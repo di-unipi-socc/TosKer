@@ -1,0 +1,13 @@
+server1:Standard.create
+server1:Standard.start
+
+node:Standard.create
+node:Standard.configure
+node:Standard.start
+
+db:Standard.create
+db:Standard.start
+
+app:Standard.create
+app:Standard.configure
+app:Standard.start

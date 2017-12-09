@@ -17,3 +17,14 @@ class VolumeManager:
     # def delete(self, node):
     #     assert isinstance(node, Volume)
     #     docker_interface.delete_volume(node)
+
+    @staticmethod
+    def exec_operation(component, operation):
+        """Exec an operation on the component."""
+        assert isinstance(component, Volume) and\
+               isinstance(operation, str)
+        try:
+            getattr(VolumeManager, operation)(component)
+        except AttributeError:
+            return False
+        return True

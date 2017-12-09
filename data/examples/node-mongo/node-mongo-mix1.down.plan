@@ -1,0 +1,11 @@
+app:Standard.stop
+app:Standard.delete
+
+db:Standard.stop
+db:Standard.delete
+
+node:Standard.stop
+node:Standard.delete
+
+server1:Standard.stop
+server1:Standard.delete

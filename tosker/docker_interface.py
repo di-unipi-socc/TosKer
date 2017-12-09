@@ -161,15 +161,16 @@ def delete_container(_cli, name, force=False):
 
 @_get_name
 @_inject_docker_cli
-def exec_cmd(_cli, name, cmd):
+def exec_cmd(_cli, name, cmd, detach=False):
     _log = Logger.get(__name__)
     if not is_running(name):
         raise Exception('{} is not running'.format(name))
     try:
         exec_id = _cli.exec_create(name, cmd,
-                                   stdout=False,
-                                   stderr=False)
-        status = _cli.exec_start(exec_id)
+                                   #stdout=False,
+                                   #stderr=False
+                                   )
+        status = _cli.exec_start(exec_id, detach=detach)
         _log.debug(status)
 
         check = 'rpc error:' != status[:10].decode("utf-8")

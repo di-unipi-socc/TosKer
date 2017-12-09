@@ -1,8 +1,9 @@
-'''
+"""
 Orchestrator module
-'''
+"""
 import logging
 import os
+import re
 import shutil
 import traceback
 from functools import wraps
@@ -14,10 +15,15 @@ from halo import Halo
 from tabulate import tabulate
 from toscaparser.common.exception import ValidationError
 from yaml.scanner import ScannerError
+
 from termcolor import colored
 
-from . import docker_interface, helper
+from . import docker_interface, helper, protocol_helper
 from .graph.nodes import Container, Software, Volume
+from .graph.protocol import (CONTAINER_STATE_CREATED, CONTAINER_STATE_DELETED,
+                             CONTAINER_STATE_RUNNING, SOFTWARE_STATE_ZOTTED,
+                             STATE_RUNNING, VOLUME_STATE_CREATED,
+                             VOLUME_STATE_DELETED)
 from .helper import Logger
 from .managers.container_manager import ContainerManager
 from .managers.software_manager import SoftwareManager
@@ -31,17 +37,17 @@ except ImportError:
     from scandir import scandir
 
 
-def _filter_components(*comps):
-    def _filter_components_decorator(func):
-        @wraps(func)
-        def func_wrapper(self, *args):
-            filter_componets = [c for c in args[0]
-                                if isinstance(c, comps)]
-            return func(self, filter_componets, *args[1:])
-        return func_wrapper
-    return _filter_components_decorator
-
 class Orchestrator:
+
+    def update_memory(f):
+        """decorator that update memory before execute function"""
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            status, faulty = args[0]._update_state()
+            Logger.println('(update memory: {})'.format(
+                           'ok' if status else 'fixed {}'.format(', '.join(faulty))))
+            return f(*args, **kwargs)
+        return decorated_function
 
     def __init__(self,
                  log_handler=logging.NullHandler(),
@@ -52,7 +58,7 @@ class Orchestrator:
         self._log = Logger.get(__name__)
         self._tmp_dir = tmp_dir
 
-        # Setup Storage system (folder and class
+        # Setup Storage system (folder and class)
         self._data_dir = data_dir
         try:
             os.makedirs(data_dir)
@@ -60,67 +66,84 @@ class Orchestrator:
             pass
         Memory.set_db(data_dir)
 
-        status, faulty = self._update_state()
-        Logger.println('update memory {} {}'.format(
-            'ok' if status else 'fixed',
-            '({})'.format(', '.join(faulty)) if not status else ''))
-
-    def orchestrate(self, file_path, commands, components=[], inputs={}):
+    @update_memory
+    def orchestrate(self, file_path, operations, inputs=None):
+        """
+        Start the orchestration using the management protocols.
+        Operations mus be a list where every element are in the
+        format "component:interface.operation"
+        """
         # Parse TOSCA file
+        tpl = self._parse_tosca(file_path, inputs)
+        if tpl is None:
+            return False
+
+        # Parse operations
+        operations = self._parse_operations(tpl, operations)
+        if operations is None:
+            return False
+
+        # Create tmp directory for the template
+        self._create_tmp_dir(tpl)
+
+        # Load components state
+        if not self._load_component_state(tpl):
+            Logger.print_error('Cannot load components state,'
+                               'try to use "tosker prune" to hard reset.')
+            return False
+        self._log.debug('State: %s', ' '.join(
+            (c['name'] + '.' + c['state'] for c in Memory.get_comps(tpl.name))))
+
         try:
-            tpl = get_tosca_template(file_path, inputs)
-        except ScannerError as e:
-            Logger.print_error('YAML parse error\n    {}'.format(e))
-            return False
-        except ValidationError as e:
-            Logger.print_error('TOSCA validation error\n    {}'.format(e))
-            return False
-        except ValueError as e:
-            Logger.print_error('TosKer validation error\n    {}'.format(e))
-            return False
-        except Exception as e:
-            Logger.print_error('Internal error\n    {}'.format(e))
-            self._log.debug('Exception type: %s', type(e))
-            self._log.debug(colored(traceback.format_exc(), 'red'))
-            return False
+            # Check plan
+            self._print_loading_start('Check deployment plan... ')
+            for component, full_operation in operations:
+                try:
+                    protocol_helper.can_execute(full_operation, component)
+                    component.protocol.execute_operation(full_operation)
+                except ValueError as e:
+                    self._print_cross('Error on {}.{}: {}'
+                                      ''.format(component.name, full_operation, e))
+                    return False
+            self._load_component_state(tpl)
+            self._print_tick()
 
-        # Check if inputs components exists in the TOSCA file
-        if not self._components_exists(tpl, components):
-            Logger.print_error('a selected component do not exists')
-            return False
+            # Create Network
+            # TODO: do not create network if already there
+            self._print_loading_start('Create network... ')
+            docker_interface.create_network(tpl.name)
+            self._print_tick()
 
-        # Create temporany directory
-        tpl.tmp_dir = os.path.join(self._tmp_dir, tpl.name)
-        try:
-            os.makedirs(tpl.tmp_dir)
-        except os.error as e:
-            self._log.info(e)
+            # Execute plan
+            for component, full_operation in operations:
+                protocol = component.protocol
+                self._log.debug('Component %s is in state %s',
+                                component.name, component.protocol.current_state)
+                self._print_loading_start('Execute op "{}" on "{}"... '
+                                          ''.format(full_operation, component.name))
 
-        # Start orchestration
-        try:
-            if len(components) == 0:
-                components = [n.name for n in tpl.nodes]
+                transition = protocol.next_transition(full_operation)
+                self._log.debug('transition: i={} o={}'.format(
+                    transition.interface, transition.operation))
 
-            # must calculate the down extension/sorting
-            if any((c in ('create', 'start') for c in commands)):
-                down_extension = self._extend_down(tpl, components)
-                down_deploy = self._sort(tpl, down_extension)
-                self._log.debug('down_deploy: %s', ', '.join(
-                                (c.name for c in down_deploy)))
-            # must calculate the up extension/sorting
-            if any((c in ('stop', 'delete') for c in commands)):
-                up_extension = self._extend_up(tpl, components)
-                up_deploy = list(reversed(self._sort(tpl, up_extension)))
-                self._log.debug('up_deploy: %s', ', '.join(
-                                (c.name for c in up_deploy)))
+                if isinstance(component, Container):
+                    ContainerManager.exec_operation(
+                        component, transition.operation)
+                elif isinstance(component, Volume):
+                    VolumeManager.exec_operation(
+                        component, transition.operation)
+                elif isinstance(component, Software):
+                    SoftwareManager.exec_operation(component, transition.interface,
+                                                   transition.operation)
 
-            for cmd in commands:
-                {
-                  'create': lambda: self._create(down_deploy, tpl),
-                  'start': lambda: self._start(down_deploy, tpl),
-                  'stop': lambda: self._stop(up_deploy, tpl),
-                  'delete': lambda: self._delete(up_deploy, tpl),
-                }.get(cmd)()
+                state = protocol.execute_operation(full_operation)
+
+                # remove the component if it is in the initial state
+                if state == protocol.initial_state:
+                    Memory.remove(component)
+                else:
+                    Memory.update_state(component, state.name)
+                self._print_tick()
 
             self._print_outputs(tpl)
         except Exception as e:
@@ -128,105 +151,21 @@ class Orchestrator:
             self._log.debug(traceback.format_exc())
             self._print_cross(e)
             return False
+
         return True
 
-    def _create(self, components, tpl):
-        self._print_loading_start('Create network... ')
-        docker_interface.create_network(tpl.name)  # TODO: da rimuovere
-        self._print_tick()
-        for node in components:
-            self._print_loading_start('Create {}... '.format(node))
+    def read_plan(self, file):
+        with open(file, 'r') as plan:
+            plan_list = [l for l in (l.strip() for l in plan.readlines())
+                         if l and not l.startswith('#')]
+            return plan_list
 
-            status = Memory.get_comp_state(node)
-            if Memory.STATE.DELETED == status:
-                if isinstance(node, Container):
-                    ContainerManager.create(node)
-                elif isinstance(node, Volume):
-                    VolumeManager.create(node)
-                elif isinstance(node, Software):
-                    SoftwareManager.create(node)
-                    SoftwareManager.configure(node)
-
-                Memory.update_state(node, Memory.STATE.CREATED)
-
-                self._print_tick()
-            else:
-                self._print_skip()
-                self._log.info('skipped already created')
-    
-    @_filter_components(Software, Container)
-    def _start(self, components, tpl):
-        for node in components:
-            self._print_loading_start('Start {}... '.format(node))
-
-            status = Memory.get_comp_state(node)
-            if Memory.STATE.STARTED == status:
-                self._print_skip()
-                self._log.info('skipped already started')
-            elif Memory.STATE.CREATED == status or\
-                    'create' not in node.interfaces:
-                if isinstance(node, Container):
-                    ContainerManager.start(node)
-                elif isinstance(node, Software):
-                    SoftwareManager.start(node)
-                Memory.update_state(node, Memory.STATE.STARTED)
-                self._print_tick()
-            else:
-                self._print_cross('the components must be created first')
-                self._log.info('%s have to be created first', node)
-                break
-    
-    @_filter_components(Software, Container)
-    def _stop(self, components, tpl):
-        for node in components:
-            self._print_loading_start('Stop {}... '.format(node))
-
-            status = Memory.get_comp_state(node)
-            if Memory.STATE.STARTED == status:
-                if isinstance(node, Container):
-                    ContainerManager.stop(node)
-                elif isinstance(node, Software):
-                    SoftwareManager.stop(node)
-                Memory.update_state(node, Memory.STATE.CREATED)
-                self._print_tick()
-            else:
-                self._print_skip()
-                self._log.info('skipped already stopped')
-
-    @_filter_components(Software, Container)
-    def _delete(self, components, tpl):
-        self._log.debug('start delete')
-        for node in components:
-            self._print_loading_start('Delete {}... '.format(node))
-
-            status = Memory.get_comp_state(node)
-            if Memory.STATE.CREATED == status:
-                if isinstance(node, Container):
-                    ContainerManager.delete(node)
-                elif isinstance(node, Software):
-                    SoftwareManager.delete(node)
-                Memory.update_state(node, Memory.STATE.DELETED)
-                self._print_tick()
-            elif Memory.STATE.STARTED == status:
-                self._print_cross('The component must be stopped first')
-                self._log.info('%s have to be stopped first', node)
-                break
-            else:
-                self._print_skip()
-                self._log.info('skipped already deleted')
-        else:
-            self._print_loading_start('Delete network... ')
-            docker_interface.delete_network(tpl.name)
-            self._print_tick()
-            shutil.rmtree(tpl.tmp_dir)
-
+    @update_memory
     def ls_components(self, app=None, filters={}):
         comps = Memory.get_comps(app, filters)
 
         def get_state(state):
-            return colored(state, {
-                Memory.STATE.CREATED.value: None,
-                Memory.STATE.STARTED.value: 'green'}.get(state))
+            return colored(state, ('green' if state == STATE_RUNNING else None))
 
         def format_row(comp):
             return [comp['app_name'],
@@ -240,30 +179,34 @@ class Orchestrator:
                                              'Type', 'State', 'Full name'])
         Logger.println(table_str)
 
-    def log(self, component, interface):
+    def log(self, component, operation):
         # TODO: add logs also for Docker container
-        try:
-            split_list = component.split('.')
-            app = '.'.join(split_list[:-1])
-            name = split_list[-1]
-        except ValueError:
-            Logger.print_error('First argument must be a component full name (i.e my_app.my_component)')
+
+        app, name = helper.split(component, '.')
+        if app is None:
+            Logger.print_error('First argument must be a component full name '
+                               '(i.e my_app.my_component)')
             return
-        
-        self._log.debug('app: %s, name: %s, interface: %s', app, name, interface)
+
+        if '.' not in operation:
+            operation = 'Standard.{}'.format(operation)
+
+        self._log.debug('app: %s, name: %s, operation: %s',
+                        app, name, operation)
 
         log_file_name = '{}/{}/*/{}/{}.log'.format(self._tmp_dir,
-                                               app, name, interface)
+                                                   app, name, operation)
 
         log_file = glob(log_file_name)
 
         if len(log_file) != 1:
-            Logger.print_error('Component or interface log not found')
+            Logger.print_error('Component or operation log not found')
             return
 
         with open(log_file[0], 'r', encoding='utf-8', errors='ignore') as f:
             for line in f.readlines():
-                line = colored(line, 'green') if line.startswith('+ ') else line
+                line = colored(line, 'green') if line.startswith(
+                    '+ ') else line
                 Logger.print_(line)
 
     def prune(self):
@@ -281,18 +224,79 @@ class Orchestrator:
             docker_interface.delete_volume(v['Name'])
         self._print_tick()
 
-        self._print_loading_start('Remove images.. ')
-        images = docker_interface.get_images()
-        for i in (i for i in images if i['RepoTags'][0].startswith('tosker')):
-            self._log.debug(i['RepoTags'][0])
-            docker_interface.delete_image(i['Id'])
-        self._print_tick()
-        
         # TODO: remove also networks
 
         self._print_loading_start('Remove tosker data.. ')
         shutil.rmtree(self._tmp_dir)
         self._print_tick()
+
+    def _parse_tosca(self, file_path, inputs):
+        '''
+        Parse TOSCA file
+        '''
+        try:
+            return get_tosca_template(file_path, inputs)
+        except ScannerError as e:
+            Logger.print_error('YAML parse error\n    {}'.format(e))
+            return None
+        except ValidationError as e:
+            Logger.print_error('TOSCA validation error\n    {}'.format(e))
+            return None
+        except ValueError as e:
+            Logger.print_error('TosKer validation error\n    {}'.format(e))
+            self._log.debug(colored(traceback.format_exc(), 'red'))
+            return None
+        except Exception as e:
+            Logger.print_error('Internal error\n    {}'.format(e))
+            self._log.debug('Exception type: %s', type(e))
+            self._log.debug(colored(traceback.format_exc(), 'red'))
+            return None
+
+    def _create_tmp_dir(self, tpl):
+        '''
+        Create temporany directory
+        '''
+        tpl.tmp_dir = os.path.join(self._tmp_dir, tpl.name)
+        try:
+            os.makedirs(tpl.tmp_dir)
+        except os.error as e:
+            self._log.info(e)
+
+    def _parse_operations(self, tpl, operations):
+        res = []
+        for op in operations:
+                # Check that the component existes in the template
+            comp_name, full_operation = helper.split(op, ':')
+            comp = tpl[comp_name]
+            if comp is None:
+                Logger.print_error(
+                    'Component "{}" not found in template.'.format(comp_name))
+                return None
+
+            # check that the component has interface.operation
+            interface, operation = helper.split(full_operation, '.')
+            if interface not in comp.interfaces and\
+               operation not in comp.interfaces[interface]:
+                Logger.print_error('Component "{}" not has the "{}"'
+                                   'operation in the "{}" interface.'
+                                   ''.format(comp_name, operation, interface))
+                return None
+            res.append((comp, full_operation))
+
+        return res
+
+    def _load_component_state(self, tpl):
+        for comp in tpl.nodes:
+            state = Memory.get_comp_state(comp)
+            if state is not None:
+                state = comp.protocol.find_state(state)
+                if state is not None:
+                    comp.protocol.current_state = state
+                else:
+                    return False
+            else:
+                comp.protocol.reset()
+        return True
 
     def _print_outputs(self, tpl):
         if len(tpl.outputs) != 0:
@@ -323,118 +327,28 @@ class Orchestrator:
 
             for s, s_path in software:
                 full_name = '{}.{}'.format(comp['app_name'], s)
-                Memory.update_state('{}.{}'.format(comp['app_name'], s), state)
-                # with open(os.path.join(s_path, 'state'), 'w') as f:
-                #     f.write(state.value)
-                try:
-                    os.remove(os.path.join(s_path, 'state'))
-                except FileNotFoundError:
-                    pass
+                Memory.update_state('{}.{}'.format(
+                    comp['app_name'], s), SOFTWARE_STATE_ZOTTED)
                 errors.add(full_name)
 
-        for c in Memory.get_comps(filters={'type': 'Software'}):
-            state = glob('{}/{}/*/{}/state'.format(self._tmp_dir,
-                                                   c['app_name'],
-                                                   c['name']))
-            self._log.debug('software update %s', state)
+        for container in Memory.get_comps(filters={'type': 'Container'}):
+            status = docker_interface.inspect_container(container['full_name'])
+            deleted, created, running = status is None,\
+                status is not None and not status['State']['Running'],\
+                status is not None and status['State']['Running']
+            if deleted and container['state'] != CONTAINER_STATE_DELETED:
+                manage_error_container(container, CONTAINER_STATE_DELETED)
+            elif created and container['state'] != CONTAINER_STATE_CREATED:
+                manage_error_container(container, CONTAINER_STATE_CREATED)
+            elif running and container['state'] != CONTAINER_STATE_RUNNING:
+                manage_error_container(container, CONTAINER_STATE_RUNNING)
 
-            if len(state) == 1:
-                with open(state[0], 'r') as f:
-                    state = f.read().replace('\n', '')
-                if state != c['state']:
-                    manage_error(c, Memory.STATE(state))
-
-        for c in Memory.get_comps(filters={'type': 'Container'}):
-                status = docker_interface.inspect_container(c['full_name'])
-                if status is not None:
-                    self._log.debug('%s status %s', c['full_name'], status['State'])
-                    if c['state'] == Memory.STATE.CREATED.value and \
-                       status['State']['Running'] is not False:
-                        manage_error_container(c, Memory.STATE.STARTED)
-                    if c['state'] == Memory.STATE.STARTED.value and\
-                       status['State']['Running'] is not True:
-                        manage_error_container(c, Memory.STATE.CREATED)
-                else:
-                    manage_error_container(c, Memory.STATE.DELETED)
-
-        for c in Memory.get_comps(filters={'type': 'Volume'}):
-                status = docker_interface.inspect_volume(c['full_name'])
-                if status is None:
-                    manage_error(c, Memory.STATE.DELETED)
+        for volume in Memory.get_comps(filters={'type': 'Volume'}):
+            status = docker_interface.inspect_volume(volume['full_name'])
+            if status is None:
+                manage_error(volume, VOLUME_STATE_DELETED)
 
         return len(errors) == 0, errors
-
-    def _components_exists(self, tpl, components):
-        for c in components:
-            if not any(c == n.name for n in tpl.nodes):
-                return False
-        return True
-
-    def _extend_down(self, tpl, components):
-        assert isinstance(components, list)
-
-        def get_down_req(c):
-            for r in c.relationships:
-                if r.to.name not in components:
-                    yield r.to
-                for c in get_down_req(r.to):
-                    yield c
-
-        return self._extend(tpl, components, get_down_req)
-
-    def _extend_up(self, tpl, components):
-        assert isinstance(components, list)
-
-        def get_up_req(c):
-            for r in c.up_requirements:
-                if r.origin.name not in components:
-                    yield r.origin
-                # python3 alternative
-                # yield from get_up_req(r.origin)
-                for c in get_up_req(r.origin):
-                    yield c
-
-        return self._extend(tpl, components, get_up_req)
-
-    def _extend(self, tpl, components, extension_gen):
-        assert isinstance(components, list)
-
-        extend_comp = []
-
-        for c in components:
-            extend_comp.append(tpl[c])
-            for rc in extension_gen(tpl[c]):
-                extend_comp.append(rc)
-
-        return extend_comp
-
-    def _sort(self, tpl, components):
-        assert isinstance(components, list)
-
-        for n in tpl.nodes:
-            n._mark = ''
-        unmarked = set((c.name for c in components))
-        deploy_order = []
-
-        def visit(n):
-            if n._mark == 'temp':
-                self._log.debug('no dag')
-                raise ValueError('the TOSCA file is not a DAG')
-            elif n._mark == '':
-                n._mark = 'temp'
-                if n.name in unmarked:
-                    unmarked.remove(n.name)
-                for r in n.relationships:
-                    if any(r.to == c for c in components):
-                        visit(r.to)
-                n._mark = 'perm'
-                deploy_order.append(n)
-
-        while len(unmarked) > 0:
-            n = unmarked.pop()
-            visit(tpl[n])
-
-        return deploy_order
 
     def _print_tick(self):
         self._loading_thread.succeed(self._loading_thread.text + 'Done')
@@ -443,8 +357,8 @@ class Orchestrator:
         self._loading_thread.info(self._loading_thread.text + 'Skipped')
 
     def _print_cross(self, error):
-        self._loading_thread.fail(self._loading_thread.text +
-                                  'Error ({})'.format(error))
+        self._loading_thread.fail(self._loading_thread.text + '\n' +
+                                  colored(error, 'red'))
 
     def _print_loading_start(self, msg):
         self._loading_thread = Halo(text=msg, spinner='dots')

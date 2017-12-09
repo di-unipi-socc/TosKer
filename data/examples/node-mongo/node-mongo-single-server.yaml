@@ -7,34 +7,34 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  # - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
-  - tosker: ../../tosker-types.yaml
+# - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
+- tosker: ../../tosker-types.yaml
 
 topology_template:
   node_templates:
     app:
       type: tosker.nodes.Software
       artifacts:
-        code: app/main.js
-        package: app/package.json
+        code: code/app/main.js
+        package: code/app/package.json
       requirements:
         - host: node
         - connection: db
       interfaces:
         Standard:
           create:
-            implementation: app/install.sh
+            implementation: scripts/app/install.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
               main: { get_artifact: [ SELF, code ] }
           start:
-            implementation: app/start.sh
+            implementation: scripts/app/start.sh
             inputs:
               port: 80
           stop:
-            implementation: app/stop.sh
+            implementation: scripts/app/stop.sh
           delete:
-            implementation: app/delete.sh
+            implementation: scripts/app/delete.sh
             inputs:
               package: { get_artifact: [ SELF, package ] }
               main: { get_artifact: [ SELF, code ] }
@@ -46,13 +46,13 @@ topology_template:
       interfaces:
         Standard:
           create:
-            implementation: mongo/install.sh
+            implementation: scripts/mongo/install.sh
           start:
-            implementation: mongo/start.sh
+            implementation: scripts/mongo/start.sh
           stop:
-            implementation: mongo/stop.sh
+            implementation: scripts/mongo/stop.sh
           delete:
-            implementation: mongo/delete.sh
+            implementation: scripts/mongo/delete.sh
 
     node:
       type: tosker.nodes.Software
@@ -61,9 +61,9 @@ topology_template:
       interfaces:
         Standard:
           create:
-            implementation: install_node.sh
+            implementation: scripts/node/install.sh
           delete:
-            implementation: uninstall_node.sh
+            implementation: scripts/node/uninstall.sh
 
     server1:
       type: tosker.nodes.Container

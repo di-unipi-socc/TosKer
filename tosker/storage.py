@@ -58,10 +58,6 @@ class Storage:
 
 
 class Memory(Storage):
-    class STATE(Enum):
-        DELETED = 'deleted'
-        CREATED = 'created'
-        STARTED = 'started'
 
     @staticmethod
     def _comp_to_dict(comp):
@@ -75,16 +71,14 @@ class Memory(Storage):
 
     @staticmethod
     def update_state(comp, state):
-        assert state in Memory.STATE
+        assert isinstance(comp, (six.string_types, dict, Root))
+        assert isinstance(state, str)
 
         def _update_state(full_name, state):
             log = Logger.get(__name__)
             log.debug('update %s to %s', full_name, state)
-            if state == Memory.STATE.DELETED:
-                return Memory.remove(Query().full_name == full_name)
-            else:
-                return Memory.update({'state': state.value},
-                                     Query().full_name == full_name)
+            return Memory.update({'state': state},
+                                 Query().full_name == full_name)
 
         if isinstance(comp, six.string_types):
             _update_state(comp, state)
@@ -99,10 +93,21 @@ class Memory(Storage):
             if len(res) < 1:
                 # comp not found
                 comp_dict = Memory._comp_to_dict(comp)
-                comp_dict['state'] = state.value
+                comp_dict['state'] = state
                 Memory.insert(comp_dict)
         else:
             raise AssertionError()
+
+    @staticmethod
+    def remove(obj):
+        assert isinstance(obj, (dict, Root, str))
+        if isinstance(obj, Root):
+            name = obj.full_name
+        elif isinstance(obj, dict):
+            name = obj['full_name']
+        else:
+            name = obj
+        return Storage.remove(Query().full_name == name)
 
     @staticmethod
     def insert(obj):
@@ -116,18 +121,15 @@ class Memory(Storage):
     def get_comp_state(comp):
         assert isinstance(comp, Root)
         res = Memory.search(Query().full_name == comp.full_name)
-        return Memory.STATE(res[0]['state']) \
-            if len(res) == 1 else Memory.STATE.DELETED
+        return res[0]['state'] if len(res) == 1 else None
 
     @staticmethod
     def get_comps(app_name=None, filters=None):
         queries = []
         if filters is not None:
             assert isinstance(filters, dict)
-            for k, v in filters.items():
-                if isinstance(v, Memory.STATE):
-                    v = v.value
-                queries.append(Query()[k] == v)
+            for key, value in filters.items():
+                queries.append(Query()[key] == value)
 
         if app_name is not None:
             queries.append(Query()['app_name'] == app_name)

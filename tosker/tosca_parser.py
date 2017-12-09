@@ -1,6 +1,6 @@
-'''
+"""
 Tosca parser module
-'''
+"""
 import re
 from os import path
 
@@ -12,13 +12,14 @@ from . import helper
 from .graph.artifacts import (Dockerfile, DockerfileExecutable, DockerImage,
                               DockerImageExecutable, File)
 from .graph.nodes import Container, Software, Volume
+from .graph.protocol import ALIVE, Protocol, State, Transition
+from .graph.relationships import HOST
 from .graph.template import Template
 from .helper import Logger
 
 _log = None
 
 # CUSTOM TYPE
-# PERSISTENT_CONTAINER = 'tosker.nodes.Container.Executable'
 CONTAINER = 'tosker.nodes.Container'
 VOLUME = 'tosker.nodes.Volume'
 SOFTWARE = 'tosker.nodes.Software'
@@ -26,34 +27,24 @@ IMAGE = 'tosker.artifacts.Image'
 IMAGE_EXE = 'tosker.artifacts.Image.Service'
 DOCKERFILE = 'tosker.artifacts.Dockerfile'
 DOCKERFILE_EXE = 'tosker.artifacts.Dockerfile.Service'
-
+PROTOCOL_POLICY = 'tosker.policies.Protocol'
 # EXECUTABLE_IMAGE = 'tosker.artifacts.ExecutableImage'
 # IMAGE2 = 'tosca.artifacts.Deployment.Image.Container.Docker'
 # DOCKERFILE2 = 'tosca.artifacts.File'
 
+# PROTOCOL NAMES
+PROT_STATES = 'states'
+PROT_INITIAL_STATE = 'initial_state'
+PROT_TRANSITIONS = 'transitions'
+PROT_STATE_PROP = PROT_REQUIRES, PROT_OFFERS = 'requires', 'offers'
+PROT_TRANSITION_PROP = PROT_SOURCE, PROT_TARGET, PROT_INTERFACE, PROT_OPERATION, PROT_REQUIRES =\
+                       'source', 'target', 'interface', 'operation', 'requires'
+
 # REQUIREMENTS
-CONNECT = 'connection'
-DEPEND = 'dependency'
-ATTACH = 'storage'
-HOST = 'host'
-
-
-# def _check_requirements(node, running):
-#     for req in node.requirements:
-#         for key, value in req.items():
-#             value = value['node'] if type(value) is dict else value
-#             if value not in running:
-#                 return False
-#     return True
-
-# def _parse_path(base_path, value):
-#     abs_path = path.abspath(
-#         path.join(base_path, value)
-#     )
-#     split_path = abs_path.split('/')
-#     return {'path': '/'.join(split_path[:-1]),
-#             'file': split_path[-1],
-#             'file_path': abs_path}
+REL_CONNECT = 'tosca.relationships.ConnectsTo'
+REL_DEPEND = 'tosca.relationships.DependsOn'
+REL_ATTACH = 'tosca.relationships.AttachesTo'
+REL_HOST = 'tosca.relationships.HostedOn'
 
 
 def _get_file(base_path, name, file):
@@ -72,7 +63,7 @@ def _parse_conf(tpl, node, repos, base_path):
         return res
 
     conf = None
-    if node.type == CONTAINER:
+    if node.is_derived_from(CONTAINER):
         conf = Container(node.name)
 
         def parse_dockerfile(name, file, executable=False):
@@ -127,10 +118,10 @@ def _parse_conf(tpl, node, repos, base_path):
                 values = node.entity_tpl['properties']['share_data']
                 conf.share_data = _parse_map(values)
 
-    elif node.type == VOLUME:
+    elif node.is_derived_from(VOLUME):
         conf = Volume(node.name)
 
-    elif node.type == SOFTWARE:
+    elif node.is_derived_from(SOFTWARE):
         conf = Software(node.name)
         if 'artifacts' in node.entity_tpl:
             artifacts = node.entity_tpl['artifacts']
@@ -141,56 +132,50 @@ def _parse_conf(tpl, node, repos, base_path):
                 _log.debug('artifacts: %s', conf.artifacts)
 
         # get interfaces
-        if 'interfaces' in node.entity_tpl and \
-                'Standard' in node.entity_tpl['interfaces']:
-            interfaces = node.entity_tpl['interfaces']['Standard']
-            intf = {}
-            for key, value in interfaces.items():
-                intf[key] = {}
-                if 'implementation' in value:
-                    abs_path = path.abspath(
-                        path.join(base_path, value['implementation'])
-                    )
-                    # path_split = abs_path.split('/')
+        if 'interfaces' in node.entity_tpl:
+            interfaces = {}
+            for name, tpl_interface in node.entity_tpl['interfaces'].items():
+                interfaces[name] = interface = {}
+                for key, value in tpl_interface.items():
+                    interface[key] = operation = {}
+                    if 'implementation' in value:
+                        abs_path = path.abspath(
+                            path.join(base_path, value['implementation'])
+                        )
+                        operation['cmd'] = File(None, abs_path)
+                        _log.debug('path: %s file: %s', operation['cmd'].path,
+                                   operation['cmd'].file)
+                    if 'inputs' in value:
+                        operation['inputs'] = value['inputs']
 
-                    intf[key]['cmd'] = File(None, abs_path)
-                    # {
-                    #     'file': path_split[-1],
-                    #     'path': '/'.join(path_split[:-1]),
-                    #     'file_path': abs_path
-                    # }
-                    _log.debug('path: %s file: %s', intf[key]['cmd'].path,
-                               intf[key]['cmd'].file)
-                if 'inputs' in value:
-                    intf[key]['inputs'] = value['inputs']
-                    # intf[key]['inputs'] = _parse_map(value['inputs'])
-
-            conf.interfaces = intf
+            conf.interfaces = interfaces
 
     else:
         raise ValueError(
             'node type "{}" not supported!'.format(node.type))
 
+    def get_req_type(req):
+        return next((n[req] for n in node.type_definition.requirements if req in n))['relationship']
+
     # get requirements
-    if 'requirements' in node.entity_tpl:
-        requirements = node.entity_tpl['requirements']
-        if requirements is not None:
-            for value in requirements:
-                if CONNECT in value:
-                    conf.add_connection(value[CONNECT])
-                if DEPEND in value:
-                    conf.add_depend(value[DEPEND])
-                if HOST in value:
-                    if isinstance(value[HOST], dict):
-                        conf.host = value[HOST]['node']
-                    else:
-                        conf.host = value[HOST]
-                if ATTACH in value:
-                    volume = value[ATTACH]
-                    if isinstance(volume, dict):
-                        conf.add_volume(volume['node'], volume['relationship']
-                                                              ['properties']
-                                                              ['location'])
+    for req in node.requirements:
+        name, value = list(req.items())[0]
+        target = value['node'] if isinstance(value, dict) else value
+
+        req_type = get_req_type(name)
+        _log.debug('%s %s', target, req_type)
+
+        if req_type == REL_CONNECT:
+            conf.add_connection(target)
+        if req_type == REL_DEPEND:
+            conf.add_depend(target)
+        if req_type == REL_HOST:
+            conf.host = target
+        if req_type == REL_ATTACH:
+            location = value['relationship']['properties']['location']
+            _log.debug('location: %s', location)
+            conf.add_volume(target, location)
+
     conf.tpl = tpl
     return conf
 
@@ -227,21 +212,107 @@ def get_tosca_template(file_path, inputs=None):
     tosca_name = tosca.input_path.split('/')[-1][:-5]
     tpl = Template(tosca_name)
 
-    if hasattr(tosca, 'nodetemplates'):
-        if tosca.outputs:
+    if hasattr(tosca, 'topology_template'):
+        if hasattr(tosca, 'outputs'):
             tpl.outputs = tosca.outputs
-        if tosca.nodetemplates:
 
+        if hasattr(tosca, 'nodetemplates'):
             for node in tosca.nodetemplates:
                 tpl.push(_parse_conf(tpl, node,
                                      repositories,
                                      base_path))
-
             _add_pointer(tpl)
             _add_back_links(tpl)
             _add_extension(tpl)
 
+        if hasattr(tosca, 'policies'):
+            for policy in tosca.policies:
+                if not policy.is_derived_from(PROTOCOL_POLICY):
+                    raise ValueError('policy of type "{}" not supported.'.format(policy.type))
+                # policy.name
+                # policy.properties
+                # policy.targets
+                _validate_protocol(policy.properties)
+                protocol = _parse_protocol(policy.properties)
+                _log.debug(protocol)
+                for target in policy.targets:
+                    comp = tpl[target]
+                    if not isinstance(comp, Software):
+                        raise ValueError('Only software support custom protocol')
+                    comp.protocol = protocol
+
     return tpl
+
+
+def _validate_protocol(properties):
+    # TODO: check that the declared initial_state is a valid state
+    if PROT_INITIAL_STATE not in properties:
+        raise ValueError('Attribute {}, is required in policy properties')
+    if not isinstance(properties[PROT_INITIAL_STATE], str):
+        raise ValueError('Attribute {}, must be string')
+
+    if PROT_STATES not in properties:
+        raise ValueError('Attribute {}, is required in policy properties')
+    if not isinstance(properties[PROT_STATES], dict):
+        raise ValueError('Attribute {}, must be dictionary')
+
+    if PROT_TRANSITIONS not in properties:
+        raise ValueError('Attribute {}, is required in policy properties')
+    if not isinstance(properties[PROT_TRANSITIONS], list):
+        raise ValueError('Attribute {}, must be list')
+
+    for name, value in properties[PROT_STATES].items():
+        if value is not None :
+            for name, value in value.items():
+                if name not in PROT_STATE_PROP:
+                    raise ValueError('State must contains only {} and {}'
+                                     ''.format(PROT_OFFERS, PROT_REQUIRES))
+                if not isinstance(value, list):
+                    raise ValueError('{} and {} must be list'.format(PROT_OFFERS, PROT_REQUIRES))
+
+    req_prop = (PROT_SOURCE, PROT_TARGET, PROT_INTERFACE, PROT_OPERATION)
+    for transition in properties[PROT_TRANSITIONS]:
+        if any((p not in transition for p in req_prop)):
+            raise ValueError('Transition require the properties {}'
+                             ''.format(', '.join(req_prop)))
+        for name, value in transition.items():
+            if name not in PROT_TRANSITION_PROP:
+                raise ValueError('Transition must contains only {}'
+                                 ''.format(', '.join(PROT_TRANSITION_PROP)))
+
+
+def _parse_protocol(properties):
+    """
+    Parse and return the protocol to manage the Software compnent from the TOSCA policy.
+    
+    This function also add the ALIVE requirements on all the state except the initial one
+    and the HOST requirements on all the transition. This permits to always have a container
+    underneed the Software componets.
+    """
+    protocol = Protocol()
+    
+    for name, value in properties[PROT_STATES].items():
+        value = value if value is not None else {}
+        state = State(name,
+                      requires=value.get(PROT_REQUIRES, None),
+                      offers=value.get(PROT_OFFERS, None))
+        protocol.states.append(state)
+        if name == properties[PROT_INITIAL_STATE]:
+            protocol.initial_state = state
+        else:
+            state.requires.append(ALIVE)
+            state.offers.append(ALIVE)
+
+    for transition in properties[PROT_TRANSITIONS]:
+        source = protocol.find_state(transition[PROT_SOURCE])
+        target = protocol.find_state(transition[PROT_TARGET])
+        transition = Transition(source, target,
+                                transition[PROT_INTERFACE],
+                                transition[PROT_OPERATION],
+                                [HOST] + transition.get(PROT_REQUIRES, []))
+        protocol.transitions.append(transition)
+        source.transitions.append(transition)
+    return protocol
 
 
 def _add_pointer(tpl):
@@ -256,10 +327,14 @@ def _add_back_links(tpl):
             rel.to.up_requirements.append(rel)
 
 
-# - add pointer host_container pointer on software
-# - add pointer on host property
-# - add software links to the corrisponding container
+
 def _add_extension(tpl):
+    """
+    This function add the following extension on the template:
+      - add pointer host_container pointer on software
+      - add pointer on host property
+      - add software links to the corrisponding container
+    """
     # Add the host_container property
     for node in tpl.software:
         def find_container(node):
@@ -294,50 +369,6 @@ def _add_extension(tpl):
             if isinstance(con.to, Software):
                 con.alias = con.to.name
                 con.to = con.to.host_container
-
-
-# def _parse_functions(tosca, inputs, base_path):
-#     # Get the template nodes
-#     tpl = tosca.topology_template.tpl['node_templates']
-#
-#     # Get the inputs of the TOSCA file
-#     if 'inputs' in tosca.topology_template.tpl:
-#         tosca_inputs = tosca.topology_template.tpl['inputs']
-#
-#     # Recurvive function searching for TOSCA function in the node
-#     def parse_node(name, node):
-#
-#         # This function return the result of the TOSCA function
-#         def execute_function(value, args):
-#             if 'SELF' == args[0]:
-#                 args[0] = name
-#             return helper.get_attributes(args[1:], tpl[args[0]][value])
-#
-#         for k, v in node.items():
-#             # If the function is already parse by toscaparser use the result
-#             if isinstance(v, toscaparser.functions.Function):
-#                 node[k] = v.result()
-#             elif type(v) is dict:
-#                 # Found a get_property function
-#                 if 'get_property' == v:
-#                     node[k] = execute_function('properties',
-#                                                v['get_property'])
-#                 # Found a get_artifact function
-#                 if 'get_artifact' == v:
-#                     art = execute_function('artifacts', v['get_artifact'])
-#                     node[k] = _parse_path(base_path, art)
-#                 # Found a get_input function
-#                 elif 'get_input' == v:
-#                     if v['get_input'] in inputs:
-#                         node[k] = inputs[v['get_input']]
-#                     else:
-#                         node[k] = tosca_inputs[v['get_input']]['default']
-#                 else:
-#                     parse_node(name, v)
-#
-#     # Scan each component of the application to find TOSCA funcions
-#     for k, v in tpl.items():
-#         parse_node(k, v)
 
 
 def _parse_functions(tosca, inputs, base_path):

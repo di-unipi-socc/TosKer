@@ -1,0 +1,5 @@
+nginx:Standard.stop
+nginx:Standard.delete
+
+server:Standard.stop
+server:Standard.delete

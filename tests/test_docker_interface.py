@@ -1,4 +1,4 @@
-import unittest
+from unittest import TestCase
 
 from tosker import docker_interface as docker
 from tosker.graph.artifacts import DockerImageExecutable
@@ -8,7 +8,7 @@ from tosker.graph.template import Template
 # from tosker.helper import Logger
 
 
-class TestDockerInterface(unittest.TestCase):
+class TestDockerInterface(TestCase):
     @classmethod
     def setUpClass(self):
         # Logger.set(helper.get_consol_handler(), False)

@@ -1,0 +1,15 @@
+server_db:Standard.create
+server_db:Standard.start
+
+server_app:Standard.create
+server_app:Standard.start
+
+node:my_interface.install
+
+db:Standard.create
+db:Standard.configure
+db:Standard.start
+
+app:my_interface.create
+app:my_interface.add_examples
+app:my_interface.start

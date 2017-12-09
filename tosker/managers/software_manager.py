@@ -1,6 +1,6 @@
-'''
+"""
 Software manager module
-'''
+"""
 import os
 from functools import wraps
 from os import path
@@ -15,59 +15,21 @@ from ..storage import Memory
 
 class SoftwareManager:
 
-    def _get_cmd(interface, force_exec=False):
-        def _get_cmd_decorator(func):
-            @wraps(func)
-            def func_wrapper(*args):
-                assert isinstance(args[0], Software)
-                cmd = SoftwareManager._get_cmd_args(args[0], interface)
-                if cmd or force_exec:
-                    return func(cmd, *args)
-            return func_wrapper
-        return _get_cmd_decorator
-
     @staticmethod
-    @_get_cmd('create', force_exec=True)
-    def create(cmd, node):
-        SoftwareManager._copy_files(node)
+    def exec_operation(comp, interface, operation):
+        """Exec an operation on the component."""
+        _log = Logger.get(__name__)
+        assert isinstance(comp, Software) and isinstance(interface, str) and\
+               isinstance(operation, str)
+
+        if comp.protocol.is_reset():
+            _log.debug('copy file inside the container')
+            SoftwareManager._copy_files(comp)
+        
+        cmd = SoftwareManager._get_cmd_args(comp, operation, interface=interface)
         if cmd is not None:
-            docker_interface.update_container(node.host_container, cmd)
-
-    @staticmethod
-    @_get_cmd('configure')
-    def configure(cmd, node):
-        docker_interface.update_container(node.host_container, cmd)
-
-    @staticmethod
-    @_get_cmd('start')
-    def start(cmd, node):
-        _log = Logger.get(__name__)
-        try:
-            docker_interface.exec_cmd(node.host_container, cmd)
-        except Exception:
-            _log.debug('is not running!')
-            # docker_interface.delete_container(node.host_container)
-            docker_interface.create_container(node.host_container,
-                                              cmd=cmd,
-                                              entrypoint='',
-                                              from_saved=True,
-                                              force=True)
-            docker_interface.start_container(node.host_container)
-
-    @staticmethod
-    @_get_cmd('stop')
-    def stop(cmd, node):
-        _log = Logger.get(__name__)
-        if docker_interface.is_running(node.host_container):
-            _log.debug('exec stop command!')
-            docker_interface.exec_cmd(node.host_container, cmd)
-
-    @staticmethod
-    @_get_cmd('delete')
-    def delete(cmd, node):
-        _log = Logger.get(__name__)
-        _log.debug('exec delete command!')
-        docker_interface.update_container(node.host_container, cmd)
+            docker_interface.exec_cmd(comp.host_container, cmd)
+        return True
 
     @staticmethod
     def _copy_files(node):
@@ -83,15 +45,16 @@ class SoftwareManager:
             pass
 
         # copy all the interfaces scripts
-        for _, value in node.interfaces.items():
-            copy(value['cmd'].file_path, tmp)
+        for _, interface in node.interfaces.items():
+            for _, value in interface.items():
+                copy(value['cmd'].file_path, tmp)
 
         # if present copy all the artifacts
         for art in node.artifacts:
             copy(art.file_path, tmp)
 
     @staticmethod
-    def _get_cmd_args(node, interface):
+    def _get_cmd_args(node, operation, interface='Standard'):
         _log = Logger.get(__name__)
 
         def get_inside_path(p):
@@ -103,42 +66,22 @@ class SoftwareManager:
             def get_echo(string, where):
                 return 'echo {} > {}'.format(string, where)
 
-            def set_in_state():
-                if interface == 'start':
-                    return get_echo(Memory.STATE.STARTED.value,
-                                    get_inside_path('state')) + ';'
-                return ''
-
-            def set_out_state():
-                if interface == 'create':
-                    return ';' + get_echo(Memory.STATE.CREATED.value,
-                                          get_inside_path('state'))
-                elif interface == 'start':
-                    return ';' + get_echo(Memory.STATE.CREATED.value,
-                                          get_inside_path('state'))
-                elif interface == 'stop':
-                    return ';' + get_echo(Memory.STATE.CREATED.value,
-                                          get_inside_path('state'))
-                elif interface == 'delete':
-                    return ';' + get_echo(Memory.STATE.DELETED.value,
-                                          get_inside_path('state'))
-                return ''
-
-            return '{}sh -x {} >> {} 2>&1{}'.format(
-                set_in_state(),
-                get_inside_path(node.interfaces[interface]['cmd']),
-                get_inside_path('{}.log'.format(interface)),
-                set_out_state()
+            return 'sh -x {} >> {} 2>&1'.format(
+                get_inside_path(node.interfaces[interface][operation]['cmd']),
+                get_inside_path('{}.{}.log'.format(interface, operation))
             )
 
-        if interface not in node.interfaces:
+        if interface not in node.interfaces or\
+           operation not in node.interfaces[interface]:
+            _log.debug('operation %s.%s not in %s', interface,
+                       operation, node.interfaces)
             return None
 
         args = []
         args_env = []
         res = None
-        if 'inputs' in node.interfaces[interface]:
-            for key, value in node.interfaces[interface]['inputs'].items():
+        if 'inputs' in node.interfaces[interface][operation]:
+            for key, value in node.interfaces[interface][operation]['inputs'].items():
                 if isinstance(value, File):
                     value = get_inside_path(value)
                 args.append('--{} {}'.format(key, value))
@@ -153,6 +96,6 @@ class SoftwareManager:
         else:
             res = "sh -c '{}'".format(get_cmd())
 
-        _log.debug('%s command (%s) on container %s', interface,
+        _log.debug('%s.%s command (%s) on container %s', interface, operation,
                    res, node.host_container)
         return res
