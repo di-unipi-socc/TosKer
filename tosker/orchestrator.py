@@ -3,9 +3,9 @@ Orchestrator module
 """
 import logging
 import os
+import re
 import shutil
 import traceback
-import re
 from functools import wraps
 from glob import glob
 from io import open
@@ -13,9 +13,10 @@ from io import open
 import six
 from halo import Halo
 from tabulate import tabulate
-from termcolor import colored
 from toscaparser.common.exception import ValidationError
 from yaml.scanner import ScannerError
+
+from termcolor import colored
 
 from . import docker_interface, helper, protocol_helper
 from .graph.nodes import Container, Software, Volume
@@ -34,6 +35,7 @@ try:
     from os import scandir
 except ImportError:
     from scandir import scandir
+
 
 class Orchestrator:
 
@@ -68,7 +70,8 @@ class Orchestrator:
     def orchestrate(self, file_path, operations, inputs=None):
         """
         Start the orchestration using the management protocols.
-        Operations mus be a list where every element are in the format "component:interface.operation"
+        Operations mus be a list where every element are in the
+        format "component:interface.operation"
         """
         # Parse TOSCA file
         tpl = self._parse_tosca(file_path, inputs)
@@ -85,10 +88,11 @@ class Orchestrator:
 
         # Load components state
         if not self._load_component_state(tpl):
-            Logger.print_error('Cannot load components state, try to use "tosker prune" to hard reset.')
+            Logger.print_error('Cannot load components state,'
+                               'try to use "tosker prune" to hard reset.')
             return False
         self._log.debug('State: %s', ' '.join(
-            (c['name']+'.'+c['state'] for c in Memory.get_comps(tpl.name))))
+            (c['name'] + '.' + c['state'] for c in Memory.get_comps(tpl.name))))
 
         try:
             # Check plan
@@ -103,7 +107,6 @@ class Orchestrator:
                     return False
             self._load_component_state(tpl)
             self._print_tick()
-            
 
             # Create Network
             # TODO: do not create network if already there
@@ -114,17 +117,21 @@ class Orchestrator:
             # Execute plan
             for component, full_operation in operations:
                 protocol = component.protocol
-                self._log.debug('Component %s is in state %s', component.name, component.protocol.current_state)
+                self._log.debug('Component %s is in state %s',
+                                component.name, component.protocol.current_state)
                 self._print_loading_start('Execute op "{}" on "{}"... '
-                    ''.format(full_operation, component.name))
+                                          ''.format(full_operation, component.name))
 
                 transition = protocol.next_transition(full_operation)
-                self._log.debug('transition: i={} o={}'.format(transition.interface, transition.operation))
-                
+                self._log.debug('transition: i={} o={}'.format(
+                    transition.interface, transition.operation))
+
                 if isinstance(component, Container):
-                    ContainerManager.exec_operation(component, transition.operation)
+                    ContainerManager.exec_operation(
+                        component, transition.operation)
                 elif isinstance(component, Volume):
-                    VolumeManager.exec_operation(component, transition.operation)
+                    VolumeManager.exec_operation(
+                        component, transition.operation)
                 elif isinstance(component, Software):
                     SoftwareManager.exec_operation(component, transition.interface,
                                                    transition.operation)
@@ -144,15 +151,15 @@ class Orchestrator:
             self._log.debug(traceback.format_exc())
             self._print_cross(e)
             return False
-        
+
         return True
-    
+
     def read_plan(self, file):
         with open(file, 'r') as plan:
             plan_list = [l for l in (l.strip() for l in plan.readlines())
                          if l and not l.startswith('#')]
             return plan_list
-    
+
     @update_memory
     def ls_components(self, app=None, filters={}):
         comps = Memory.get_comps(app, filters)
@@ -177,16 +184,18 @@ class Orchestrator:
 
         app, name = helper.split(component, '.')
         if app is None:
-            Logger.print_error('First argument must be a component full name (i.e my_app.my_component)')
+            Logger.print_error('First argument must be a component full name '
+                               '(i.e my_app.my_component)')
             return
-        
+
         if '.' not in operation:
             operation = 'Standard.{}'.format(operation)
 
-        self._log.debug('app: %s, name: %s, operation: %s', app, name, operation)
+        self._log.debug('app: %s, name: %s, operation: %s',
+                        app, name, operation)
 
         log_file_name = '{}/{}/*/{}/{}.log'.format(self._tmp_dir,
-                                               app, name, operation)
+                                                   app, name, operation)
 
         log_file = glob(log_file_name)
 
@@ -196,7 +205,8 @@ class Orchestrator:
 
         with open(log_file[0], 'r', encoding='utf-8', errors='ignore') as f:
             for line in f.readlines():
-                line = colored(line, 'green') if line.startswith('+ ') else line
+                line = colored(line, 'green') if line.startswith(
+                    '+ ') else line
                 Logger.print_(line)
 
     def prune(self):
@@ -213,7 +223,7 @@ class Orchestrator:
             self._log.debug(v['Name'])
             docker_interface.delete_volume(v['Name'])
         self._print_tick()
-        
+
         # TODO: remove also networks
 
         self._print_loading_start('Remove tosker data.. ')
@@ -241,7 +251,7 @@ class Orchestrator:
             self._log.debug('Exception type: %s', type(e))
             self._log.debug(colored(traceback.format_exc(), 'red'))
             return None
-    
+
     def _create_tmp_dir(self, tpl):
         '''
         Create temporany directory
@@ -253,32 +263,28 @@ class Orchestrator:
             self._log.info(e)
 
     def _parse_operations(self, tpl, operations):
-            res = []
-            for op in operations:
-                # Check that the format of the operation si correct
-                if re.match('.*:.*\..*', op) is None:
-                    Logger.print_error('"{}" has a wrong format. The format must be'
-                                       '"COMPONENT:INTERFACE.OPERATION"'.format(op))
-                    return None
-
+        res = []
+        for op in operations:
                 # Check that the component existes in the template
-                comp_name, full_operation = helper.split(op, ':')
-                comp = tpl[comp_name]
-                if comp is None:
-                    Logger.print_error('Component "{}" not found in template.'.format(comp_name))
-                    return None
+            comp_name, full_operation = helper.split(op, ':')
+            comp = tpl[comp_name]
+            if comp is None:
+                Logger.print_error(
+                    'Component "{}" not found in template.'.format(comp_name))
+                return None
 
-                # check that the component has interface.operation
-                interface, operation = helper.split(full_operation, '.')
-                if interface not in comp.interfaces and\
-                   operation not in comp.interfaces[interface]:
-                    Logger.print_error('Component "{}" not has the "{}" operation in the "{}" interface.'
-                                    ''.format(comp_name, operation, interface))
-                    return None
-                res.append((comp, full_operation))
-            
-            return res
-    
+            # check that the component has interface.operation
+            interface, operation = helper.split(full_operation, '.')
+            if interface not in comp.interfaces and\
+               operation not in comp.interfaces[interface]:
+                Logger.print_error('Component "{}" not has the "{}"'
+                                   'operation in the "{}" interface.'
+                                   ''.format(comp_name, operation, interface))
+                return None
+            res.append((comp, full_operation))
+
+        return res
+
     def _load_component_state(self, tpl):
         for comp in tpl.nodes:
             state = Memory.get_comp_state(comp)
@@ -321,14 +327,15 @@ class Orchestrator:
 
             for s, s_path in software:
                 full_name = '{}.{}'.format(comp['app_name'], s)
-                Memory.update_state('{}.{}'.format(comp['app_name'], s), SOFTWARE_STATE_ZOTTED)
+                Memory.update_state('{}.{}'.format(
+                    comp['app_name'], s), SOFTWARE_STATE_ZOTTED)
                 errors.add(full_name)
 
         for container in Memory.get_comps(filters={'type': 'Container'}):
             status = docker_interface.inspect_container(container['full_name'])
             deleted, created, running = status is None,\
-                                        status is not None and not status['State']['Running'],\
-                                        status is not None and status['State']['Running']
+                status is not None and not status['State']['Running'],\
+                status is not None and status['State']['Running']
             if deleted and container['state'] != CONTAINER_STATE_DELETED:
                 manage_error_container(container, CONTAINER_STATE_DELETED)
             elif created and container['state'] != CONTAINER_STATE_CREATED:
