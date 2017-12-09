@@ -46,7 +46,7 @@ def exec(ctx, file, cmds, plan, dry_run):
         import sys
         cmds = [line.strip() for line in sys.stdin if line.strip()]
     elif not cmds:
-        ctx.fail('must supply a lisy of operation to execute.')
+        ctx.fail('must supply a list of operation to execute.')
     # TODO: add inputs
     # TODO: implement dry_run
     inputs = None
