@@ -269,7 +269,7 @@ class Orchestrator:
     def prune(self):
         self._print_loading_start('Remove containers.. ')
         con = docker_interface.get_containers(all=True)
-        for c in (c for c in con if c['Names'][0].startswith('/tosker')):
+        for c in (c for c in con if c['Names'] and c['Names'][0].startswith('/tosker')):
             self._log.debug(c['Names'][0])
             docker_interface.delete_container(c['Id'], force=True)
         self._print_tick()
@@ -283,7 +283,8 @@ class Orchestrator:
 
         self._print_loading_start('Remove images.. ')
         images = docker_interface.get_images()
-        for i in (i for i in images if i['RepoTags'][0].startswith('tosker')):
+        for i in (i for i in images
+                  if i['RepoTags'] and i['RepoTags'][0].startswith('tosker')):
             self._log.debug(i['RepoTags'][0])
             docker_interface.delete_image(i['Id'])
         self._print_tick()
