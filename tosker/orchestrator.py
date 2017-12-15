@@ -68,6 +68,7 @@ class Orchestrator:
 
     @update_memory
     def orchestrate(self, file_path, operations, inputs=None):
+        # TODO: change "operations" in a list of triple (component, interface, operation)
         """
         Start the orchestration using the management protocols.
         Operations mus be a list where every element are in the
@@ -154,11 +155,40 @@ class Orchestrator:
 
         return True
 
-    def read_plan(self, file):
-        with open(file, 'r') as plan:
-            plan_list = [l for l in (l.strip() for l in plan.readlines())
-                         if l and not l.startswith('#')]
-            return plan_list
+    
+    def read_plan_file(self, file):
+        # FIXME:
+        '''
+        parse the operation from a general plan file (.csv, .plan, other)
+        '''
+        with open(file, 'r') as fstream:
+            _, ext = os.path.splitext(file)
+            if '.csv' == ext:
+                return self._read_csv(fstream)
+            elif '.plan' == ext:
+                return self._read_plan(fstream)
+            else:
+                # TODO: must return an return an error
+                pass
+
+    def _read_csv(self, file):
+        '''
+        get a file streame of a .csv file and return a list
+        of triple (componet, interface, operation).
+        '''
+        # plan = [l.strip().split(',') for l in file.readlines()]
+        # assert all((len(p) == 3 for p in plan))
+        # return plan
+        pass
+
+    def _read_plan(self, file):
+        '''
+        get a file streame of a .plan file and return a list
+        of triple (componet, interface, operation).
+        '''
+        # return [l for l in (l.strip() for l in file.readlines())
+        #         if l and not l.startswith('#')]
+        pass
 
     @update_memory
     def ls_components(self, app=None, filters={}):
