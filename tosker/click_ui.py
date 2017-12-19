@@ -40,9 +40,9 @@ def exec(ctx, file, cmds_inputs, plan, dry_run):
 
     \b
     Examples:
-    tosker hello.yaml component1:Standard.create component1:Standard.start
-    tosker hello.yaml -p hello.down.plan
-    cat hello.up.plan | tosker hello.yaml -
+    tosker exec hello.yaml component1:Standard.create component1:Standard.start
+    tosker exec hello.yaml -p hello.down.plan
+    cat hello.up.plan | tosker exec hello.yaml -
     """
 
     cmds, inputs = _get_cmds_inputs(ctx, cmds_inputs)
