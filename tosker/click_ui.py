@@ -2,6 +2,7 @@
 Terminal interface build with click
 """
 import re
+import sys
 
 import click
 
@@ -47,11 +48,13 @@ def exec(ctx, file, cmds_inputs, plan, dry_run):
 
     cmds, inputs = _get_cmds_inputs(ctx, cmds_inputs)
     if plan:
-        cmds = ctx.obj.read_plan(plan)
+        cmds = ctx.obj.read_plan_file(plan)
     elif cmds and cmds[0] == '-':
-        import sys
-        cmds = [line.strip() for line in sys.stdin if line.strip()]
-    elif not cmds:
+        ops = [line.strip() for line in sys.stdin if line.strip()]
+        cmds = ctx.obj.parse_operations(ops)
+    elif cmds:
+        cmds = ctx.obj.parse_operations(cmds)
+    else:        
         ctx.fail('must supply a list of operation to execute.')
     # TODO: implement dry_run
     ctx.obj.orchestrate(file, cmds, inputs)

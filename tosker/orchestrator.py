@@ -67,12 +67,12 @@ class Orchestrator:
         Memory.set_db(data_dir)
 
     @update_memory
-    def orchestrate(self, file_path, operations, inputs=None):
-        # TODO: change "operations" in a list of triple (component, interface, operation)
+    def orchestrate(self, file_path, plan, inputs=None):
+        # TODO: change "plan" in a list of triple (component, interface,
+        # operation)
         """
         Start the orchestration using the management protocols.
-        Operations mus be a list where every element are in the
-        format "component:interface.operation"
+        plan must be a list of tuple (component, full_operation)
         """
         # Parse TOSCA file
         tpl = self._parse_tosca(file_path, inputs)
@@ -80,8 +80,14 @@ class Orchestrator:
             return False
 
         # Parse operations
-        operations = self._parse_operations(tpl, operations)
-        if operations is None:
+        # operations = self._parse_operations(tpl, operations)
+        # if operations is None:
+        #     return False
+
+        # Check plan format
+        if not self._check_plan_format(tpl, plan):
+            self._log.debug(plan)
+            Logger.print_error('Plan format not correct')
             return False
 
         # Create tmp directory for the template
@@ -98,7 +104,7 @@ class Orchestrator:
         try:
             # Check plan
             self._print_loading_start('Check deployment plan... ')
-            for component, full_operation in operations:
+            for component, full_operation in plan:
                 try:
                     protocol_helper.can_execute(full_operation, component)
                     component.protocol.execute_operation(full_operation)
@@ -116,7 +122,7 @@ class Orchestrator:
             self._print_tick()
 
             # Execute plan
-            for component, full_operation in operations:
+            for component, full_operation in plan:
                 protocol = component.protocol
                 self._log.debug('Component %s is in state %s',
                                 component.name, component.protocol.current_state)
@@ -152,15 +158,10 @@ class Orchestrator:
             self._log.debug(traceback.format_exc())
             self._print_cross(e)
             return False
-
         return True
 
-    
     def read_plan_file(self, file):
-        # FIXME:
-        '''
-        parse the operation from a general plan file (.csv, .plan, other)
-        '''
+        """Parse the operation from a general plan file (.csv, .plan, other)"""
         with open(file, 'r') as fstream:
             _, ext = os.path.splitext(file)
             if '.csv' == ext:
@@ -168,27 +169,27 @@ class Orchestrator:
             elif '.plan' == ext:
                 return self._read_plan(fstream)
             else:
-                # TODO: must return an return an error
+                Logger.print_error('Plan file format not supported.')
                 pass
 
-    def _read_csv(self, file):
-        '''
-        get a file streame of a .csv file and return a list
+    def _read_csv(self, stream):
+        """
+        Get a file stream of a .csv file and return a list
         of triple (componet, interface, operation).
-        '''
-        # plan = [l.strip().split(',') for l in file.readlines()]
-        # assert all((len(p) == 3 for p in plan))
-        # return plan
-        pass
+        """
+        # TODO: !! test this function !!
+        return [(l[0], '{}.{}'.format(l[1], l[2]))
+                for l in (l.strip().split(',')
+                          for l in stream.readlines())]
 
-    def _read_plan(self, file):
-        '''
-        get a file streame of a .plan file and return a list
+    def _read_plan(self, stream):
+        """
+        Get a file streame of a .plan file and return a list
         of triple (componet, interface, operation).
-        '''
-        # return [l for l in (l.strip() for l in file.readlines())
-        #         if l and not l.startswith('#')]
-        pass
+        """
+        return self.parse_operations(
+            [l for l in (l.strip() for l in stream.readlines())
+             if l and not l.startswith('#')])
 
     @update_memory
     def ls_components(self, app=None, filters={}):
@@ -292,16 +293,21 @@ class Orchestrator:
         except os.error as e:
             self._log.info(e)
 
-    def _parse_operations(self, tpl, operations):
-        res = []
-        for op in operations:
-                # Check that the component existes in the template
-            comp_name, full_operation = helper.split(op, ':')
+    def _check_plan_format(self, tpl, operations):
+        """
+        operation: [("component", "interface.operation")..]
+        """
+        for i, op in enumerate(operations):
+            if not (isinstance(op, tuple) and len(op) == 2):
+                Logger.print_error('Plan is not in the right format')
+                return False
+            comp_name, full_operation = op
+            # Check that the component existes in the template
             comp = tpl[comp_name]
             if comp is None:
                 Logger.print_error(
                     'Component "{}" not found in template.'.format(comp_name))
-                return None
+                return False
 
             # check that the component has interface.operation
             interface, operation = helper.split(full_operation, '.')
@@ -310,10 +316,16 @@ class Orchestrator:
                 Logger.print_error('Component "{}" not has the "{}"'
                                    'operation in the "{}" interface.'
                                    ''.format(comp_name, operation, interface))
-                return None
-            res.append((comp, full_operation))
+                return False
+            operations[i] = comp, full_operation
+        return True
 
-        return res
+    def parse_operations(self, operations):
+        """
+        Transform a ["component:interface.operation"..] in
+        [("component","interface.operation")..]
+        """
+        return [helper.split(op.strip(), ':') for op in operations]
 
     def _load_component_state(self, tpl):
         for comp in tpl.nodes:
