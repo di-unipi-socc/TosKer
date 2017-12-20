@@ -68,8 +68,6 @@ class Orchestrator:
 
     @update_memory
     def orchestrate(self, file_path, plan, inputs=None):
-        # TODO: change "plan" in a list of triple (component, interface,
-        # operation)
         """
         Start the orchestration using the management protocols.
         plan must be a list of tuple (component, full_operation)
@@ -78,11 +76,6 @@ class Orchestrator:
         tpl = self._parse_tosca(file_path, inputs)
         if tpl is None:
             return False
-
-        # Parse operations
-        # operations = self._parse_operations(tpl, operations)
-        # if operations is None:
-        #     return False
 
         # Check plan format
         if not self._check_plan_format(tpl, plan):
@@ -159,38 +152,7 @@ class Orchestrator:
             self._print_cross(e)
             return False
         return True
-
-    def read_plan_file(self, file):
-        """Parse the operation from a general plan file (.csv, .plan, other)"""
-        with open(file, 'r') as fstream:
-            _, ext = os.path.splitext(file)
-            if '.csv' == ext:
-                return self._read_csv(fstream)
-            elif '.plan' == ext:
-                return self._read_plan(fstream)
-            else:
-                Logger.print_error('Plan file format not supported.')
-                pass
-
-    def _read_csv(self, stream):
-        """
-        Get a file stream of a .csv file and return a list
-        of triple (componet, interface, operation).
-        """
-        # TODO: !! test this function !!
-        return [(l[0], '{}.{}'.format(l[1], l[2]))
-                for l in (l.strip().split(',')
-                          for l in stream.readlines())]
-
-    def _read_plan(self, stream):
-        """
-        Get a file streame of a .plan file and return a list
-        of triple (componet, interface, operation).
-        """
-        return self.parse_operations(
-            [l for l in (l.strip() for l in stream.readlines())
-             if l and not l.startswith('#')])
-
+    
     @update_memory
     def ls_components(self, app=None, filters={}):
         comps = Memory.get_comps(app, filters)
@@ -261,6 +223,43 @@ class Orchestrator:
         shutil.rmtree(self._tmp_dir)
         self._print_tick()
 
+    def parse_operations(self, operations):
+        """
+        Transform a ["component:interface.operation"..] in
+        [("component","interface.operation")..]
+        """
+        return [helper.split(op.strip(), ':') for op in operations]
+
+    def read_plan_file(self, file):
+        """Parse the operation from a general plan file (.csv, .plan, other)"""
+        with open(file, 'r') as fstream:
+            _, ext = os.path.splitext(file)
+            if '.csv' == ext:
+                return self._read_csv(fstream)
+            elif '.plan' == ext:
+                return self._read_plan(fstream)
+            else:
+                Logger.print_error('Plan file format not supported.')
+                pass
+
+    def _read_csv(self, stream):
+        """
+        Get a file stream of a .csv file and return a list
+        of triple (componet, interface, operation).
+        """
+        return [(l[0], '{}.{}'.format(l[1], l[2]))
+                for l in (l.strip().split(',')
+                          for l in stream.readlines())]
+
+    def _read_plan(self, stream):
+        """
+        Get a file streame of a .plan file and return a list
+        of triple (componet, interface, operation).
+        """
+        return self.parse_operations(
+            [l for l in (l.strip() for l in stream.readlines())
+             if l and not l.startswith('#')])
+
     def _parse_tosca(self, file_path, inputs):
         '''
         Parse TOSCA file
@@ -319,13 +318,6 @@ class Orchestrator:
                 return False
             operations[i] = comp, full_operation
         return True
-
-    def parse_operations(self, operations):
-        """
-        Transform a ["component:interface.operation"..] in
-        [("component","interface.operation")..]
-        """
-        return [helper.split(op.strip(), ':') for op in operations]
 
     def _load_component_state(self, tpl):
         for comp in tpl.nodes:
