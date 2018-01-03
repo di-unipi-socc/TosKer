@@ -29,14 +29,14 @@ def cli(ctx, quiet, debug):
     ctx.obj.quiet = quiet
 
 
-@cli.command(context_settings=dict(ignore_unknown_options=True))
+@cli.command(name="exec", context_settings=dict(ignore_unknown_options=True))
 @click.pass_context
 @click.argument('file', type=click.Path(exists=True))
 @click.argument('cmds_inputs', nargs=-1, type=click.UNPROCESSED)
 # @click.argument('cmds', nargs=-1)
 @click.option('--plan', '-p', type=click.Path(exists=True), help='File with the plan to execute.')
 @click.option('--dry-run', is_flag=True, help='Simulate the dangerous operations.')
-def exec(ctx, file, cmds_inputs, plan, dry_run):
+def exec_(ctx, file, cmds_inputs, plan, dry_run):
     """Exec a plan.
 
     \b
