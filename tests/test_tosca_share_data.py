@@ -10,10 +10,10 @@ class TestShareData(TestToscaBase):
     def test(self):
 
         file = 'data/examples/share-data-container/share-data.yaml'
-        up_plan = self.read_plan(
+        up_plan = self.o.read_plan_file(
             'data/examples/share-data-container/share-data.up.plan'
         )
-        down_plan = self.read_plan(
+        down_plan = self.o.read_plan_file(
             'data/examples/share-data-container/share-data.down.plan'
         )
 

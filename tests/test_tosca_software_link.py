@@ -7,10 +7,10 @@ class TestSoftwareLink(TestToscaBase):
 
     def test(self):
         file = 'data/examples/software-link/software-link.yaml'
-        up = self.read_plan(
+        up = self.o.read_plan_file(
             'data/examples/software-link/software-link.up.plan'
         )
-        down = self.read_plan(
+        down = self.o.read_plan_file(
             'data/examples/software-link/software-link.down.plan'
         )
         self.assert_up_start(file, up)

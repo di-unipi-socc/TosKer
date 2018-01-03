@@ -7,10 +7,10 @@ class TestSockshop(TestToscaBase):
 
     def test(self):
         file = 'data/examples/sockshop-app/sockshop.csar'
-        up = self.read_plan(
+        up = self.o.read_plan_file(
             'data/examples/sockshop-app/sockshop.up.plan'
         )
-        down = self.read_plan(
+        down = self.o.read_plan_file(
             'data/examples/sockshop-app/sockshop.down.plan'
         )
         self.assert_up_start(file, up)
