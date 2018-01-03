@@ -245,7 +245,7 @@ class Orchestrator:
     def _read_csv(self, stream):
         """
         Get a file stream of a .csv file and return a list
-        of triple (componet, interface, operation).
+        of tuple (componet, interface.operation).
         """
         return [(l[0], '{}.{}'.format(l[1], l[2]))
                 for l in (l.strip().split(',')
@@ -254,7 +254,7 @@ class Orchestrator:
     def _read_plan(self, stream):
         """
         Get a file streame of a .plan file and return a list
-        of triple (componet, interface, operation).
+        of tuple (componet, interface.operation).
         """
         return self.parse_operations(
             [l for l in (l.strip() for l in stream.readlines())
