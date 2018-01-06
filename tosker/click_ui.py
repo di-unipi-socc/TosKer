@@ -46,10 +46,10 @@ def exec_(ctx, file, cmds_inputs, plan, dry_run):
     cat hello.up.plan | tosker exec hello.yaml -
     """
 
-    cmds, inputs = _get_cmds_inputs(ctx, cmds_inputs)
+    pipe, cmds, inputs = _get_cmds_inputs(ctx, cmds_inputs)
     if plan:
         cmds = ctx.obj.read_plan_file(plan)
-    elif cmds and cmds[0] == '-':
+    elif pipe:
         ops = [line.strip() for line in sys.stdin if line.strip()]
         cmds = ctx.obj.parse_operations(ops)
     elif cmds:
@@ -107,6 +107,7 @@ def _get_cmds_inputs(ctx, ci):
     """Parse and return commands and TOSCA inputs."""
     cmds = []
     inputs = {}
+    pipe = False
     i = 0
     while i < len(ci):
         if ci[i].startswith('--'):
@@ -120,11 +121,14 @@ def _get_cmds_inputs(ctx, ci):
                 i += 1
             else:
                 ctx.fail('missing the TOSCA inputs value.')
+        if ci[i] == '-':
+            pipe = True
         else:
             # Check that the format of the operation si correct
             if re.match('.*:.*\..*', ci[i]) is None:
                 ctx.fail('"{}" not valid format. Should be COMPONENT:INTERFACE.OPERATION.'
                          ''.format(ci[i]))
+            
             cmds.append(ci[i])
         i += 1
-    return cmds, inputs
+    return pipe, cmds, inputs

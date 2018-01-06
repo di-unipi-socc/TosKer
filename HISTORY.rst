@@ -33,4 +33,5 @@ Stable release without Management Protocols.
 Stable release with Management Protocols.
 
 * Add support of two type of plans (.plan, .csv)
+* Fix piped input error
 * Fix errors in python2 interpreter
