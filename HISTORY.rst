@@ -27,3 +27,10 @@ Stable release without Management Protocols.
 * Support custom management protocol defined using policies.
 * Support safe execution of plans (list of <component, interface, operation>).
 * Improve command line interface.
+
+2.0.2 (TBD)
+----------------------------
+Stable release with Management Protocols.
+
+* Add support of two type of plans (.plan, .csv)
+* Fix errors in python2 interpreter
