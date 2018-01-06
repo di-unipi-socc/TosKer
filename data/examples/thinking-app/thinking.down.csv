@@ -1,0 +1,11 @@
+gui,Standard,stop
+gui,Standard,delete
+api,Standard,stop
+api,Standard,delete
+maven,Standard,stop
+maven,Standard,delete
+node,Standard,stop
+node,Standard,delete
+mongodb,Standard,stop
+mongodb,Standard,delete
+dbvolume,Standard,delete

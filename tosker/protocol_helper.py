@@ -1,11 +1,12 @@
 """A set of functions to help the protocols implementation."""
+import six
+
 from .graph.nodes import Root
 from .helper import Logger
 
-
 def can_execute(operation, component):
     """Check if an operation can be executed on a component."""
-    assert isinstance(operation, str)
+    assert isinstance(operation, six.string_types)
     assert isinstance(component, Root)
     _log = Logger.get(__name__)
 

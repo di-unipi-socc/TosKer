@@ -7,10 +7,10 @@ class TestThinking(TestToscaBase):
 
     def test(self):
         file = 'data/examples/thinking-app/thinking.csar'
-        up = self.read_plan(
+        up = self.o.read_plan_file(
             'data/examples/thinking-app/thinking.up.plan'
         )
-        down = self.read_plan(
+        down = self.o.read_plan_file(
             'data/examples/thinking-app/thinking.down.plan'
         )
         self.assert_up_start(file, up)

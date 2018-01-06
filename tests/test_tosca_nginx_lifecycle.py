@@ -7,10 +7,10 @@ class TestNginxLifecycle(TestToscaBase):
 
     def test(self):
         file = 'data/examples/nginx-lifecycle/nginx-lifecycle.yaml'
-        up = self.read_plan(
+        up = self.o.read_plan_file(
             'data/examples/nginx-lifecycle/nginx-lifecycle.up.plan'
         )
-        down = self.read_plan(
+        down = self.o.read_plan_file(
             'data/examples/nginx-lifecycle/nginx-lifecycle.down.plan'
         )
         self.assert_up_start(file, up)

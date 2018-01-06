@@ -111,7 +111,7 @@ def print_byte(stream, fprint):
         fprint('\t' + line.decode("utf-8").strip())
 
 def split(string, char):
-    """ Split string a string and return always two parts"""
+    """ Split a string with a char and return always two parts"""
     string_list = string.split(char)
     if len(string_list) == 1:
         return None, None

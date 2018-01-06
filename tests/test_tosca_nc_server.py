@@ -17,10 +17,10 @@ class TestNcServer(TestToscaBase):
 
     def test_dockerfile(self):
         file = 'data/examples/nc-server/nc-dockerfile.yaml'
-        up_plan = self.read_plan(
+        up_plan = self.o.read_plan_file(
             'data/examples/nc-server/nc-dockerfile.up.plan'
         )
-        down_plan = self.read_plan(
+        down_plan = self.o.read_plan_file(
             'data/examples/nc-server/nc-dockerfile.down.plan'
         )
         tpl = self.get_tpl(file)
@@ -46,10 +46,10 @@ class TestNcServer(TestToscaBase):
 
     def test_image(self):
         file = 'data/examples/nc-server/nc-image.yaml'
-        up_plan = self.read_plan(
+        up_plan = self.o.read_plan_file(
             'data/examples/nc-server/nc-image.up.plan'
         )
-        down_plan = self.read_plan(
+        down_plan = self.o.read_plan_file(
             'data/examples/nc-server/nc-image.down.plan'
         )
         tpl = self.get_tpl(file)

@@ -2,6 +2,7 @@
 Terminal interface build with click
 """
 import re
+import sys
 
 import click
 
@@ -28,14 +29,14 @@ def cli(ctx, quiet, debug):
     ctx.obj.quiet = quiet
 
 
-@cli.command(context_settings=dict(ignore_unknown_options=True))
+@cli.command(name="exec", context_settings=dict(ignore_unknown_options=True))
 @click.pass_context
 @click.argument('file', type=click.Path(exists=True))
 @click.argument('cmds_inputs', nargs=-1, type=click.UNPROCESSED)
 # @click.argument('cmds', nargs=-1)
 @click.option('--plan', '-p', type=click.Path(exists=True), help='File with the plan to execute.')
 @click.option('--dry-run', is_flag=True, help='Simulate the dangerous operations.')
-def exec(ctx, file, cmds_inputs, plan, dry_run):
+def exec_(ctx, file, cmds_inputs, plan, dry_run):
     """Exec a plan.
 
     \b
@@ -47,11 +48,13 @@ def exec(ctx, file, cmds_inputs, plan, dry_run):
 
     cmds, inputs = _get_cmds_inputs(ctx, cmds_inputs)
     if plan:
-        cmds = ctx.obj.read_plan(plan)
+        cmds = ctx.obj.read_plan_file(plan)
     elif cmds and cmds[0] == '-':
-        import sys
-        cmds = [line.strip() for line in sys.stdin if line.strip()]
-    elif not cmds:
+        ops = [line.strip() for line in sys.stdin if line.strip()]
+        cmds = ctx.obj.parse_operations(ops)
+    elif cmds:
+        cmds = ctx.obj.parse_operations(cmds)
+    else:        
         ctx.fail('must supply a list of operation to execute.')
     # TODO: implement dry_run
     ctx.obj.orchestrate(file, cmds, inputs)
