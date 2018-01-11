@@ -29,6 +29,12 @@ If you wish to reuse the tool or the sources contained in this repository, pleas
 
 The documentation of TosKer can be found [here](https://tosker.readthedocs.io).
 
+## Table of Contents
+- [Quick Guide](#quick-guide)
+  * [Installation](#installation)
+  * [Example of usage](#example-of-usage)
+- [License](#license)
+
 ## Quick Guide
 
 ### Installation
