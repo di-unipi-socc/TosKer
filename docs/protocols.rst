@@ -7,12 +7,15 @@ Default Protocols
 -----------------
 
 **Software**
-.. image:: img/default_protocolds_software.jpg
+
+.. image:: img/default_protocols_software.jpg
 
 
 **Container**
-.. image:: img/default_protocolds_container.jpg
+
+.. image:: img/default_protocols_container.jpg
 
 
 **Volume**
-.. image:: img/default_protocolds_volume.jpg
+
+.. image:: img/default_protocols_volume.jpg
