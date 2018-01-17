@@ -10,6 +10,19 @@ imports:
 # - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
 - tosker: tosker-types.yaml
 
+interface_types:
+  api_interface:
+    derived_from: tosca.interfaces.Root
+    push_default:
+      description: push default data on the database
+
+node_types:
+  APISoftware:
+    derived_from: tosker.nodes.Software
+    interfaces:
+      api_interface:
+        type: api_interface
+
 topology_template:
   inputs:
     gui_port:
@@ -31,7 +44,9 @@ topology_template:
 
   node_templates:
     api:
-      type: tosker.nodes.Software
+      type: APISoftware
+      artifacts:
+        default_data: artifacts/default_data.csv
       requirements:
         - host: maven
         - connection: mongodb
@@ -55,6 +70,12 @@ topology_template:
             implementation: scripts/api/stop.sh
           delete:
             implementation: scripts/api/uninstall.sh
+        api_interface:
+          push_default:
+            implementation: scripts/api/push_default.sh
+            inputs:
+              data: { get_artifact: [ SELF, default_data ] }
+              port: 8080
 
     gui:
       type: tosker.nodes.Software
@@ -120,3 +141,47 @@ topology_template:
 
     dbvolume:
       type: tosker.nodes.Volume
+
+  policies:
+  - api_protocol:
+      type: tosker.policies.Protocol
+      targets: [ api ]
+      properties:
+        initial_state: deleted
+        states:
+          deleted:
+          created:
+          configured:
+          started:
+            requires: [ host, connection ]
+            offers: [ feature ]
+        transitions:
+        - source: deleted
+          target: created
+          interface: Standard
+          operation: create
+        - source: created
+          target: configured
+          interface: Standard
+          operation: configure
+        - source: created
+          target: deleted
+          interface: Standard
+          operation: delete
+        - source: configured
+          target: deleted
+          interface: Standard
+          operation: delete
+        - source: configured
+          target: configured
+          requires: [ connection ]
+          interface: api_interface
+          operation: push_default
+        - source: configured
+          target: started
+          interface: Standard
+          operation: start
+        - source: started
+          target: configured
+          interface: Standard
+          operation: stop
