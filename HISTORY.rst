@@ -32,6 +32,7 @@ Stable release without Management Protocols.
 ----------------------------
 Stable release with Management Protocols.
 
-* Add support of two type of plans (.plan, .csv)
-* Fix piped input error
-* Fix errors in python2 interpreter
+* Add support of two type of plans (.plan, .csv).
+* Fix piped input error.
+* Fix errors in python2 interpreter.
+* Fix bug that does not execute the delete operation on Docker volumes.
