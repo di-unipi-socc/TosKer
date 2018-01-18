@@ -75,7 +75,7 @@ class TestToscaBase(TestCase):
             )
 
         for c in tpl.volumes:
-            self.assertIsNotNone(
+            self.assertIsNone(
                 docker.inspect_volume(c)
             )
 
