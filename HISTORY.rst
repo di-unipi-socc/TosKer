@@ -28,7 +28,7 @@ Stable release without Management Protocols.
 * Support safe execution of plans (list of <component, interface, operation>).
 * Improve command line interface.
 
-2.0.2 (2017-02-12)
+2.0.2 (2018-02-12)
 ----------------------------
 Stable release with Management Protocols.
 
