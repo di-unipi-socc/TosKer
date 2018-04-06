@@ -14,8 +14,8 @@ from .orchestrator import Orchestrator
 def _usage():
     return '''
 Usage: tosker FILE [COMPONENTS...] COMMAND...  [OPTIONS] [INPUTS]
-       tosker ls [APPLICATION] [FILTES]
-       tosker log COMPONET COMMAND
+       tosker ls [APPLICATION] [FILTERS]
+       tosker log COMPONENT COMMAND
        tosker prune
        tosker -h|--help
        tosker -v|--version
