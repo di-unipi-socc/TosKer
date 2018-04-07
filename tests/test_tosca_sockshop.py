@@ -1,22 +1,25 @@
-import unittest
+"""
+TEST REMOVED, TO LONG TO BE PERFORMED
+"""
+# import unittest
 
-from .test_tosca_base import TestToscaBase
+# from .test_tosca_base import TestToscaBase
 
 
-class TestSockshop(TestToscaBase):
+# class TestSockshop(TestToscaBase):
 
-    def test(self):
-        file = 'data/examples/sockshop-app/sockshop.csar'
-        up = self.o.read_plan_file(
-            'data/examples/sockshop-app/sockshop.up.plan'
-        )
-        down = self.o.read_plan_file(
-            'data/examples/sockshop-app/sockshop.down.plan'
-        )
-        self.assert_up_start(file, up)
-        self.assert_down(file, down)
+#     def test(self):
+#         file = 'data/examples/sockshop-app/sockshop.csar'
+#         up = self.o.read_plan_file(
+#             'data/examples/sockshop-app/sockshop.up.plan'
+#         )
+#         down = self.o.read_plan_file(
+#             'data/examples/sockshop-app/sockshop.down.plan'
+#         )
+#         self.assert_up_start(file, up)
+#         self.assert_down(file, down)
         
-        # TODO: checks that the application works
+#         # TODO: checks that the application works
 
-if __name__ == '__main__':
-    unittest.main()
+# if __name__ == '__main__':
+#     unittest.main()
