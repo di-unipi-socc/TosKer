@@ -1,9 +1,0 @@
-server2:Standard.create
-server2:Standard.start
-
-db:Standard.create
-db:Standard.configure
-db:Standard.start
-
-app_container:Standard.create
-app_container:Standard.start

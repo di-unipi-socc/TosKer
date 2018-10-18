@@ -1,9 +1,0 @@
-{
-  "name": "software-link",
-  "version": "1.0.0",
-  "description": "",
-  "author": "lucarin91",
-  "dependencies": {
-    "express": "^4.14.0"
-  }
-}

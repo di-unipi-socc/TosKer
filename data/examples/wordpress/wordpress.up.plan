@@ -1,7 +1,0 @@
-mysql_volume:Standard.create
-
-mysql_container:Standard.create
-mysql_container:Standard.start
-
-wp_container:Standard.create
-wp_container:Standard.start

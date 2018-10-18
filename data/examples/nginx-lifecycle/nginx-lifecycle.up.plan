@@ -1,6 +1,0 @@
-server:Standard.create
-server:Standard.start
-
-nginx:Standard.create
-nginx:Standard.configure
-nginx:Standard.start

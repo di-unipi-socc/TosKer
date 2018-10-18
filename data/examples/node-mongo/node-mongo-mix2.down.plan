@@ -1,8 +1,0 @@
-app_container:Standard.stop
-app_container:Standard.delete
-
-db:Standard.stop
-db:Standard.delete
-
-server2:Standard.stop
-server2:Standard.delete
