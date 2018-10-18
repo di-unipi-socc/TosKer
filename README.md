@@ -12,18 +12,19 @@
 TosKer is an orchestrator engine capable of automatically deploying and managing multi-component applications specified in [OASIS TOSCA](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=tosca), by exploiting [Docker](https://www.docker.com) as a lightweight virtualization framework.
 It was first presented in 
 > _A. Brogi, L. Rinaldi, J. Soldani <br>
-> **TosKer: Orchestrating applications with TOSCA and Docker.** <br>
-> Submitted for publication_ 
+> **TosKer: A synergy between TOSCA and Docker for orchestrating multicomponent applications.** <br>
+> Software: Practice and Experience, vol. 48, num. 11, pp. 2061-2079._ 
 
 If you wish to reuse the tool or the sources contained in this repository, please properly cite the above mentioned paper. Below you can find the BibTex reference:
 ```
-@misc{TosKer,
-  author = {Antonio Brogi and Luca Rinaldi and Jacopo Soldani},
-  title = {{TosKer}: Orchestrating applications with {TOSCA} and {D}ocker},
-  editor={Zoltán Ádám Mann, Volker Stolz},
-  bookTitle={Advances in Service-Oriented and Cloud Computing: Workshops of ESOCC 2017},
-  publisher={Springer},
-  note={{\em [In press]}}
+@article{tosker,
+  author = {Brogi, Antonio and Rinaldi, Luca and Soldani, Jacopo},
+  title = {TosKer: A synergy between TOSCA and Docker for orchestrating multicomponent applications},
+  journal = {Software: Practice and Experience},
+  volume = {48},
+  number = {11},
+  pages = {2061-2079},
+  doi = {10.1002/spe.2625}
 }
 ```
 
