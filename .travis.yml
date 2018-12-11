@@ -17,7 +17,7 @@ python:
 install: pip install tox-travis
 
 # command to run tests, e.g. python setup.py test
-script: travis_wait 30 tox
+script: travis_wait 60 tox
 
 # After you create the Github repo and add it to Travis, run the
 # travis_pypi_setup.py script to finish PyPI deployment setup
