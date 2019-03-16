@@ -39,14 +39,14 @@ The documentation of TosKer can be found [here](https://tosker.readthedocs.io).
 ## Quick Guide
 
 ### Installation
-TosKer requires having [Docker](https://www.docker.com) installed and configured on the machine. In is possible to install TosKer by using pip:
+TosKer requires [Docker](https://www.docker.com) installed and configured on the hosting machine. It is possible to install TosKer by using pip:
 ```
 # pip install tosker
 ```
 The minimum Python version supported is 2.7. It is possible to find other installation methods on the documentation.
 
 ### Example of usage
-After the installation it is possible to use TosKer to deploy some example application. First of all download the TosKer repository and go on the example folder:
+After installation, it is possible to use TosKer to deploy some example applications. First of all download the TosKer repository and go to the example folder:
 
 ```
 $ git clone https://github.com/di-unipi-socc/TosKer.git
