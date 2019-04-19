@@ -8,7 +8,7 @@ repositories:
 
 imports:
   # - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
-- tosker: ../../tosker-types.yaml
+- ../../tosker-types.yaml
 
 interface_types:
   app_interface:
@@ -100,7 +100,7 @@ topology_template:
           target: uninstalled
           interface: my_interface
           operation: uninstall
-  
+
   node_templates:
     app:
       type: AppSoftware

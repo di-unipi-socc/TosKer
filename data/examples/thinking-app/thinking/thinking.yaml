@@ -8,7 +8,7 @@ repositories:
 
 imports:
 # - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
-- tosker: tosker-types.yaml
+- tosker-types.yaml
 
 interface_types:
   api_interface:
