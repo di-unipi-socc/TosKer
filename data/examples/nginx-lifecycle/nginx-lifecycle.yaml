@@ -7,7 +7,7 @@ repositories:
 
 imports:
   # - tosker: https://di-unipi-socc.github.io/tosker-types/tosker.yaml
-- tosker: ../../tosker-types.yaml
+  - tosker: ../../tosker-types.yaml
 
 topology_template:
   node_templates:
