@@ -6,7 +6,7 @@ repositories:
   docker_hub: https://registry.hub.docker.com/
 
 imports:
-  - tosker-types.yaml
+  - tosker: tosker-types.yaml
 
 topology_template:
   inputs:
