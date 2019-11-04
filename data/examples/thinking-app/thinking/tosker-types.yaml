@@ -7,6 +7,35 @@ group_types:
   tosker.groups.DeploymentUnit:
     derived_from: tosca.groups.Root
 
+data_types:
+  tosker.datatypes.State:
+    properties:
+      requires:
+        type: list
+        entry_schema:
+          type: string
+        required: false
+      offers:
+        type: list
+        entry_schema:
+          type: string
+        required: false
+
+  tosker.datatypes.Transition:
+    properties:
+      source:
+        type: string
+      target:
+        type: string
+      requires:
+        type: list
+        entry_schema:
+          type: string
+        required: false
+      interface:
+        type: string
+      operation:
+        type: string
 
 policy_types:
   tosker.policies.Protocol:
@@ -17,9 +46,13 @@ policy_types:
         required: true
       states:
         type: map
+        entry_schema:
+          type: tosker.datatypes.State
         required: true
       transitions:
         type: list
+        entry_schema:
+          type: tosker.datatypes.Transition
         required: true
     targets: [ tosker.nodes.Software ]
 
@@ -40,32 +73,48 @@ node_types:
       # BEGIN work around for the get_attribute bug in toscaparser
       ports:
         type: map
+        entry_schema:
+          type: integer
       env_variable:
         type: map
+        entry_schema:
+          type: string
       command:
         type: string
       share_data:
         type: map
+        entry_schema:
+          type: string
       supported_sw:
         type: map
+        entry_schema:
+          type: string
       os_distribution:
         type: string
       # END
     properties:
       ports:
         type: map
+        entry_schema:
+          type: integer
         required: false
       env_variable:
         type: map
+        entry_schema:
+          type: string
         required: false
       command:
         type: string
         required: false
       share_data:
         type: map
+        entry_schema:
+          type: string
         required: false
       supported_sw:
         type: map
+        entry_schema:
+          type: string
         required: false
       os_distribution:
         type: string
@@ -126,7 +175,6 @@ node_types:
         relationship: tosca.relationships.DependsOn
     - host:
         capability: tosca.capabilities.Container
-        occurrences: 1
         node: tosker.nodes.Container
         relationship: tosca.relationships.HostedOn
     capabilities:
